@@ -1,5 +1,4 @@
-#####################################################################################################################################
-# mInfo ver 0.75  June 2014
+mInfo ver 0.75  June 2014
 # To activate copy mInfo folder to C:\Program Files (x86)\Steam\steamapps\common\assettocorsa\apps\python
 # Motorheadz present mInfo an app for the game Assetto Corsa.
 # Allowing compiling sequence of sounds then playback of wave files of speech or sounds in the game as alerts or reports
