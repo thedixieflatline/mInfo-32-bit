@@ -31,7 +31,7 @@ from ctypes import c_int32, c_float, c_char, c_wchar, c_bool, c_int
 import pygame
 import pygame.mixer
 import pygame.sndarray
-#from pygame.locals import *
+
 # for d in sys.path:
 #     ac.console("{0}".format(d))
 
@@ -150,15 +150,15 @@ class SPageFileStatic(ctypes.Structure):
 
 #make _char_p properties return unicode strings not needed now here maybe later
 
-# for cls in (SPageFilePhysics, SPageFileGraphic, SPageFileStatic):
-#     for name, typ in cls._fields_:
-#         if name.startswith("_"):
-#             def getter(self, name=None):
-#                 value = getattr(self, name)
-#                 # TODO: real encoding is very strange, it's not utf-8
-#                 return value.decode("utf-8")
-#             setattr(cls, name.lstrip("_"),
-#                     property(functools.partial(getter, name=name)))
+for cls in (SPageFilePhysics, SPageFileGraphic, SPageFileStatic):
+    for name, typ in cls._fields_:
+        if name.startswith("_"):
+            def getter(self, name=None):
+                value = getattr(self, name)
+                # TODO: real encoding is very strange, it's not utf-8
+                return value.decode("utf-8")
+            setattr(cls, name.lstrip("_"),
+                    property(functools.partial(getter, name=name)))
 
 class SimInfo:
     def __init__(self):
@@ -193,6 +193,8 @@ class SoundClass:
         self.maindir = os.path.split(os.path.abspath(__file__))[0]
         self.mixer = pygame.mixer
         self.chan = None
+
+        self.hasplayed = 0
 
         self.joinsounds = None
         self.playsounds =  None
@@ -388,43 +390,122 @@ class SoundClass:
 class TimerClass:
     """ Controls time recording storage combination output of laptimes input to getTime() is milliseconds from siminfo class obj instance laptimer. """
     def __init__(self,):
-        self.lapminutes = 0.0
-        self.lapseconds = 0.0
-        self.lapmilliseconds1 = 0.0
-        self.lapmilliseconds2 = 0.0
-        self.lapmilliseconds3 = 0.0
 
-    def getTime(self,thetime):
-        self.lapminutes = int(thetime/100000)
-        self.lapseconds = int(thetime/1000)
-        self.lapmilliseconds1 = (thetime/1000) - self.lapseconds
-        #"{0:.2f}".format(thetime/100)
-        self.lapmilliseconds2 = thetime/1000000
-        self.lapmilliseconds3 = thetime/1000000
-        return "{0}:{1}.{2}".format(self.lapminutes, self.lapseconds, self.lapmilliseconds1)
+        self.currentlap = 0
+        self.completedlaps = 0
 
+        self.bestlapminutes = 0.0
+        self.bestlapsecondsint = 0.0
+        self.bestlapmilliseconds = 0.0
+        self.bestlapmillisecondsStr = ""
+        self.bestlapmilliseconds1 = ""
+        self.bestlapmilliseconds2 = ""
+        self.bestlapmilliseconds3 = ""
+
+        self.lastlapminutes = 0.0
+        self.lastlapsecondsint = 0.0
+        self.lastlapmilliseconds = 0.0
+        self.lastlapmillisecondsStr = ""
+        self.lastlapmilliseconds1 = ""
+        self.lastlapmilliseconds2 = ""
+        self.lastlapmilliseconds3 = ""
+
+        self.currentlapminutes = 0.0
+        self.currentlapsecondsint = 0.0
+        self.currentlapmilliseconds = 0.0
+        self.currentlapmillisecondsStr = ""
+        self.currentlapmilliseconds1 = "0"
+        self.currentlapmilliseconds2 = "0"
+        self.currentlapmilliseconds3 = "0"
+
+    def updateTime(self,thelap,thetime1,thetime2,thetime3):
+        self.currentlap = thelap
+        self.bestlapmilliseconds = thetime2
+        self.lastlapmilliseconds = thetime1
+        self.currentlapmilliseconds = thetime3
+
+    def getCurrentLap(self,):
+        return self.currentlap
+
+    def getBestLapTime(self,):
+        if(self.bestlapmilliseconds):
+            if(self.bestlapmilliseconds<60000):
+                self.bestlapminutes = 0
+                self.bestlapsecondsint = int((self.bestlapmilliseconds/1000) // 1 * 1)
+                self.bestlapmillisecondsStr = str(self.bestlapmilliseconds/1000)
+                self.bestlapmilliseconds1 = str(self.bestlapmillisecondsStr[-3:-2])
+                self.bestlapmilliseconds2 = str(self.bestlapmillisecondsStr[-2:-1])
+                self.bestlapmilliseconds3 = str(self.bestlapmillisecondsStr[-1])
+                if(self.bestlapsecondsint <10 ):
+                    return "{0}:0{1}:{2}{3}{4}".format(self.bestlapminutes,self.bestlapsecondsint,self.bestlapmilliseconds1,self.bestlapmilliseconds2,self.bestlapmilliseconds3)
+                else:
+                    return "{0}:{1}:{2}{3}{4}".format(self.bestlapminutes,self.bestlapsecondsint,self.bestlapmilliseconds1,self.bestlapmilliseconds2,self.bestlapmilliseconds3)
+            else:
+                self.bestlapminutes = int((self.bestlapmilliseconds/1000)/60)
+                self.bestlapsecondsint = int((self.bestlapmilliseconds/1000) - (self.bestlapminutes*60))
+                self.bestlapmillisecondsStr = str(self.bestlapmilliseconds/1000)
+                self.bestlapmilliseconds1 = str(self.bestlapmillisecondsStr[-3:-2])
+                self.bestlapmilliseconds2 = str(self.bestlapmillisecondsStr[-2:-1])
+                self.bestlapmilliseconds3 = str(self.bestlapmillisecondsStr[-1])
+                return "{0}:{1}:{2}{3}{4}".format(self.bestlapminutes,self.bestlapsecondsint,self.bestlapmilliseconds1,self.bestlapmilliseconds2,self.bestlapmilliseconds3)
+        else:
+            return "-:--:---"
+
+    def getLastLapTime(self,):
+        if(self.lastlapmilliseconds):
+            if(self.lastlapmilliseconds<60000):
+                self.lastlapminutes = 0
+                self.lastlapsecondsint = int((self.lastlapmilliseconds/1000) // 1 * 1)
+                self.lastlapmillisecondsStr = str(self.lastlapmilliseconds/1000)
+                self.lastlapmilliseconds1 = str(self.lastlapmillisecondsStr[-3:-2])
+                self.lastlapmilliseconds2 = str(self.lastlapmillisecondsStr[-2:-1])
+                self.lastlapmilliseconds3 = str(self.lastlapmillisecondsStr[-1])
+                return "{0}:{1}:{2}{3}{4}".format(self.lastlapminutes,self.lastlapsecondsint,self.lastlapmilliseconds1,self.lastlapmilliseconds2,self.lastlapmilliseconds3)
+            else:
+                self.lastlapminutes = int((self.lastlapmilliseconds/1000)/60)
+                self.lastlapsecondsint = int((self.lastlapmilliseconds/1000) - (self.lastlapminutes*60))
+                self.lastlapmillisecondsStr = str(self.lastlapmilliseconds/1000)
+                self.lastlapmilliseconds1 = str(self.lastlapmillisecondsStr[-3:-2])
+                self.lastlapmilliseconds2 = str(self.lastlapmillisecondsStr[-2:-1])
+                self.lastlapmilliseconds3 = str(self.lastlapmillisecondsStr[-1])
+                return "{0}:{1}:{2}{3}{4}".format(self.lastlapminutes,self.lastlapsecondsint,self.lastlapmilliseconds1,self.lastlapmilliseconds2,self.lastlapmilliseconds3)
+        else:
+            return "-:--:---"
+
+    def getCurrentLapTime(self,):
+        if(self.currentlapmilliseconds):
+            if(self.currentlapmilliseconds<60000):
+                self.currentlapminutes = 0
+                self.currentlapsecondsint = int((self.currentlapmilliseconds/1000) // 1 * 1)
+                self.currentlapmillisecondsStr = str(self.currentlapmilliseconds/1000)
+                self.currentlapmilliseconds1 = str(self.currentlapmillisecondsStr[-3:-2])
+                self.currentlapmilliseconds2 = str(self.currentlapmillisecondsStr[-2:-1])
+                self.currentlapmilliseconds3 = str(self.currentlapmillisecondsStr[-1])
+                #return "{0}:{1}:{2}{3}{4}".format(self.currentlapminutes,self.currentlapsecondsint,self.currentlapmilliseconds1,self.currentlapmilliseconds2,self.currentlapmilliseconds3)
+                if(self.currentlapsecondsint <10 ):
+                    return "{0}:0{1}:{2}{3}{4}".format(self.currentlapminutes,self.currentlapsecondsint,self.currentlapmilliseconds1,self.currentlapmilliseconds2,self.currentlapmilliseconds3)
+                else:
+                    return "{0}:{1}:{2}{3}{4}".format(self.currentlapminutes,self.currentlapsecondsint,self.currentlapmilliseconds1,self.currentlapmilliseconds2,self.currentlapmilliseconds3)
+            else:
+                self.currentlapminutes = int((self.currentlapmilliseconds/1000)/60)
+                self.currentlapsecondsint = int((self.currentlapmilliseconds/1000) - (self.currentlapminutes*60))
+                self.currentlapmillisecondsStr = str(self.currentlapmilliseconds/1000)
+                self.currentlapmilliseconds1 = str(self.currentlapmillisecondsStr[-3:-2])
+                self.currentlapmilliseconds2 = str(self.currentlapmillisecondsStr[-2:-1])
+                self.currentlapmilliseconds3 = str(self.currentlapmillisecondsStr[-1])
+                return "{0}:{1}:{2}{3}{4}".format(self.currentlapminutes,self.currentlapsecondsint,self.currentlapmilliseconds1,self.currentlapmilliseconds2,self.currentlapmilliseconds3)
+        else:
+            return "-:--:---"
 
 class DisplayClass:
     """eventually move all of the display elements into this class like labels buttons and settings """
     def __init__(self,):
         self.appWindow = 0
+        self.currentlaplabel = 0
+        self.besttimelabel = 0
+        self.lasttimelabel = 0
+        self.currenttimelabel = 0
 
-
-# all global vars eventually move into classes access via instances
-lapcompleted = 0
-currentlaplabel = 0
-currentlapset = 0
-besttimelabel = 0
-besttimeset = 0.0
-lasttimelabel = 0
-lasttimeset = 0.0
-currenttimelabel = 0
-currenttimeset = 0.0
-lapminutes = 0
-lapseconds = 0
-lapmilliseconds = 0
-hasplayed = 0
-appWindow = 0
 
 #---------------------------------------------------------
 # declare class instance objects
@@ -433,59 +514,35 @@ infosystem = SimInfo()
 soundsystem = SoundClass()
 laptimer = TimerClass()
 mInfoDisplay = DisplayClass()
-ac.console("class")
 #---------------------------------------------------------
 
 def acMain(ac_version):
     """main init function which runs on game startup."""
-    global lapcompleted
 
-    global currentlaplabel
-    global currentlapset
+    mInfoDisplay.appWindow = ac.newApp("mInfo")
+    ac.addRenderCallback(mInfoDisplay.appWindow, onFormRender)
+    ac.setSize(mInfoDisplay.appWindow, 220, 180)
 
-    global besttimelabel
-    global besttimeset
+    mInfoDisplay.currentlaplabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
+    ac.setPosition(mInfoDisplay.currentlaplabel, 49, 65)
+    ac.setFontColor(mInfoDisplay.currentlaplabel, 1.0, 1.0, 1.0, 1)
+    ac.setFontAlignment(mInfoDisplay.currentlaplabel,'left')
 
-    global lasttimelabel
-    global lasttimeset
+    mInfoDisplay.besttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
+    ac.setPosition(mInfoDisplay.besttimelabel, 59, 90)
+    ac.setFontColor(mInfoDisplay.besttimelabel, 1.0, 1.0, 1.0, 1)
+    ac.setFontAlignment(mInfoDisplay.besttimelabel,'left')
 
-    global currenttimelabel
-    global currenttimeset
+    mInfoDisplay.lasttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
+    ac.setPosition(mInfoDisplay.lasttimelabel, 65, 115)
+    ac.setFontColor(mInfoDisplay.lasttimelabel, 1.0, 1.0, 1.0, 1)
+    ac.setFontAlignment(mInfoDisplay.lasttimelabel,'left')
 
-    global hasplayed
-    global appWindow
-    appWindow = ac.newApp("mInfo")
-    # #mInfoDisplay.appWindow = ac.newApp("mInfo")
-    ac.addRenderCallback(appWindow, onFormRender)
-    ac.setSize(appWindow, 220, 180)
-    currentlapset = infosystem.graphics.completedLaps
-    #currentlapset = ac.getCarState(0, acsys.CS.SpeedKMH)
-    currentlaplabel = ac.addLabel(appWindow, "mInfo")
-    ac.setPosition(currentlaplabel, 51, 65)
-    ac.setFontColor(currentlaplabel, 1.0, 1.0, 1.0, 1)
-    ac.setFontAlignment(currentlaplabel,'left')
-
-    besttimeset = infosystem.graphics.iBestTime
-    #besttimeset =  ac.getCarState(0, acsys.CS.SpeedKMH)
-    besttimelabel = ac.addLabel(appWindow, "mInfo")
-    ac.setPosition(besttimelabel, 61, 90)
-    ac.setFontColor(besttimelabel, 1.0, 1.0, 1.0, 1)
-    ac.setFontAlignment(besttimelabel,'left')
-
-    lasttimeset = infosystem.graphics.iLastTime
-    #lasttimeset = ac.getCarState(0, acsys.CS.SpeedKMH)
-    lasttimelabel = ac.addLabel(appWindow, "mInfo")
-    ac.setPosition(lasttimelabel, 66, 115)
-    ac.setFontColor(lasttimelabel, 1.0, 1.0, 1.0, 1)
-    ac.setFontAlignment(lasttimelabel,'left')
-
-    currenttimeset = infosystem.graphics.iCurrentTime
-    #currenttimeset = ac.getCarState(0, acsys.CS.SpeedKMH)
-    currenttimelabel = ac.addLabel(appWindow, "mInfo")
-    ac.setPosition(currenttimelabel, 46, 140)
-    ac.setFontColor(currenttimelabel, 1.0, 1.0, 1.0, 1)
-    ac.setFontAlignment(currenttimelabel,'left')
-    ac.setBackgroundTexture(appWindow, "apps/python/mInfo/images/mInfoBackground.png")
+    mInfoDisplay.currenttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
+    ac.setPosition(mInfoDisplay.currenttimelabel, 40, 140)
+    ac.setFontColor(mInfoDisplay.currenttimelabel, 1.0, 1.0, 1.0, 1)
+    ac.setFontAlignment(mInfoDisplay.currenttimelabel,'left')
+    ac.setBackgroundTexture(mInfoDisplay.appWindow, "apps/python/mInfo/images/mInfoBackground.png")
 
     pygame.init()
     soundsystem.loadSounds()
@@ -493,57 +550,32 @@ def acMain(ac_version):
 
 def acUpdate(deltaT):
     """main loop."""
-    global appWindow
-    global lapcompleted
-    global currentlaplabel
-    global currentlapset
-    global besttimelabel
-    global besttimeset
-    global lasttimelabel
-    global lasttimeset
-    global currenttimelabel
-    global currenttimeset
-    global hasplayed
-    # """ only update lap once and play sound once required as we are in a loop."""
-    hasplayed = 0
-    if (lapcompleted < currentlapset):
-        lapcompleted = currentlapset
-        hasplayed = 1
-        if(hasplayed==1):
-            #info = SimInfo()
-            #ac.console(laptimer.getTime(lasttimeset))
-            ac.console(laptimer.getTime(lasttimeset))
-            #ac.console("min:{0} sec:{1} mic:{2}".format(laptimer.lapminutes ,laptimer.lapseconds,laptimer.lapmilliseconds))
-            soundsystem.playSound()
-            #ac.console(laptimer.getTime(info.graphics.iLastTime))
-            hasplayed = 0
-            #ac.console(hasplayed)
-    """update timer."""
-    currentlapset = infosystem.graphics.completedLaps
-    besttimeset = infosystem.graphics.iBestTime
-    lasttimeset = infosystem.graphics.iLastTime
-    currenttimeset = infosystem.graphics.iCurrentTime
-    # currentlapset = ac.getCarState(0, acsys.CS.SpeedKMH)
-    # besttimeset =  ac.getCarState(0, acsys.CS.SpeedKMH)
-    # lasttimeset = ac.getCarState(0, acsys.CS.SpeedKMH)
-    # currenttimeset = ac.getCarState(0, acsys.CS.SpeedKMH)
 
+    # """ only update lap once and play sound once required as we are in a loop."""
+    soundsystem.hasplayed = 0
+    if (laptimer.completedlaps < laptimer.currentlap):
+        laptimer.completedlaps = laptimer.currentlap
+        soundsystem.hasplayed = 1
+        if(soundsystem.hasplayed==1):
+            #ac.console(laptimer.getLastLapTime())
+            soundsystem.playSound()
+            soundsystem.hasplayed = 0
+
+    """update timer."""
+    laptimer.updateTime(infosystem.graphics.completedLaps,infosystem.graphics.iBestTime,infosystem.graphics.iLastTime, infosystem.graphics.iCurrentTime)
 
 def onFormRender(deltaT):
     """only update app when app form is visible then update only the following note call back method for this function defined in acMain above."""
-    global appWindow
-    global currentlaplabel
-    global currentlapset
+    #global appWindow
     global besttimelabel
     global besttimeset
     global lasttimelabel
-    global lasttimeset
     global currenttimelabel
     global currenttimeset
-    ac.setText(currentlaplabel, " current lap: {0}".format(currentlapset))
-    ac.setText(besttimelabel, " best time: {0}".format(besttimeset))
-    ac.setText(lasttimelabel, " last time: {0}".format(lasttimeset))
-    ac.setText(currenttimelabel, "current time: {0}".format(currenttimeset))
+    ac.setText(mInfoDisplay.currentlaplabel, "current lap : {0}".format(laptimer.getCurrentLap()))
+    ac.setText(mInfoDisplay.besttimelabel, "best time : {0}".format(laptimer.getBestLapTime()))
+    ac.setText(mInfoDisplay.lasttimelabel, "last time : {0}".format(laptimer.getLastLapTime()))
+    ac.setText(mInfoDisplay.currenttimelabel, "current time : {0}".format(laptimer.getCurrentLapTime()))
 
 
 def acShutdown():
