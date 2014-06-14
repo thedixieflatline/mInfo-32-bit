@@ -26,14 +26,16 @@
       <file leaf-file-name="mInfo.py" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/mInfo.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="526" column="51" selection-start="24115" selection-end="24115" vertical-scroll-proportion="0.33741647" vertical-offset="3658" max-vertical-offset="5015">
+            <state line="749" column="29" selection-start="37184" selection-end="37184" vertical-scroll-proportion="0.46993318" vertical-offset="4066" max-vertical-offset="5763">
               <folding>
                 <element signature="e#1489#1499#0" expanded="true" />
                 <element signature="e#3005#4000#0" expanded="false" />
                 <element signature="e#4048#4960#0" expanded="false" />
                 <element signature="e#5007#5669#0" expanded="false" />
-                <element signature="e#6217#6915#0" expanded="false" />
-                <element signature="e#7282#16493#0" expanded="false" />
+                <element signature="e#6235#6933#0" expanded="false" />
+                <element signature="e#7471#11442#0" expanded="false" />
+                <element signature="e#11479#26424#0" expanded="false" />
+                <element signature="e#37210#37492#0" expanded="false" />
               </folding>
             </state>
           </provider>
@@ -362,11 +364,11 @@
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32900432" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
     </layout>
   </component>
   <component name="Vcs.Log.UiProperties">
@@ -388,14 +390,32 @@
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/mInfo.py">
       <provider selected="true" editor-type-id="text-editor">
+        <state line="654" column="0" selection-start="29594" selection-end="29594" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="10438">
+          <folding>
+            <element signature="e#1489#1499#0" expanded="true" />
+            <element signature="e#3005#4000#0" expanded="false" />
+            <element signature="e#4048#4960#0" expanded="false" />
+            <element signature="e#5007#5669#0" expanded="false" />
+            <element signature="e#6235#6933#0" expanded="false" />
+            <element signature="e#7471#11442#0" expanded="false" />
+            <element signature="e#11479#26424#0" expanded="false" />
+            <element signature="e#37210#37492#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/mInfo.py">
+      <provider selected="true" editor-type-id="text-editor">
         <state line="535" column="0" selection-start="21509" selection-end="21743" vertical-scroll-proportion="0.0" vertical-offset="7109" max-vertical-offset="9622">
           <folding>
             <element signature="e#1489#1499#0" expanded="true" />
             <element signature="e#3005#4000#0" expanded="false" />
             <element signature="e#4048#4960#0" expanded="false" />
             <element signature="e#5007#5669#0" expanded="false" />
-            <element signature="e#6217#6915#0" expanded="false" />
-            <element signature="e#7282#16493#0" expanded="false" />
+            <element signature="e#6235#6933#0" expanded="false" />
+            <element signature="e#7471#11442#0" expanded="false" />
+            <element signature="e#11479#26424#0" expanded="false" />
+            <element signature="e#37210#37492#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -408,8 +428,10 @@
             <element signature="e#3005#4000#0" expanded="false" />
             <element signature="e#4048#4960#0" expanded="false" />
             <element signature="e#5007#5669#0" expanded="false" />
-            <element signature="e#6217#6915#0" expanded="false" />
-            <element signature="e#7282#16493#0" expanded="false" />
+            <element signature="e#6235#6933#0" expanded="false" />
+            <element signature="e#7471#11442#0" expanded="false" />
+            <element signature="e#11479#26424#0" expanded="false" />
+            <element signature="e#37210#37492#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -422,8 +444,10 @@
             <element signature="e#3005#4000#0" expanded="false" />
             <element signature="e#4048#4960#0" expanded="false" />
             <element signature="e#5007#5669#0" expanded="false" />
-            <element signature="e#6217#6915#0" expanded="false" />
-            <element signature="e#7282#16493#0" expanded="false" />
+            <element signature="e#6235#6933#0" expanded="false" />
+            <element signature="e#7471#11442#0" expanded="false" />
+            <element signature="e#11479#26424#0" expanded="false" />
+            <element signature="e#37210#37492#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -436,8 +460,10 @@
             <element signature="e#3005#4000#0" expanded="false" />
             <element signature="e#4048#4960#0" expanded="false" />
             <element signature="e#5007#5669#0" expanded="false" />
-            <element signature="e#6217#6915#0" expanded="false" />
-            <element signature="e#7282#16493#0" expanded="false" />
+            <element signature="e#6235#6933#0" expanded="false" />
+            <element signature="e#7471#11442#0" expanded="false" />
+            <element signature="e#11479#26424#0" expanded="false" />
+            <element signature="e#37210#37492#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -539,14 +565,16 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/mInfo.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="526" column="51" selection-start="24115" selection-end="24115" vertical-scroll-proportion="0.33741647" vertical-offset="3658" max-vertical-offset="5015">
+        <state line="749" column="29" selection-start="37184" selection-end="37184" vertical-scroll-proportion="0.46993318" vertical-offset="4066" max-vertical-offset="5763">
           <folding>
             <element signature="e#1489#1499#0" expanded="true" />
             <element signature="e#3005#4000#0" expanded="false" />
             <element signature="e#4048#4960#0" expanded="false" />
             <element signature="e#5007#5669#0" expanded="false" />
-            <element signature="e#6217#6915#0" expanded="false" />
-            <element signature="e#7282#16493#0" expanded="false" />
+            <element signature="e#6235#6933#0" expanded="false" />
+            <element signature="e#7471#11442#0" expanded="false" />
+            <element signature="e#11479#26424#0" expanded="false" />
+            <element signature="e#37210#37492#0" expanded="false" />
           </folding>
         </state>
       </provider>

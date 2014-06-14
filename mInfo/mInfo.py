@@ -150,15 +150,15 @@ class SPageFileStatic(ctypes.Structure):
 
 #make _char_p properties return unicode strings not needed now here maybe later
 
-for cls in (SPageFilePhysics, SPageFileGraphic, SPageFileStatic):
-    for name, typ in cls._fields_:
-        if name.startswith("_"):
-            def getter(self, name=None):
-                value = getattr(self, name)
-                # TODO: real encoding is very strange, it's not utf-8
-                return value.decode("utf-8")
-            setattr(cls, name.lstrip("_"),
-                    property(functools.partial(getter, name=name)))
+# for cls in (SPageFilePhysics, SPageFileGraphic, SPageFileStatic):
+#     for name, typ in cls._fields_:
+#         if name.startswith("_"):
+#             def getter(self, name=None):
+#                 value = getattr(self, name)
+#                 # TODO: real encoding is very strange, it's not utf-8
+#                 return value.decode("utf-8")
+#             setattr(cls, name.lstrip("_"),
+#                     property(functools.partial(getter, name=name)))
 
 class SimInfo:
     def __init__(self):
@@ -194,13 +194,20 @@ class SoundClass:
         self.mixer = pygame.mixer
         self.chan = None
 
-        self.hasplayed = 0
-
+        self.hasplayedLastLap = 0
+        self.soundlist = {}
+        self.playlist = []
         self.joinsounds = None
         self.playsounds =  None
 
+        self.sound_silence = None
+        self.filepathsound_silence = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_silence.wav')
+
         self.sound_point = None
         self.filepathsound_point = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_point.wav')
+
+        self.sound_zero = None
+        self.filepathsound_zero = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_zero.wav')
 
         self.sound_one = None
         self.filepathsound_one = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_one.wav')
@@ -262,6 +269,8 @@ class SoundClass:
         self.sound_twenty = None
         self.filepathsound_twenty = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_twenty.wav')
 
+        self.sound_twenty_one_array = None
+
         self.sound_thirty = None
         self.filepathsound_thirty = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_thirty.wav')
 
@@ -279,113 +288,330 @@ class SoundClass:
         self.chan = pygame.mixer.Channel(0)
         self.chan.set_volume(1.0)
 
+        self.joinsounds = self.mixer.Sound(self.filepathsound_point)
+        self.joinsounds.set_volume(1.0)
+
         self.playsounds = self.mixer.Sound(self.filepathsound_point)
         self.playsounds.set_volume(1.0)
 
+        self.sound_silence = self.mixer.Sound(self.filepathsound_silence)
+        self.sound_silence.set_volume(1.0)
+
         self.sound_point = self.mixer.Sound(self.filepathsound_point)
         self.sound_point.set_volume(1.0)
-        self.sound_point_array = pygame.sndarray.array(self.sound_point)
+
+        self.sound_zero = self.mixer.Sound(self.filepathsound_zero)
+        self.sound_zero.set_volume(1.0)
 
         self.sound_one = self.mixer.Sound(self.filepathsound_one)
         self.sound_one.set_volume(1.0)
-        self.sound_one_array = pygame.sndarray.array(self.sound_one)
 
         self.sound_two = self.mixer.Sound(self.filepathsound_two)
         self.sound_two.set_volume(1.0)
-        self.sound_two_array = pygame.sndarray.array(self.sound_two)
 
         self.sound_three = self.mixer.Sound(self.filepathsound_three)
         self.sound_three.set_volume(1.0)
-        self.sound_three_array = pygame.sndarray.array(self.sound_three)
 
         self.sound_four = self.mixer.Sound(self.filepathsound_four)
         self.sound_four.set_volume(1.0)
-        self.sound_four_array = pygame.sndarray.array(self.sound_four)
 
         self.sound_five = self.mixer.Sound(self.filepathsound_five)
         self.sound_five.set_volume(1.0)
-        self.sound_five_array = pygame.sndarray.array(self.sound_five)
 
         self.sound_six = self.mixer.Sound(self.filepathsound_six)
         self.sound_six.set_volume(1.0)
-        self.sound_six_array = pygame.sndarray.array(self.sound_six)
 
         self.sound_seven = self.mixer.Sound(self.filepathsound_seven)
         self.sound_seven.set_volume(1.0)
-        self.sound_seven_array = pygame.sndarray.array(self.sound_seven)
 
         self.sound_eight = self.mixer.Sound(self.filepathsound_eight)
         self.sound_eight.set_volume(1.0)
-        self.sound_eight_array = pygame.sndarray.array(self.sound_eight)
 
         self.sound_nine = self.mixer.Sound(self.filepathsound_nine)
         self.sound_nine.set_volume(1.0)
-        self.sound_nine_array = pygame.sndarray.array(self.sound_nine)
 
         self.sound_ten = self.mixer.Sound(self.filepathsound_ten)
         self.sound_ten.set_volume(1.0)
-        self.sound_ten_array = pygame.sndarray.array(self.sound_ten)
 
         self.sound_eleven = self.mixer.Sound(self.filepathsound_eleven)
         self.sound_eleven.set_volume(1.0)
-        self.sound_eleven_array = pygame.sndarray.array(self.sound_eleven)
 
         self.sound_twelve = self.mixer.Sound(self.filepathsound_twelve)
         self.sound_twelve.set_volume(1.0)
-        self.sound_twelve_array = pygame.sndarray.array(self.sound_twelve)
 
         self.sound_thirteen = self.mixer.Sound(self.filepathsound_thirteen)
         self.sound_thirteen.set_volume(1.0)
-        self.sound_thirteen_array = pygame.sndarray.array(self.sound_thirteen)
 
         self.sound_fourteen = self.mixer.Sound(self.filepathsound_fourteen)
         self.sound_fourteen.set_volume(1.0)
-        self.sound_fourteen_array = pygame.sndarray.array(self.sound_fourteen)
 
         self.sound_fifteen = self.mixer.Sound(self.filepathsound_fifteen)
         self.sound_fifteen.set_volume(1.0)
-        self.sound_fifteen_array = pygame.sndarray.array(self.sound_fifteen)
 
         self.sound_sixteen = self.mixer.Sound(self.filepathsound_sixteen)
         self.sound_sixteen.set_volume(1.0)
-        self.sound_sixteen_array = pygame.sndarray.array(self.sound_sixteen)
 
         self.sound_seventeen = self.mixer.Sound(self.filepathsound_seventeen)
         self.sound_seventeen.set_volume(1.0)
-        self.sound_seventeen_array = pygame.sndarray.array(self.sound_seventeen)
 
         self.sound_eighteen = self.mixer.Sound(self.filepathsound_eighteen)
         self.sound_eighteen.set_volume(1.0)
-        self.sound_eighteen_array = pygame.sndarray.array(self.sound_eighteen)
 
         self.sound_nineteen = self.mixer.Sound(self.filepathsound_nineteen)
         self.sound_nineteen.set_volume(1.0)
-        self.sound_nineteen_array = pygame.sndarray.array(self.sound_nineteen)
 
         self.sound_twenty = self.mixer.Sound(self.filepathsound_twenty)
         self.sound_twenty.set_volume(1.0)
-        self.sound_twenty_array = pygame.sndarray.array(self.sound_twenty)
+
+        self.sound_twenty_one_array = np.concatenate((self.sound_twenty,self.sound_silence,self.sound_one))
+        self.sound_twenty_one = pygame.sndarray.make_sound(self.sound_twenty_one_array)
+        self.sound_twenty_one.set_volume(1.0)
+
+        self.sound_twenty_two_array = np.concatenate((self.sound_twenty,self.sound_silence,self.sound_two))
+        self.sound_twenty_two = pygame.sndarray.make_sound(self.sound_twenty_two_array)
+        self.sound_twenty_two.set_volume(1.0)
+
+        self.sound_twenty_three_array = np.concatenate((self.sound_twenty,self.sound_silence,self.sound_three))
+        self.sound_twenty_three = pygame.sndarray.make_sound(self.sound_twenty_three_array)
+        self.sound_twenty_three.set_volume(1.0)
+
+        self.sound_twenty_four_array = np.concatenate((self.sound_twenty,self.sound_silence,self.sound_four))
+        self.sound_twenty_four = pygame.sndarray.make_sound(self.sound_twenty_four_array)
+        self.sound_twenty_four.set_volume(1.0)
+
+        self.sound_twenty_five_array = np.concatenate((self.sound_twenty,self.sound_silence,self.sound_five))
+        self.sound_twenty_five = pygame.sndarray.make_sound(self.sound_twenty_five_array)
+        self.sound_twenty_five.set_volume(1.0)
+
+        self.sound_twenty_six_array = np.concatenate((self.sound_twenty,self.sound_silence,self.sound_six))
+        self.sound_twenty_six = pygame.sndarray.make_sound(self.sound_twenty_six_array)
+        self.sound_twenty_six.set_volume(1.0)
+
+        self.sound_twenty_seven_array = np.concatenate((self.sound_twenty,self.sound_silence,self.sound_seven))
+        self.sound_twenty_seven = pygame.sndarray.make_sound(self.sound_twenty_seven_array)
+        self.sound_twenty_seven.set_volume(1.0)
+
+        self.sound_twenty_eight_array = np.concatenate((self.sound_twenty,self.sound_silence,self.sound_eight))
+        self.sound_twenty_eight = pygame.sndarray.make_sound(self.sound_twenty_eight_array)
+        self.sound_twenty_eight.set_volume(1.0)
+
+        self.sound_twenty_nine_array = np.concatenate((self.sound_twenty,self.sound_silence,self.sound_nine))
+        self.sound_twenty_nine = pygame.sndarray.make_sound(self.sound_twenty_nine_array)
+        self.sound_twenty_nine.set_volume(1.0)
 
         self.sound_thirty = self.mixer.Sound(self.filepathsound_thirty)
         self.sound_thirty.set_volume(1.0)
-        self.sound_thirty_array = pygame.sndarray.array(self.sound_thirty)
+        
+        self.sound_thirty_one_array = np.concatenate((self.sound_thirty,self.sound_silence,self.sound_one))
+        self.sound_thirty_one = pygame.sndarray.make_sound(self.sound_thirty_one_array)
+        self.sound_thirty_one.set_volume(1.0)
+
+        self.sound_thirty_two_array = np.concatenate((self.sound_thirty,self.sound_silence,self.sound_two))
+        self.sound_thirty_two = pygame.sndarray.make_sound(self.sound_thirty_two_array)
+        self.sound_thirty_two.set_volume(1.0)
+
+        self.sound_thirty_three_array = np.concatenate((self.sound_thirty,self.sound_silence,self.sound_three))
+        self.sound_thirty_three = pygame.sndarray.make_sound(self.sound_thirty_three_array)
+        self.sound_thirty_three.set_volume(1.0)
+
+        self.sound_thirty_four_array = np.concatenate((self.sound_thirty,self.sound_silence,self.sound_four))
+        self.sound_thirty_four = pygame.sndarray.make_sound(self.sound_thirty_four_array)
+        self.sound_thirty_four.set_volume(1.0)
+
+        self.sound_thirty_five_array = np.concatenate((self.sound_thirty,self.sound_silence,self.sound_five))
+        self.sound_thirty_five = pygame.sndarray.make_sound(self.sound_thirty_five_array)
+        self.sound_thirty_five.set_volume(1.0)
+
+        self.sound_thirty_six_array = np.concatenate((self.sound_thirty,self.sound_silence,self.sound_six))
+        self.sound_thirty_six = pygame.sndarray.make_sound(self.sound_thirty_six_array)
+        self.sound_thirty_six.set_volume(1.0)
+
+        self.sound_thirty_seven_array = np.concatenate((self.sound_thirty,self.sound_silence,self.sound_seven))
+        self.sound_thirty_seven = pygame.sndarray.make_sound(self.sound_thirty_seven_array)
+        self.sound_thirty_seven.set_volume(1.0)
+
+        self.sound_thirty_eight_array = np.concatenate((self.sound_thirty,self.sound_silence,self.sound_eight))
+        self.sound_thirty_eight = pygame.sndarray.make_sound(self.sound_thirty_eight_array)
+        self.sound_thirty_eight.set_volume(1.0)
+
+        self.sound_thirty_nine_array = np.concatenate((self.sound_thirty,self.sound_silence,self.sound_nine))
+        self.sound_thirty_nine = pygame.sndarray.make_sound(self.sound_thirty_nine_array)
+        self.sound_thirty_nine.set_volume(1.0)
 
         self.sound_forty = self.mixer.Sound(self.filepathsound_forty)
         self.sound_forty.set_volume(1.0)
-        self.sound_forty_array = pygame.sndarray.array(self.sound_forty)
+    
+        self.sound_forty_one_array = np.concatenate((self.sound_forty,self.sound_silence,self.sound_one))
+        self.sound_forty_one = pygame.sndarray.make_sound(self.sound_forty_one_array)
+        self.sound_forty_one.set_volume(1.0)
+
+        self.sound_forty_two_array = np.concatenate((self.sound_forty,self.sound_silence,self.sound_two))
+        self.sound_forty_two = pygame.sndarray.make_sound(self.sound_forty_two_array)
+        self.sound_forty_two.set_volume(1.0)
+
+        self.sound_forty_three_array = np.concatenate((self.sound_forty,self.sound_silence,self.sound_three))
+        self.sound_forty_three = pygame.sndarray.make_sound(self.sound_forty_three_array)
+        self.sound_forty_three.set_volume(1.0)
+
+        self.sound_forty_four_array = np.concatenate((self.sound_forty,self.sound_silence,self.sound_four))
+        self.sound_forty_four = pygame.sndarray.make_sound(self.sound_forty_four_array)
+        self.sound_forty_four.set_volume(1.0)
+
+        self.sound_forty_five_array = np.concatenate((self.sound_forty,self.sound_silence,self.sound_five))
+        self.sound_forty_five = pygame.sndarray.make_sound(self.sound_forty_five_array)
+        self.sound_forty_five.set_volume(1.0)
+
+        self.sound_forty_six_array = np.concatenate((self.sound_forty,self.sound_silence,self.sound_six))
+        self.sound_forty_six = pygame.sndarray.make_sound(self.sound_forty_six_array)
+        self.sound_forty_six.set_volume(1.0)
+
+        self.sound_forty_seven_array = np.concatenate((self.sound_forty,self.sound_silence,self.sound_seven))
+        self.sound_forty_seven = pygame.sndarray.make_sound(self.sound_forty_seven_array)
+        self.sound_forty_seven.set_volume(1.0)
+
+        self.sound_forty_eight_array = np.concatenate((self.sound_forty,self.sound_silence,self.sound_eight))
+        self.sound_forty_eight = pygame.sndarray.make_sound(self.sound_forty_eight_array)
+        self.sound_forty_eight.set_volume(1.0)
+
+        self.sound_forty_nine_array = np.concatenate((self.sound_forty,self.sound_silence,self.sound_nine))
+        self.sound_forty_nine = pygame.sndarray.make_sound(self.sound_forty_nine_array)
+        self.sound_forty_nine.set_volume(1.0)
 
         self.sound_fifty = self.mixer.Sound(self.filepathsound_fifty)
         self.sound_fifty.set_volume(1.0)
-        self.sound_fifty_array = pygame.sndarray.array(self.sound_fifty)
+        
+        self.sound_fifty_one_array = np.concatenate((self.sound_fifty,self.sound_silence,self.sound_one))
+        self.sound_fifty_one = pygame.sndarray.make_sound(self.sound_fifty_one_array)
+        self.sound_fifty_one.set_volume(1.0)
 
+        self.sound_fifty_two_array = np.concatenate((self.sound_fifty,self.sound_silence,self.sound_two))
+        self.sound_fifty_two = pygame.sndarray.make_sound(self.sound_fifty_two_array)
+        self.sound_fifty_two.set_volume(1.0)
+
+        self.sound_fifty_three_array = np.concatenate((self.sound_fifty,self.sound_silence,self.sound_three))
+        self.sound_fifty_three = pygame.sndarray.make_sound(self.sound_fifty_three_array)
+        self.sound_fifty_three.set_volume(1.0)
+
+        self.sound_fifty_four_array = np.concatenate((self.sound_fifty,self.sound_silence,self.sound_four))
+        self.sound_fifty_four = pygame.sndarray.make_sound(self.sound_fifty_four_array)
+        self.sound_fifty_four.set_volume(1.0)
+
+        self.sound_fifty_five_array = np.concatenate((self.sound_fifty,self.sound_silence,self.sound_five))
+        self.sound_fifty_five = pygame.sndarray.make_sound(self.sound_fifty_five_array)
+        self.sound_fifty_five.set_volume(1.0)
+
+        self.sound_fifty_six_array = np.concatenate((self.sound_fifty,self.sound_silence,self.sound_six))
+        self.sound_fifty_six = pygame.sndarray.make_sound(self.sound_fifty_six_array)
+        self.sound_fifty_six.set_volume(1.0)
+
+        self.sound_fifty_seven_array = np.concatenate((self.sound_fifty,self.sound_silence,self.sound_seven))
+        self.sound_fifty_seven = pygame.sndarray.make_sound(self.sound_fifty_seven_array)
+        self.sound_fifty_seven.set_volume(1.0)
+
+        self.sound_fifty_eight_array = np.concatenate((self.sound_fifty,self.sound_silence,self.sound_eight))
+        self.sound_fifty_eight = pygame.sndarray.make_sound(self.sound_fifty_eight_array)
+        self.sound_fifty_eight.set_volume(1.0)
+
+        self.sound_fifty_nine_array = np.concatenate((self.sound_fifty,self.sound_silence,self.sound_nine))
+        self.sound_fifty_nine = pygame.sndarray.make_sound(self.sound_fifty_nine_array)
+        self.sound_fifty_nine.set_volume(1.0)
+
+        self.playlist = [self.sound_silence, self.sound_silence, self.sound_silence, self.sound_silence, self.sound_silence, self.sound_silence]
+
+        self.soundlist = {
+            's': self.sound_silence,
+            'p': self.sound_point,
+            '0': self.sound_zero,
+            '1': self.sound_one,
+            '2': self.sound_two,
+            '3': self.sound_three,
+            '4': self.sound_four,
+            '5': self.sound_five,
+            '6': self.sound_six,
+            '7': self.sound_seven,
+            '8': self.sound_eight,
+            '9': self.sound_nine,
+            '10': self.sound_ten,
+            '11': self.sound_eleven,
+            '12': self.sound_twelve,
+            '13': self.sound_thirteen,
+            '14': self.sound_fourteen,
+            '15': self.sound_fifteen,
+            '16': self.sound_sixteen,
+            '17': self.sound_seventeen,
+            '18': self.sound_eighteen,
+            '19': self.sound_nineteen,
+            '20': self.sound_twenty,
+            '21': self.sound_twenty_one,
+            '22': self.sound_twenty_two,
+            '23': self.sound_twenty_three,
+            '24': self.sound_twenty_four,
+            '25': self.sound_twenty_five,
+            '26': self.sound_twenty_six,
+            '27': self.sound_twenty_seven,
+            '28': self.sound_twenty_eight,
+            '29': self.sound_twenty_nine,
+            '30': self.sound_thirty,
+            '31': self.sound_thirty_one,
+            '32': self.sound_thirty_two,
+            '33': self.sound_thirty_three,
+            '34': self.sound_thirty_four,
+            '35': self.sound_thirty_five,
+            '36': self.sound_thirty_six,
+            '37': self.sound_thirty_seven,
+            '38': self.sound_thirty_eight,
+            '39': self.sound_thirty_nine,
+            '40': self.sound_forty,
+            '41': self.sound_forty_one,
+            '42': self.sound_forty_two,
+            '43': self.sound_forty_three,
+            '44': self.sound_forty_four,
+            '45': self.sound_forty_five,
+            '46': self.sound_forty_six,
+            '47': self.sound_forty_seven,
+            '48': self.sound_forty_eight,
+            '49': self.sound_forty_nine,
+            '50': self.sound_fifty,
+            '51': self.sound_fifty_one,
+            '52': self.sound_fifty_two,
+            '53': self.sound_fifty_three,
+            '54': self.sound_fifty_four,
+            '55': self.sound_fifty_five,
+            '56': self.sound_fifty_six,
+            '57': self.sound_fifty_seven,
+            '58': self.sound_fifty_eight,
+            '59': self.sound_fifty_nine,
+            }
+
+    def playSoundLastLap(self):
+
+        if(laptimer.lastlapminutes==0):
+            self.playlist[0] = self.sound_silence
+        else:
+            self.playlist[0] = self.soundlist.get(str(laptimer.lastlapminutes))
+
+        self.playlist[1] = self.soundlist.get(str(laptimer.lastlapsecondsint))
+        self.playlist[2] = self.soundlist.get("p")
+        self.playlist[3] = self.soundlist.get(str(laptimer.lastlapmilliseconds1))
+        self.playlist[4] = self.soundlist.get(str(laptimer.lastlapmilliseconds2))
+        self.playlist[5] = self.soundlist.get(str(laptimer.lastlapmilliseconds3))
+        # self.playlist[0] = self.sound_one
+        # self.playlist[1] = self.sound_twenty_one
+        # self.playlist[2] = self.sound_point
+        # self.playlist[3] = self.sound_three
+        # self.playlist[4] = self.sound_three
+        # self.playlist[5] = self.sound_two
+        self.joinsounds = np.concatenate((self.playlist[0],self.playlist[1], self.playlist[2],self.playlist[3], self.playlist[4],self.playlist[5]), axis=0)
+        self.playsounds = pygame.sndarray.make_sound(self.joinsounds)
+        self.chan.play(self.playsounds)
 
     def playSound(self):
         """ join sounds to form laptime sound in container self.joinsounds format and copy to playback container self.playsounds then play thru channel in mixer."""
-        self.joinsounds = np.concatenate((self.sound_one, self.sound_twenty, self.sound_two,self.sound_point_array, self.sound_three,self.sound_three,self.sound_two), axis=0)
+        #self.listsounds = [self.sound_one, self.sound_twenty, self.sound_two,self.sound_point, self.sound_three,self.sound_three,self.sound_two]
+        self.joinsounds = np.concatenate((self.playlist[0],self.playlist[1], self.playlist[2],self.playlist[3], self.playlist[4],self.playlist[5],self.playlist[6]), axis=0)
         self.playsounds = pygame.sndarray.make_sound(self.joinsounds)
         self.chan.play(self.playsounds)
         #ac.console("playSound")
-
 
 class TimerClass:
     """ Controls time recording storage combination output of laptimes input to getTime() is milliseconds from siminfo class obj instance laptimer. """
@@ -420,8 +646,8 @@ class TimerClass:
 
     def updateTime(self,thelap,thetime1,thetime2,thetime3):
         self.currentlap = thelap
-        self.bestlapmilliseconds = thetime2
-        self.lastlapmilliseconds = thetime1
+        self.bestlapmilliseconds = thetime1
+        self.lastlapmilliseconds = thetime2
         self.currentlapmilliseconds = thetime3
 
     def getCurrentLap(self,):
@@ -436,9 +662,11 @@ class TimerClass:
                 self.bestlapmilliseconds1 = str(self.bestlapmillisecondsStr[-3:-2])
                 self.bestlapmilliseconds2 = str(self.bestlapmillisecondsStr[-2:-1])
                 self.bestlapmilliseconds3 = str(self.bestlapmillisecondsStr[-1])
-                if(self.bestlapsecondsint <10 ):
-                    return "{0}:0{1}:{2}{3}{4}".format(self.bestlapminutes,self.bestlapsecondsint,self.bestlapmilliseconds1,self.bestlapmilliseconds2,self.bestlapmilliseconds3)
+                if(self.bestlapsecondsint<10):
+                    insertzeroatminutes = "0{0}".format(self.bestlapsecondsint)
+                    return "{0}:{1}:{2}{3}{4}".format(self.bestlapminutes,insertzeroatminutes,self.bestlapmilliseconds1,self.bestlapmilliseconds2,self.bestlapmilliseconds3)
                 else:
+                    self.bestlapsecondsint = int((self.bestlapmilliseconds/1000) - (self.bestlapminutes*60))
                     return "{0}:{1}:{2}{3}{4}".format(self.bestlapminutes,self.bestlapsecondsint,self.bestlapmilliseconds1,self.bestlapmilliseconds2,self.bestlapmilliseconds3)
             else:
                 self.bestlapminutes = int((self.bestlapmilliseconds/1000)/60)
@@ -447,7 +675,12 @@ class TimerClass:
                 self.bestlapmilliseconds1 = str(self.bestlapmillisecondsStr[-3:-2])
                 self.bestlapmilliseconds2 = str(self.bestlapmillisecondsStr[-2:-1])
                 self.bestlapmilliseconds3 = str(self.bestlapmillisecondsStr[-1])
-                return "{0}:{1}:{2}{3}{4}".format(self.bestlapminutes,self.bestlapsecondsint,self.bestlapmilliseconds1,self.bestlapmilliseconds2,self.bestlapmilliseconds3)
+                if(self.bestlapsecondsint<10):
+                    insertzeroatminutes = "0{0}".format(self.bestlapsecondsint)
+                    return "{0}:{1}:{2}{3}{4}".format(self.bestlapminutes,insertzeroatminutes,self.bestlapmilliseconds1,self.bestlapmilliseconds2,self.bestlapmilliseconds3)
+                else:
+                    self.bestlapsecondsint = int((self.bestlapmilliseconds/1000) - (self.bestlapminutes*60))
+                    return "{0}:{1}:{2}{3}{4}".format(self.bestlapminutes,self.bestlapsecondsint,self.bestlapmilliseconds1,self.bestlapmilliseconds2,self.bestlapmilliseconds3)
         else:
             return "-:--:---"
 
@@ -460,7 +693,12 @@ class TimerClass:
                 self.lastlapmilliseconds1 = str(self.lastlapmillisecondsStr[-3:-2])
                 self.lastlapmilliseconds2 = str(self.lastlapmillisecondsStr[-2:-1])
                 self.lastlapmilliseconds3 = str(self.lastlapmillisecondsStr[-1])
-                return "{0}:{1}:{2}{3}{4}".format(self.lastlapminutes,self.lastlapsecondsint,self.lastlapmilliseconds1,self.lastlapmilliseconds2,self.lastlapmilliseconds3)
+                if(self.lastlapsecondsint<10):
+                    insertzeroatminutes = "0{0}".format(self.lastlapsecondsint)
+                    return "{0}:{1}:{2}{3}{4}".format(self.lastlapminutes,insertzeroatminutes,self.lastlapmilliseconds1,self.lastlapmilliseconds2,self.lastlapmilliseconds3)
+                else:
+                    self.lastlapsecondsint = int((self.lastlapmilliseconds/1000) - (self.lastlapminutes*60))
+                    return "{0}:{1}:{2}{3}{4}".format(self.lastlapminutes,self.lastlapsecondsint,self.lastlapmilliseconds1,self.lastlapmilliseconds2,self.lastlapmilliseconds3)
             else:
                 self.lastlapminutes = int((self.lastlapmilliseconds/1000)/60)
                 self.lastlapsecondsint = int((self.lastlapmilliseconds/1000) - (self.lastlapminutes*60))
@@ -468,7 +706,12 @@ class TimerClass:
                 self.lastlapmilliseconds1 = str(self.lastlapmillisecondsStr[-3:-2])
                 self.lastlapmilliseconds2 = str(self.lastlapmillisecondsStr[-2:-1])
                 self.lastlapmilliseconds3 = str(self.lastlapmillisecondsStr[-1])
-                return "{0}:{1}:{2}{3}{4}".format(self.lastlapminutes,self.lastlapsecondsint,self.lastlapmilliseconds1,self.lastlapmilliseconds2,self.lastlapmilliseconds3)
+                if(self.lastlapsecondsint<10):
+                    insertzeroatminutes = "0{0}".format(self.lastlapsecondsint)
+                    return "{0}:{1}:{2}{3}{4}".format(self.lastlapminutes,insertzeroatminutes,self.lastlapmilliseconds1,self.lastlapmilliseconds2,self.lastlapmilliseconds3)
+                else:
+                    self.lastlapsecondsint = int((self.lastlapmilliseconds/1000) - (self.lastlapminutes*60))
+                    return "{0}:{1}:{2}{3}{4}".format(self.lastlapminutes,self.lastlapsecondsint,self.lastlapmilliseconds1,self.lastlapmilliseconds2,self.lastlapmilliseconds3)
         else:
             return "-:--:---"
 
@@ -482,9 +725,11 @@ class TimerClass:
                 self.currentlapmilliseconds2 = str(self.currentlapmillisecondsStr[-2:-1])
                 self.currentlapmilliseconds3 = str(self.currentlapmillisecondsStr[-1])
                 #return "{0}:{1}:{2}{3}{4}".format(self.currentlapminutes,self.currentlapsecondsint,self.currentlapmilliseconds1,self.currentlapmilliseconds2,self.currentlapmilliseconds3)
-                if(self.currentlapsecondsint <10 ):
-                    return "{0}:0{1}:{2}{3}{4}".format(self.currentlapminutes,self.currentlapsecondsint,self.currentlapmilliseconds1,self.currentlapmilliseconds2,self.currentlapmilliseconds3)
+                if(self.currentlapsecondsint<10):
+                    insertzeroatminutes = "0{0}".format(self.currentlapsecondsint)
+                    return "{0}:{1}:{2}{3}{4}".format(self.currentlapminutes,insertzeroatminutes,self.currentlapmilliseconds1,self.currentlapmilliseconds2,self.currentlapmilliseconds3)
                 else:
+                    self.currentlapsecondsint = int((self.currentlapmilliseconds/1000) - (self.currentlapminutes*60))
                     return "{0}:{1}:{2}{3}{4}".format(self.currentlapminutes,self.currentlapsecondsint,self.currentlapmilliseconds1,self.currentlapmilliseconds2,self.currentlapmilliseconds3)
             else:
                 self.currentlapminutes = int((self.currentlapmilliseconds/1000)/60)
@@ -493,7 +738,14 @@ class TimerClass:
                 self.currentlapmilliseconds1 = str(self.currentlapmillisecondsStr[-3:-2])
                 self.currentlapmilliseconds2 = str(self.currentlapmillisecondsStr[-2:-1])
                 self.currentlapmilliseconds3 = str(self.currentlapmillisecondsStr[-1])
-                return "{0}:{1}:{2}{3}{4}".format(self.currentlapminutes,self.currentlapsecondsint,self.currentlapmilliseconds1,self.currentlapmilliseconds2,self.currentlapmilliseconds3)
+                #self.currentlapsecondsint = int((self.currentlapmilliseconds/1000) - (self.currentlapminutes*60))
+                insertzero = 0
+                if(self.currentlapsecondsint<10):
+                    insertzeroatminutes = "0{0}".format(self.currentlapsecondsint)
+                    return "{0}:{1}:{2}{3}{4}".format(self.currentlapminutes,insertzeroatminutes,self.currentlapmilliseconds1,self.currentlapmilliseconds2,self.currentlapmilliseconds3)
+                else:
+                    self.currentlapsecondsint = int((self.currentlapmilliseconds/1000) - (self.currentlapminutes*60))
+                    return "{0}:{1}:{2}{3}{4}".format(self.currentlapminutes,self.currentlapsecondsint,self.currentlapmilliseconds1,self.currentlapmilliseconds2,self.currentlapmilliseconds3)
         else:
             return "-:--:---"
 
@@ -506,7 +758,6 @@ class DisplayClass:
         self.lasttimelabel = 0
         self.currenttimelabel = 0
 
-
 #---------------------------------------------------------
 # declare class instance objects
 
@@ -514,6 +765,7 @@ infosystem = SimInfo()
 soundsystem = SoundClass()
 laptimer = TimerClass()
 mInfoDisplay = DisplayClass()
+
 #---------------------------------------------------------
 
 def acMain(ac_version):
@@ -549,34 +801,25 @@ def acMain(ac_version):
     return "mInfo"
 
 def acUpdate(deltaT):
-    """main loop."""
-
-    # """ only update lap once and play sound once required as we are in a loop."""
-    soundsystem.hasplayed = 0
+    """main loop.only update lap once and play sound once required as we are in a loop."""
+    soundsystem.hasplayedLastLap = 0
     if (laptimer.completedlaps < laptimer.currentlap):
         laptimer.completedlaps = laptimer.currentlap
-        soundsystem.hasplayed = 1
-        if(soundsystem.hasplayed==1):
+        soundsystem.hasplayedLastLap = 1
+        if(soundsystem.hasplayedLastLap==1):
             #ac.console(laptimer.getLastLapTime())
-            soundsystem.playSound()
-            soundsystem.hasplayed = 0
-
-    """update timer."""
+            #laptimer.updateTime(infosystem.graphics.completedLaps,infosystem.graphics.iBestTime,infosystem.graphics.iLastTime, infosystem.graphics.iCurrentTime)
+            #laptimer.getLastLapTime()
+            soundsystem.playSoundLastLap()
+            soundsystem.hasplayedLastLap = 0
     laptimer.updateTime(infosystem.graphics.completedLaps,infosystem.graphics.iBestTime,infosystem.graphics.iLastTime, infosystem.graphics.iCurrentTime)
 
 def onFormRender(deltaT):
     """only update app when app form is visible then update only the following note call back method for this function defined in acMain above."""
-    #global appWindow
-    global besttimelabel
-    global besttimeset
-    global lasttimelabel
-    global currenttimelabel
-    global currenttimeset
     ac.setText(mInfoDisplay.currentlaplabel, "current lap : {0}".format(laptimer.getCurrentLap()))
     ac.setText(mInfoDisplay.besttimelabel, "best time : {0}".format(laptimer.getBestLapTime()))
     ac.setText(mInfoDisplay.lasttimelabel, "last time : {0}".format(laptimer.getLastLapTime()))
     ac.setText(mInfoDisplay.currenttimelabel, "current time : {0}".format(laptimer.getCurrentLapTime()))
-
 
 def acShutdown():
     """on shut down quit pygame so no crash or lockup."""
