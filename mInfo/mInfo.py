@@ -367,11 +367,13 @@ class SoundClass:
             self.playlist[0] = self.sound_silence
             self.playlist[1] = self.sound_silence
         else:
-            self.playlist[0] = self.soundlist.get(str(laptimer.lastlapminutes))
-            self.playlist[1] = self.soundlist.get("m")
-            if(laptimer.lastlapminutes==0 or 1):
+            # self.playlist[0] = self.soundlist.get(str(laptimer.lastlapminutes))
+            # self.playlist[1] = self.soundlist.get("m")
+            if(laptimer.lastlapminutes == 1):
+                self.playlist[0] = self.soundlist.get(str(laptimer.lastlapminutes))
                 self.playlist[1] = self.soundlist.get("m")
             else:
+                self.playlist[0] = self.soundlist.get(str(laptimer.lastlapminutes))
                 self.playlist[1] = self.soundlist.get("ms")
         self.playlist[2] = self.soundlist.get(str(laptimer.lastlapsecondsint))
         self.playlist[3] = self.soundlist.get("p")
@@ -437,8 +439,8 @@ class TimerClass:
         self.currentlapmilliseconds = thetime3
 
     def getCurrentLap(self,):
-        #return self.currentlap
-        return str(self.currentlap) + " " + str(self.completedlaps)
+        return self.currentlap
+        #return str(self.currentlap) + " " + str(self.completedlaps)
 
     def getBestLapTime(self,):
         if(self.bestlapmilliseconds):
