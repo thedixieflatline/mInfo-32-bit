@@ -66,6 +66,10 @@ class SoundClass:
         self.filepathsound_silence = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_silence.wav')
         self.sound_point = None
         self.filepathsound_point = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_point.wav')
+        self.sound_minute = None
+        self.filepathsound_minute = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_minute.wav')
+        self.sound_minutes = None
+        self.filepathsound_minutes = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_minutes.wav')
         self.sound_zero = None
         self.filepathsound_zero = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_zero.wav')
         self.sound_one = None
@@ -130,6 +134,10 @@ class SoundClass:
         self.sound_silence.set_volume(1.0)
         self.sound_point = self.mixer.Sound(self.filepathsound_point)
         self.sound_point.set_volume(1.0)
+        self.sound_minute = self.mixer.Sound(self.filepathsound_minute)
+        self.sound_minute.set_volume(1.0)
+        self.sound_minutes = self.mixer.Sound(self.filepathsound_minutes)
+        self.sound_minutes.set_volume(1.0)
         self.sound_zero = self.mixer.Sound(self.filepathsound_zero)
         self.sound_zero.set_volume(1.0)
         self.sound_one = self.mixer.Sound(self.filepathsound_one)
@@ -286,10 +294,12 @@ class SoundClass:
         self.sound_fifty_nine_array = np.concatenate((self.sound_fifty,self.sound_silence,self.sound_nine))
         self.sound_fifty_nine = pygame.sndarray.make_sound(self.sound_fifty_nine_array)
         self.sound_fifty_nine.set_volume(1.0)
-        self.playlist = [self.sound_silence, self.sound_silence, self.sound_silence, self.sound_silence, self.sound_silence, self.sound_silence]
+        self.playlist = [self.sound_silence,self.sound_silence, self.sound_silence, self.sound_silence, self.sound_silence, self.sound_silence, self.sound_silence]
         self.soundlist = {
             's': self.sound_silence,
             'p': self.sound_point,
+            'm': self.sound_minute,
+            'ms': self.sound_minutes,
             '0': self.sound_zero,
             '1': self.sound_one,
             '2': self.sound_two,
@@ -359,18 +369,23 @@ class SoundClass:
         else:
             self.playlist[0] = self.soundlist.get(str(laptimer.lastlapminutes))
 
-        self.playlist[1] = self.soundlist.get(str(laptimer.lastlapsecondsint))
-        self.playlist[2] = self.soundlist.get("p")
-        self.playlist[3] = self.soundlist.get(str(laptimer.lastlapmilliseconds1))
-        self.playlist[4] = self.soundlist.get(str(laptimer.lastlapmilliseconds2))
-        self.playlist[5] = self.soundlist.get(str(laptimer.lastlapmilliseconds3))
+        if(laptimer.lastlapsecondsint<10):
+            self.playlist[1] = self.soundlist.get("m")
+        else:
+            self.playlist[1] = self.soundlist.get("ms")
+
+        self.playlist[2] = self.soundlist.get(str(laptimer.lastlapsecondsint))
+        self.playlist[3] = self.soundlist.get("p")
+        self.playlist[4] = self.soundlist.get(str(laptimer.lastlapmilliseconds1))
+        self.playlist[5] = self.soundlist.get(str(laptimer.lastlapmilliseconds2))
+        self.playlist[6] = self.soundlist.get(str(laptimer.lastlapmilliseconds3))
         # self.playlist[0] = self.sound_one
         # self.playlist[1] = self.sound_twenty_one
         # self.playlist[2] = self.sound_point
         # self.playlist[3] = self.sound_three
         # self.playlist[4] = self.sound_three
         # self.playlist[5] = self.sound_two
-        self.joinsounds = np.concatenate((self.playlist[0],self.playlist[1], self.playlist[2],self.playlist[3], self.playlist[4],self.playlist[5]), axis=0)
+        self.joinsounds = np.concatenate((self.playlist[0],self.playlist[1], self.playlist[2],self.playlist[3], self.playlist[4],self.playlist[5], self.playlist[6]), axis=0)
         self.playsounds = pygame.sndarray.make_sound(self.joinsounds)
         self.chan.play(self.playsounds)
 
@@ -545,8 +560,6 @@ class DisplayClass:
         self.enabledisable = True
 
 
-
-
 #------------------------------------------------------------------------------------------------------------------------------------------
 # SIM INFO by @Rombik
 # Big thanks to @Rombik who wrote this sim info  module. Saved me maybe a week of thrashing to get it going and testing
@@ -704,7 +717,6 @@ laptimer = TimerClass()
 mInfoDisplay = DisplayClass()
 
 #---------------------------------------------------------
-
 
 def acMain(ac_version):
     """main init function which runs on game startup."""
