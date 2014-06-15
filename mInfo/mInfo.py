@@ -1,21 +1,25 @@
 # mInfo ver 0.75  June 2014
-#
 # GitHub Page: https://github.com/thedixieflatline/assettocorsa
 #
 # To activate copy mInfo folder to C:\Program Files (x86)\Steam\steamapps\common\assettocorsa\apps\python
-#
+# 
 # Motorheadz present mInfo an app for the game Assetto Corsa.
 # Allowing compiling sequence of sounds then playback of wave files of speech or sounds in the game as alerts or reports
 # First alert developed is lap times for players car as they cross the line.
 #
 # App developed by David Trenear
 # Additional Testing by Jason Madigan and Tyson Cierpial
-# Big thanks to whoever wrote the sim info  module. Saved me maybe a week of thrashing to get shared memory it going and testing
-# Contact me so I can give thanks and acknowledge you on the Assetto Corsa forums and in the credits
+# Big thanks to Rombik who wrote the original sim info  module.
 #
 # This is an alpha proof of concept if people like it I will develop this concept further.
 # Please submit bugs or requests to the Assetto Corsa forum
 # http://www.assettocorsa.net/forum/index.php
+#
+# TODO Need to do a better recording on the audio to sweeten it, make timing and volume more consistent. It sounds bad because I recorded on a headphone mic as a test so next version will be a nice microphone.
+# TODO clean up some of the code to be more efficent. Add ability for config fie to remember settings.
+# TODO add additional languages and voice sets and volume control
+# TODO Review code and refactor when the game is released and python API and or shared memory is ver 1.0
+# TODO Perhaps add more features, report other drivers times, fuel report, temp warnings, average speed, lap countdowns  etc
 #
 # TODO Need to do a better recording on the audio to sweeten it, make timing and volume more consistent. It sounds bad because I recorded on a headphone mic as a test so next version will be a nice microphone.
 # TODO clean up some of the code to be more efficent. Create enable/disable switch. Add ability for config fie to remember settings.
@@ -513,6 +517,22 @@ class TimerClass:
         else:
             return "-:--:---"
 
+# Checkbox container and callback
+#Have to have it like this for now cannot get the callback to work as a class member
+checkboxContainer=0
+def checkboxEvent(x,y):
+    global checkboxContainer
+    if(mInfoDisplay.enabledisable):
+        mInfoDisplay.enabledisable = False
+        ac.setText(mInfoDisplay.checkboxlabel, "Disabled")
+        ac.setFontColor(mInfoDisplay.checkboxlabel, 1.0, 0.0, 0.0, 1)
+        #ac.console(str(mInfoDisplay.enabledisable)+":disable")
+    else:
+        mInfoDisplay.enabledisable = True
+        ac.setText(mInfoDisplay.checkboxlabel, "Enabled")
+        ac.setFontColor(mInfoDisplay.checkboxlabel, 0.0, 1.0, 0.1, 1)
+        #ac.console(str(mInfoDisplay.enabledisable)+":enabled")
+
 class DisplayClass:
     """eventually move all of the display elements into this class like labels buttons and settings """
     def __init__(self,):
@@ -521,12 +541,15 @@ class DisplayClass:
         self.besttimelabel = 0
         self.lasttimelabel = 0
         self.currenttimelabel = 0
-        self.enabledisablecheckbox = 0
+        self.checkboxlabel = 0
+        self.enabledisable = True
+
+
+
 
 #------------------------------------------------------------------------------------------------------------------------------------------
-# SIM INFO
-# Big thanks to whoever wrote this sim info  module. Saved me maybe a week of thrashing to get it going and testing
-# Contact me so I can give thanks and acknowledge you on the assetto corsa forums and in the credits
+# SIM INFO by @Rombik
+# Big thanks to @Rombik who wrote this sim info  module. Saved me maybe a week of thrashing to get it going and testing
 # I adapted to run internally and not as a module. Also temporarily switched off what I do not need from shared memory link at the moment
 # This following set of variables and class setup the reading of shared memore with the game which enables us to get correct vales
 # that are currently not working in the python API, namely the last lap times
@@ -685,31 +708,39 @@ mInfoDisplay = DisplayClass()
 
 def acMain(ac_version):
     """main init function which runs on game startup."""
-    def foo():
-        ac.console("foo")
+    global checkboxContainer
     mInfoDisplay.appWindow = ac.newApp("mInfo")
     ac.addRenderCallback(mInfoDisplay.appWindow, onFormRender)
     ac.setSize(mInfoDisplay.appWindow, 220, 180)
 
     mInfoDisplay.currentlaplabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-    ac.setPosition(mInfoDisplay.currentlaplabel, 49, 62)
+    ac.setPosition(mInfoDisplay.currentlaplabel, 50, 60)
     ac.setFontColor(mInfoDisplay.currentlaplabel, 1.0, 1.0, 1.0, 1)
     ac.setFontAlignment(mInfoDisplay.currentlaplabel,'left')
 
     mInfoDisplay.besttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-    ac.setPosition(mInfoDisplay.besttimelabel, 59, 82)
+    ac.setPosition(mInfoDisplay.besttimelabel, 60, 80)
     ac.setFontColor(mInfoDisplay.besttimelabel, 1.0, 1.0, 1.0, 1)
     ac.setFontAlignment(mInfoDisplay.besttimelabel,'left')
 
     mInfoDisplay.lasttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-    ac.setPosition(mInfoDisplay.lasttimelabel, 65, 102)
+    ac.setPosition(mInfoDisplay.lasttimelabel, 65, 96)
     ac.setFontColor(mInfoDisplay.lasttimelabel, 1.0, 1.0, 1.0, 1)
     ac.setFontAlignment(mInfoDisplay.lasttimelabel,'left')
 
     mInfoDisplay.currenttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-    ac.setPosition(mInfoDisplay.currenttimelabel, 40, 122)
+    ac.setPosition(mInfoDisplay.currenttimelabel, 41, 116)
     ac.setFontColor(mInfoDisplay.currenttimelabel, 1.0, 1.0, 1.0, 1)
     ac.setFontAlignment(mInfoDisplay.currenttimelabel,'left')
+
+    checkboxContainer = ac.addCheckBox(mInfoDisplay.appWindow, "")
+    ac.setPosition(checkboxContainer, 8, 148)
+    ac.addOnCheckBoxChanged(checkboxContainer,checkboxEvent)
+
+    mInfoDisplay.checkboxlabel = ac.addLabel(mInfoDisplay.appWindow, "Enabled")
+    ac.setPosition(mInfoDisplay.checkboxlabel, 44, 148)
+    ac.setFontColor(mInfoDisplay.checkboxlabel, 0.0, 1.0, 0.1, 1)
+    ac.setFontAlignment(mInfoDisplay.checkboxlabel,'left')
 
     ac.setBackgroundTexture(mInfoDisplay.appWindow, "apps/python/mInfo/images/mInfoBackground.png")
 
@@ -719,22 +750,34 @@ def acMain(ac_version):
 
 def acUpdate(deltaT):
     """main loop.only update lap once and play sound once required as we are in a loop."""
-    global foo
-    soundsystem.hasplayedLastLap = 0
-    if (laptimer.completedlaps < laptimer.currentlap):
-        laptimer.completedlaps = laptimer.currentlap
-        soundsystem.hasplayedLastLap = 1
-        if(soundsystem.hasplayedLastLap==1):
-            #ac.console(laptimer.getLastLapTime())
-            #laptimer.updateTime(infosystem.graphics.completedLaps,infosystem.graphics.iBestTime,infosystem.graphics.iLastTime, infosystem.graphics.iCurrentTime)
-            #laptimer.getLastLapTime()
-            soundsystem.playSoundLastLap()
-            soundsystem.hasplayedLastLap = 0
-    laptimer.updateTime(infosystem.graphics.completedLaps,infosystem.graphics.iBestTime,infosystem.graphics.iLastTime, infosystem.graphics.iCurrentTime)
+    global checkboxContainer
+    if(mInfoDisplay.enabledisable):
+        soundsystem.hasplayedLastLap = 0
+        if (laptimer.completedlaps < laptimer.currentlap):
+            laptimer.completedlaps = laptimer.currentlap
+            soundsystem.hasplayedLastLap = 1
+            if(soundsystem.hasplayedLastLap==1):
+                #ac.console(laptimer.getLastLapTime())
+                #laptimer.getLastLapTime()
+                soundsystem.playSoundLastLap()
+                soundsystem.hasplayedLastLap = 0
+        laptimer.updateTime(infosystem.graphics.completedLaps,infosystem.graphics.iBestTime,infosystem.graphics.iLastTime, infosystem.graphics.iCurrentTime)
+    else:
+        ac.setFontColor(mInfoDisplay.currentlaplabel, 1.0, 0.0, 0.0, 1)
+        ac.setFontColor(mInfoDisplay.besttimelabel, 1.0, 0.0, 0.0, 1)
+        ac.setFontColor(mInfoDisplay.lasttimelabel, 1.0, 0.0, 0.0, 1)
+        ac.setFontColor(mInfoDisplay.currenttimelabel, 1.0, 0.0, 0.0, 1)
+        ac.setText(mInfoDisplay.currentlaplabel, "current lap : -")
+        ac.setText(mInfoDisplay.besttimelabel, "best time : -:--:---")
+        ac.setText(mInfoDisplay.lasttimelabel, "last time : -:--:---")
+        ac.setText(mInfoDisplay.currenttimelabel, "current time : -:--:---")
 
 def onFormRender(deltaT):
     """only update app when app form is visible then update only the following note call back method for this function defined in acMain above."""
-    global foo
+    ac.setFontColor(mInfoDisplay.currentlaplabel, 1.0, 1.0, 1.0, 1)
+    ac.setFontColor(mInfoDisplay.besttimelabel, 1.0, 1.0, 1.0, 1)
+    ac.setFontColor(mInfoDisplay.lasttimelabel, 1.0, 1.0, 1.0, 1)
+    ac.setFontColor(mInfoDisplay.currenttimelabel, 1.0, 1.0, 1.0, 1)
     ac.setText(mInfoDisplay.currentlaplabel, "current lap : {0}".format(laptimer.getCurrentLap()))
     ac.setText(mInfoDisplay.besttimelabel, "best time : {0}".format(laptimer.getBestLapTime()))
     ac.setText(mInfoDisplay.lasttimelabel, "last time : {0}".format(laptimer.getLastLapTime()))
