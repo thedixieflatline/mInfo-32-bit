@@ -294,7 +294,7 @@ class SoundClass:
         self.sound_fifty_nine_array = np.concatenate((self.sound_fifty,self.sound_silence,self.sound_nine))
         self.sound_fifty_nine = pygame.sndarray.make_sound(self.sound_fifty_nine_array)
         self.sound_fifty_nine.set_volume(1.0)
-        self.playlist = [self.sound_silence,self.sound_silence, self.sound_silence, self.sound_silence, self.sound_silence, self.sound_silence, self.sound_silence]
+        self.playlist = [self.sound_point,self.sound_point, self.sound_point, self.sound_point, self.sound_point, self.sound_point, self.sound_point]
         self.soundlist = {
             's': self.sound_silence,
             'p': self.sound_point,
@@ -363,31 +363,32 @@ class SoundClass:
             }
 
     def playSoundLastLap(self):
-
         if(laptimer.lastlapminutes==0):
             self.playlist[0] = self.sound_silence
+            self.playlist[1] = self.sound_silence
         else:
             self.playlist[0] = self.soundlist.get(str(laptimer.lastlapminutes))
-
-        if(laptimer.lastlapsecondsint<10):
             self.playlist[1] = self.soundlist.get("m")
-        else:
-            self.playlist[1] = self.soundlist.get("ms")
-
+            if(laptimer.lastlapminutes==0 or 1):
+                self.playlist[1] = self.soundlist.get("m")
+            else:
+                self.playlist[1] = self.soundlist.get("ms")
         self.playlist[2] = self.soundlist.get(str(laptimer.lastlapsecondsint))
         self.playlist[3] = self.soundlist.get("p")
         self.playlist[4] = self.soundlist.get(str(laptimer.lastlapmilliseconds1))
         self.playlist[5] = self.soundlist.get(str(laptimer.lastlapmilliseconds2))
         self.playlist[6] = self.soundlist.get(str(laptimer.lastlapmilliseconds3))
         # self.playlist[0] = self.sound_one
-        # self.playlist[1] = self.sound_twenty_one
-        # self.playlist[2] = self.sound_point
-        # self.playlist[3] = self.sound_three
+        # self.playlist[1] = self.sound_minute
+        # self.playlist[2] = self.sound_twenty_one
+        # self.playlist[3] = self.sound_point
         # self.playlist[4] = self.sound_three
-        # self.playlist[5] = self.sound_two
+        # self.playlist[5] = self.sound_three
+        # self.playlist[6] = self.sound_two
         self.joinsounds = np.concatenate((self.playlist[0],self.playlist[1], self.playlist[2],self.playlist[3], self.playlist[4],self.playlist[5], self.playlist[6]), axis=0)
         self.playsounds = pygame.sndarray.make_sound(self.joinsounds)
         self.chan.play(self.playsounds)
+
 
     def playSound(self):
         """ join sounds to form laptime sound in container self.joinsounds format and copy to playback container self.playsounds then play thru channel in mixer."""
@@ -402,7 +403,6 @@ class TimerClass:
 
         self.currentlap = 0
         self.completedlaps = 0
-
         self.bestlapminutes = 0.0
         self.bestlapsecondsint = 0.0
         self.bestlapmilliseconds = 0.0
@@ -410,6 +410,7 @@ class TimerClass:
         self.bestlapmilliseconds1 = ""
         self.bestlapmilliseconds2 = ""
         self.bestlapmilliseconds3 = ""
+        self.insertzeroatminutesbest = ""
 
         self.lastlapminutes = 0.0
         self.lastlapsecondsint = 0.0
@@ -418,6 +419,7 @@ class TimerClass:
         self.lastlapmilliseconds1 = ""
         self.lastlapmilliseconds2 = ""
         self.lastlapmilliseconds3 = ""
+        self.insertzeroatminuteslast = ""
 
         self.currentlapminutes = 0.0
         self.currentlapsecondsint = 0.0
@@ -426,6 +428,7 @@ class TimerClass:
         self.currentlapmilliseconds1 = "0"
         self.currentlapmilliseconds2 = "0"
         self.currentlapmilliseconds3 = "0"
+        self.insertzeroatminutescurrent = ""
 
     def updateTime(self,thelap,thetime1,thetime2,thetime3):
         self.currentlap = thelap
@@ -434,7 +437,8 @@ class TimerClass:
         self.currentlapmilliseconds = thetime3
 
     def getCurrentLap(self,):
-        return self.currentlap
+        #return self.currentlap
+        return str(self.currentlap) + " " + str(self.completedlaps)
 
     def getBestLapTime(self,):
         if(self.bestlapmilliseconds):
@@ -446,8 +450,8 @@ class TimerClass:
                 self.bestlapmilliseconds2 = str(self.bestlapmillisecondsStr[-2:-1])
                 self.bestlapmilliseconds3 = str(self.bestlapmillisecondsStr[-1])
                 if(self.bestlapsecondsint<10):
-                    insertzeroatminutes = "0{0}".format(self.bestlapsecondsint)
-                    return "{0}:{1}:{2}{3}{4}".format(self.bestlapminutes,insertzeroatminutes,self.bestlapmilliseconds1,self.bestlapmilliseconds2,self.bestlapmilliseconds3)
+                    self.insertzeroatminutesbest = "0{0}".format(self.bestlapsecondsint)
+                    return "{0}:{1}:{2}{3}{4}".format(self.bestlapminutes,self.insertzeroatminutesbest,self.bestlapmilliseconds1,self.bestlapmilliseconds2,self.bestlapmilliseconds3)
                 else:
                     self.bestlapsecondsint = int((self.bestlapmilliseconds/1000) - (self.bestlapminutes*60))
                     return "{0}:{1}:{2}{3}{4}".format(self.bestlapminutes,self.bestlapsecondsint,self.bestlapmilliseconds1,self.bestlapmilliseconds2,self.bestlapmilliseconds3)
@@ -459,8 +463,8 @@ class TimerClass:
                 self.bestlapmilliseconds2 = str(self.bestlapmillisecondsStr[-2:-1])
                 self.bestlapmilliseconds3 = str(self.bestlapmillisecondsStr[-1])
                 if(self.bestlapsecondsint<10):
-                    insertzeroatminutes = "0{0}".format(self.bestlapsecondsint)
-                    return "{0}:{1}:{2}{3}{4}".format(self.bestlapminutes,insertzeroatminutes,self.bestlapmilliseconds1,self.bestlapmilliseconds2,self.bestlapmilliseconds3)
+                    self.insertzeroatminutesbest = "0{0}".format(self.bestlapsecondsint)
+                    return "{0}:{1}:{2}{3}{4}".format(self.bestlapminutes,self.insertzeroatminutesbest,self.bestlapmilliseconds1,self.bestlapmilliseconds2,self.bestlapmilliseconds3)
                 else:
                     self.bestlapsecondsint = int((self.bestlapmilliseconds/1000) - (self.bestlapminutes*60))
                     return "{0}:{1}:{2}{3}{4}".format(self.bestlapminutes,self.bestlapsecondsint,self.bestlapmilliseconds1,self.bestlapmilliseconds2,self.bestlapmilliseconds3)
@@ -477,8 +481,8 @@ class TimerClass:
                 self.lastlapmilliseconds2 = str(self.lastlapmillisecondsStr[-2:-1])
                 self.lastlapmilliseconds3 = str(self.lastlapmillisecondsStr[-1])
                 if(self.lastlapsecondsint<10):
-                    insertzeroatminutes = "0{0}".format(self.lastlapsecondsint)
-                    return "{0}:{1}:{2}{3}{4}".format(self.lastlapminutes,insertzeroatminutes,self.lastlapmilliseconds1,self.lastlapmilliseconds2,self.lastlapmilliseconds3)
+                    self.insertzeroatminuteslast = "0{0}".format(self.lastlapsecondsint)
+                    return "{0}:{1}:{2}{3}{4}".format(self.lastlapminutes,self.insertzeroatminuteslast,self.lastlapmilliseconds1,self.lastlapmilliseconds2,self.lastlapmilliseconds3)
                 else:
                     self.lastlapsecondsint = int((self.lastlapmilliseconds/1000) - (self.lastlapminutes*60))
                     return "{0}:{1}:{2}{3}{4}".format(self.lastlapminutes,self.lastlapsecondsint,self.lastlapmilliseconds1,self.lastlapmilliseconds2,self.lastlapmilliseconds3)
@@ -490,8 +494,8 @@ class TimerClass:
                 self.lastlapmilliseconds2 = str(self.lastlapmillisecondsStr[-2:-1])
                 self.lastlapmilliseconds3 = str(self.lastlapmillisecondsStr[-1])
                 if(self.lastlapsecondsint<10):
-                    insertzeroatminutes = "0{0}".format(self.lastlapsecondsint)
-                    return "{0}:{1}:{2}{3}{4}".format(self.lastlapminutes,insertzeroatminutes,self.lastlapmilliseconds1,self.lastlapmilliseconds2,self.lastlapmilliseconds3)
+                    self.insertzeroatminuteslast = "0{0}".format(self.lastlapsecondsint)
+                    return "{0}:{1}:{2}{3}{4}".format(self.lastlapminutes,self.insertzeroatminuteslast,self.lastlapmilliseconds1,self.lastlapmilliseconds2,self.lastlapmilliseconds3)
                 else:
                     self.lastlapsecondsint = int((self.lastlapmilliseconds/1000) - (self.lastlapminutes*60))
                     return "{0}:{1}:{2}{3}{4}".format(self.lastlapminutes,self.lastlapsecondsint,self.lastlapmilliseconds1,self.lastlapmilliseconds2,self.lastlapmilliseconds3)
@@ -509,8 +513,8 @@ class TimerClass:
                 self.currentlapmilliseconds3 = str(self.currentlapmillisecondsStr[-1])
                 #return "{0}:{1}:{2}{3}{4}".format(self.currentlapminutes,self.currentlapsecondsint,self.currentlapmilliseconds1,self.currentlapmilliseconds2,self.currentlapmilliseconds3)
                 if(self.currentlapsecondsint<10):
-                    insertzeroatminutes = "0{0}".format(self.currentlapsecondsint)
-                    return "{0}:{1}:{2}{3}{4}".format(self.currentlapminutes,insertzeroatminutes,self.currentlapmilliseconds1,self.currentlapmilliseconds2,self.currentlapmilliseconds3)
+                    self.insertzeroatminutescurrent = "0{0}".format(self.currentlapsecondsint)
+                    return "{0}:{1}:{2}{3}{4}".format(self.currentlapminutes,self.insertzeroatminutescurrent,self.currentlapmilliseconds1,self.currentlapmilliseconds2,self.currentlapmilliseconds3)
                 else:
                     self.currentlapsecondsint = int((self.currentlapmilliseconds/1000) - (self.currentlapminutes*60))
                     return "{0}:{1}:{2}{3}{4}".format(self.currentlapminutes,self.currentlapsecondsint,self.currentlapmilliseconds1,self.currentlapmilliseconds2,self.currentlapmilliseconds3)
@@ -521,32 +525,14 @@ class TimerClass:
                 self.currentlapmilliseconds1 = str(self.currentlapmillisecondsStr[-3:-2])
                 self.currentlapmilliseconds2 = str(self.currentlapmillisecondsStr[-2:-1])
                 self.currentlapmilliseconds3 = str(self.currentlapmillisecondsStr[-1])
-                #self.currentlapsecondsint = int((self.currentlapmilliseconds/1000) - (self.currentlapminutes*60))
-                insertzero = 0
                 if(self.currentlapsecondsint<10):
-                    insertzeroatminutes = "0{0}".format(self.currentlapsecondsint)
-                    return "{0}:{1}:{2}{3}{4}".format(self.currentlapminutes,insertzeroatminutes,self.currentlapmilliseconds1,self.currentlapmilliseconds2,self.currentlapmilliseconds3)
+                    self.insertzeroatminutescurrent = "0{0}".format(self.currentlapsecondsint)
+                    return "{0}:{1}:{2}{3}{4}".format(self.currentlapminutes,self.insertzeroatminutescurrent,self.currentlapmilliseconds1,self.currentlapmilliseconds2,self.currentlapmilliseconds3)
                 else:
                     self.currentlapsecondsint = int((self.currentlapmilliseconds/1000) - (self.currentlapminutes*60))
                     return "{0}:{1}:{2}{3}{4}".format(self.currentlapminutes,self.currentlapsecondsint,self.currentlapmilliseconds1,self.currentlapmilliseconds2,self.currentlapmilliseconds3)
         else:
             return "-:--:---"
-
-# Checkbox container and callback
-#Have to have it like this for now cannot get the callback to work as a class member
-checkboxContainer=0
-def checkboxEvent(x,y):
-    global checkboxContainer
-    if(mInfoDisplay.enabledisable):
-        mInfoDisplay.enabledisable = False
-        ac.setText(mInfoDisplay.checkboxlabel, "Disabled")
-        ac.setFontColor(mInfoDisplay.checkboxlabel, 1.0, 0.0, 0.0, 1)
-        #ac.console(str(mInfoDisplay.enabledisable)+":disable")
-    else:
-        mInfoDisplay.enabledisable = True
-        ac.setText(mInfoDisplay.checkboxlabel, "Enabled")
-        ac.setFontColor(mInfoDisplay.checkboxlabel, 0.0, 1.0, 0.1, 1)
-        #ac.console(str(mInfoDisplay.enabledisable)+":enabled")
 
 class DisplayClass:
     """eventually move all of the display elements into this class like labels buttons and settings """
@@ -559,6 +545,20 @@ class DisplayClass:
         self.checkboxlabel = 0
         self.enabledisable = True
 
+# Checkbox container and callback
+#Have to have it like this for now cannot get the callback to work as a class member
+checkboxContainer=0
+def checkboxEvent(x,y):
+    if(mInfoDisplay.enabledisable):
+        mInfoDisplay.enabledisable = False
+        ac.setText(mInfoDisplay.checkboxlabel, "Disabled")
+        ac.setFontColor(mInfoDisplay.checkboxlabel, 1.0, 0.0, 0.0, 1)
+        #ac.console(str(mInfoDisplay.enabledisable)+":disable")
+    else:
+        mInfoDisplay.enabledisable = True
+        ac.setText(mInfoDisplay.checkboxlabel, "Enabled")
+        ac.setFontColor(mInfoDisplay.checkboxlabel, 0.0, 1.0, 0.1, 1)
+        #ac.console(str(mInfoDisplay.enabledisable)+":enabled")
 
 #------------------------------------------------------------------------------------------------------------------------------------------
 # SIM INFO by @Rombik
@@ -672,15 +672,15 @@ class SPageFileStatic(ctypes.Structure):
     ]
 
 #make _char_p properties return unicode strings not needed now here maybe later
-# for cls in (SPageFilePhysics, SPageFileGraphic, SPageFileStatic):
-#     for name, typ in cls._fields_:
-#         if name.startswith("_"):
-#             def getter(self, name=None):
-#                 value = getattr(self, name)
-#                 # TODO: real encoding is very strange, it's not utf-8
-#                 return value.decode("utf-8")
-#             setattr(cls, name.lstrip("_"),
-#                     property(functools.partial(getter, name=name)))
+for cls in (SPageFilePhysics, SPageFileGraphic, SPageFileStatic):
+    for name, typ in cls._fields_:
+        if name.startswith("_"):
+            def getter(self, name=None):
+                value = getattr(self, name)
+                # TODO: real encoding is very strange, it's not utf-8
+                return value.decode("utf-8")
+            setattr(cls, name.lstrip("_"),
+                    property(functools.partial(getter, name=name)))
 
 class SimInfo:
     def __init__(self):
@@ -712,17 +712,31 @@ class SimInfo:
 # declare class instance objects
 
 infosystem = SimInfo()
-soundsystem = SoundClass()
 laptimer = TimerClass()
+soundsystem = SoundClass()
 mInfoDisplay = DisplayClass()
 
 #---------------------------------------------------------
+
+def AppActivated(val):
+    #must have a pass completion or crash!!!
+    pass
+    #mInfoDisplay.enabledisable = True
+    #ac.console("enable")
+
+def AppDismissed(val):
+    #must have a pass completion or crash!!!
+    pass
+    #mInfoDisplay.enabledisable = False
+    #ac.console("Disable")
 
 def acMain(ac_version):
     """main init function which runs on game startup."""
     global checkboxContainer
     mInfoDisplay.appWindow = ac.newApp("mInfo")
     ac.addRenderCallback(mInfoDisplay.appWindow, onFormRender)
+    ac.addOnAppActivatedListener(mInfoDisplay.appWindow, AppActivated)
+    ac.addOnAppDismissedListener(mInfoDisplay.appWindow, AppDismissed)
     ac.setSize(mInfoDisplay.appWindow, 220, 180)
 
     mInfoDisplay.currentlaplabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
@@ -753,28 +767,37 @@ def acMain(ac_version):
     ac.setPosition(mInfoDisplay.checkboxlabel, 44, 148)
     ac.setFontColor(mInfoDisplay.checkboxlabel, 0.0, 1.0, 0.1, 1)
     ac.setFontAlignment(mInfoDisplay.checkboxlabel,'left')
-
     ac.setBackgroundTexture(mInfoDisplay.appWindow, "apps/python/mInfo/images/mInfoBackground.png")
-
     pygame.init()
     soundsystem.loadSounds()
+    #mInfoDisplay.enabledisable = True
     return "mInfo"
 
 def acUpdate(deltaT):
     """main loop.only update lap once and play sound once required as we are in a loop."""
     global checkboxContainer
-    if(mInfoDisplay.enabledisable):
+    if(mInfoDisplay.enabledisable is True):
         soundsystem.hasplayedLastLap = 0
-        if (laptimer.completedlaps < laptimer.currentlap):
+        if(laptimer.currentlap==0):
+            laptimer.completedlaps = laptimer.currentlap
+        if(laptimer.completedlaps < laptimer.currentlap):
             laptimer.completedlaps = laptimer.currentlap
             soundsystem.hasplayedLastLap = 1
             if(soundsystem.hasplayedLastLap==1):
-                #ac.console(laptimer.getLastLapTime())
-                #laptimer.getLastLapTime()
+                #ac.console("play sound")
                 soundsystem.playSoundLastLap()
                 soundsystem.hasplayedLastLap = 0
         laptimer.updateTime(infosystem.graphics.completedLaps,infosystem.graphics.iBestTime,infosystem.graphics.iLastTime, infosystem.graphics.iCurrentTime)
+        ac.setFontColor(mInfoDisplay.currentlaplabel, 1.0, 1.0, 1.0, 1)
+        ac.setFontColor(mInfoDisplay.besttimelabel, 1.0, 1.0, 1.0, 1)
+        ac.setFontColor(mInfoDisplay.lasttimelabel, 1.0, 1.0, 1.0, 1)
+        ac.setFontColor(mInfoDisplay.currenttimelabel, 1.0, 1.0, 1.0, 1)
+        ac.setText(mInfoDisplay.currentlaplabel, "current lap : {0}".format(laptimer.getCurrentLap()))
+        ac.setText(mInfoDisplay.besttimelabel, "best time : {0}".format(laptimer.getBestLapTime()))
+        ac.setText(mInfoDisplay.lasttimelabel, "last time : {0}".format(laptimer.getLastLapTime()))
+        ac.setText(mInfoDisplay.currenttimelabel, "current time : {0}".format(laptimer.getCurrentLapTime()))
     else:
+        laptimer.updateTime(infosystem.graphics.completedLaps,infosystem.graphics.iBestTime,infosystem.graphics.iLastTime, infosystem.graphics.iCurrentTime)
         ac.setFontColor(mInfoDisplay.currentlaplabel, 1.0, 0.0, 0.0, 1)
         ac.setFontColor(mInfoDisplay.besttimelabel, 1.0, 0.0, 0.0, 1)
         ac.setFontColor(mInfoDisplay.lasttimelabel, 1.0, 0.0, 0.0, 1)
