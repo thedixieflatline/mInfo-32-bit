@@ -44,10 +44,33 @@ from ctypes import c_int32, c_float, c_char, c_wchar, c_bool, c_int
 import pygame
 import pygame.mixer
 import pygame.sndarray
+import configparser
 
-# Check Python path
+# #Check Python path
 # for d in sys.path:
 #     ac.console("{0}".format(d))
+
+
+class ConfigClass:
+    """Config file loader (mInfo.ini) and data process"""
+    def __init__(self):
+        self.config = None
+        self.configpath = 'apps/python/mInfo/mInfo.ini'
+        self.disabled = None
+        self.soundpack1 = None
+        self.soundpack2 = None
+
+    def loadConfig(self):
+        self.config = configparser.ConfigParser()
+        self.config.read(self.configpath)
+
+    def readConfig(self):
+        pass
+        #ac.console(str(self.config.sections()))
+        # ac.console(str(self.config['app']['disabled']))
+        # ac.console(str(self.config['app']['currentsoundpack']))
+        # ac.console(str(dict(self.config.items('soundpackdefault'))))
+        # ac.console(str(dict(self.config.items('soundpackuser'))))
 
 class SoundClass:
     """Define sound paths and sound object containers define pygame mixer and channel define variables for sound manipulation and playback."""
@@ -549,7 +572,9 @@ class DisplayClass:
 
 # Checkbox container and callback
 #Have to have it like this for now cannot get the callback to work as a class member
+
 checkboxContainer=0
+
 def checkboxEvent(x,y):
     if(mInfoDisplay.enabledisable):
         mInfoDisplay.enabledisable = False
@@ -713,10 +738,13 @@ class SimInfo:
 #---------------------------------------------------------
 # declare class instance objects
 
+configini = ConfigClass()
 infosystem = SimInfo()
 laptimer = TimerClass()
 soundsystem = SoundClass()
 mInfoDisplay = DisplayClass()
+configini.loadConfig()
+configini.readConfig()
 
 #---------------------------------------------------------
 
