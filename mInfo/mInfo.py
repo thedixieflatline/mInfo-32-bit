@@ -31,9 +31,9 @@ import sys
 import os
 import os.path
 # Check Python path
-# sys.path.insert(0, "apps/python/mInfo/pygame")
-# sys.path.insert(0, "apps/python/mInfo/numpy")
-# sys.path.insert(0, "apps/python/mInfo/ctypes")
+sys.path.insert(0, "apps/python/mInfo/pygame")
+sys.path.insert(0, "apps/python/mInfo/numpy")
+sys.path.insert(0, "apps/python/mInfo/ctypes")
 import numpy as np
 import ac
 import acsys
@@ -67,6 +67,7 @@ class ConfigClass:
     def saveConfig(self):
         self.config.write(open(self.configpath,"w"))
 
+
     def setAppStatusEnabled(self):
          self.appstatus = "enabled"
 
@@ -77,7 +78,7 @@ class ConfigClass:
         return self.appstatus
 
     def setAppStatus(self):
-        pass
+        self.appstatus =  self.config['app']['appstatus']
 
     def getCurrentSoundPack(self,soundpack,folder):
         soundpack = self.currentsoundpack
@@ -780,6 +781,7 @@ def AppDismissed(val):
 def acMain(ac_version):
     """main init function which runs on game startup."""
     global checkboxContainer
+    configuration.setAppStatus()
     if(configuration.getAppStatus()=="enabled"):
         mInfoDisplay.appstatus = True
     elif(configuration.getAppStatus()=="disabled"):
