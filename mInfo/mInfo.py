@@ -67,7 +67,7 @@ class ConfigClass:
     def saveConfig(self):
         self.config['app']['appstatus'] = self.appstatus
         self.config['soundpacksets']['soundpackdefault'] = self.currentsoundpack
-        self.config['soundpacksets']['soundpackdefault']['folder'] = self.currentsoundpackfolder
+        #self.config['soundpacksets']['soundpackdefault']['folder'] = self.currentsoundpackfolder
         self.config.write(open(self.configpath,"w"))
 
     def setAppStatusEnabled(self):
@@ -82,7 +82,7 @@ class ConfigClass:
     def setInitialAppStatus(self):
         self.appstatus =  self.config['app']['appstatus']
         self.currentsoundpack = self.config['soundpacksets']['soundpackdefault']
-        self.currentsoundpackfolder = self.config['soundpackdefault']['folder']
+        #self.currentsoundpackfolder = self.config['soundpackdefault']['folder']
 
     def getCurrentSoundPack(self,):
         return self.currentsoundpack
