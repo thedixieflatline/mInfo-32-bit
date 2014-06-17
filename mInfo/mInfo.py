@@ -56,8 +56,8 @@ class ConfigClass:
         self.config = None
         self.configpath = 'apps/python/mInfo/mInfo.ini'
         self.appstatus = "enabled"
-        self.currentsoundpack = None
-        # self.currentsoundpack_folder = None
+        self.currentsoundpack = ""
+        self.currentsoundpackfolder = ""
         # self.soundpacksets = []
 
     def loadConfig(self):
@@ -67,6 +67,7 @@ class ConfigClass:
     def saveConfig(self):
         self.config['app']['appstatus'] = self.appstatus
         self.config['soundpacksets']['soundpackdefault'] = self.currentsoundpack
+        self.config['soundpacksets']['soundpackdefault']['folder'] = self.currentsoundpackfolder
         self.config.write(open(self.configpath,"w"))
 
     def setAppStatusEnabled(self):
@@ -81,12 +82,19 @@ class ConfigClass:
     def setInitialAppStatus(self):
         self.appstatus =  self.config['app']['appstatus']
         self.currentsoundpack = self.config['soundpacksets']['soundpackdefault']
+        self.currentsoundpackfolder = self.config['soundpackdefault']['folder']
 
     def getCurrentSoundPack(self,):
         return self.currentsoundpack
 
-    def setCurrentSoundPack(self,):
-        self.currentsoundpack = self.config['soundpacksets']['soundpackdefault']
+    def getCurrentSoundPackFolder(self,):
+        return self.currentsoundpackfolder
+
+    def setCurrentSoundPack(self,xxx):
+        self.currentsoundpack = xxx
+
+    def setCurrentSoundPackFolder(self,xxx):
+        self.currentsoundpackfolder = xxx
 
 
 class SoundClass:
@@ -159,9 +167,15 @@ class SoundClass:
         self.sound_fifty = None
         self.filepathsound_fifty = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_fifty.wav')
 
-    def setCurrentSoundPack(self,soundpack,folder):
-        self.currentsoundpack_name = soundpack
-        self.currentsoundpack_folder = folder
+    def setCurrentSoundPack(self,):
+        self.currentsoundpack_name = configuration.getCurrentSoundPack()
+        self.currentsoundpack_folder = configuration.getCurrentSoundPackFolder()
+
+    def getCurrentSoundPack(self,):
+        return self.currentsoundpack_name
+
+    def getCurrentSoundPackFolder(self,):
+        return self.currentsoundpack_folder
 
     def loadSounds(self):
         """ init mixer freq set channels and volume, load sounds into contained from disk and set volume."""
@@ -742,13 +756,7 @@ class DisplayClass:
         self.spinner = None
         self.currentsoundpacklabel = None
 
-# Checkbox container and callback
-#Have to have it like this for now cannot get the callback to work as a class member
-
-
-
-#---------------------------------------------------------
-# declare class instance objects
+# Checkbox container and callback Have to have it like this for now cannot get the callback to work as a class member
 
 checkboxContainer=0
 
@@ -765,26 +773,23 @@ def checkboxEvent(x,y):
         ac.setFontColor(mInfoDisplay.checkboxlabel, 0.0, 1.0, 0.1, 1)
         configuration.setAppStatusEnabled()
 
-
-
-configuration = ConfigClass()
-configuration.loadConfig()
-infosystem = SimInfo()
-laptimer = TimerClass()
-soundsystem = SoundClass()
-
-mInfoDisplay = DisplayClass()
-
-configuration.setInitialAppStatus()
-
 def spinnerEvent(x):
     ac.console("hit")
     ac.console(str(ac.getValue(mInfoDisplay.spinner)))
 
 #---------------------------------------------------------
-# secondary initialize instance objects
+# declare class instance objects and secondary init
 
+configuration = ConfigClass()
+configuration.loadConfig()
 
+infosystem = SimInfo()
+laptimer = TimerClass()
+soundsystem = SoundClass()
+
+mInfoDisplay = DisplayClass()
+configuration.setInitialAppStatus()
+soundsystem.setCurrentSoundPack()
 #---------------------------------------------------------
 
 def AppActivated(val):
@@ -800,7 +805,6 @@ def AppDismissed(val):
 def acMain(ac_version):
     """main init function which runs on game startup."""
     global checkboxContainer
-    configuration.setCurrentSoundPack()
     if(configuration.getAppStatus()=="enabled"):
         mInfoDisplay.appstatus = True
     elif(configuration.getAppStatus()=="disabled"):
@@ -812,7 +816,6 @@ def acMain(ac_version):
     ac.addOnAppActivatedListener(mInfoDisplay.appWindow, AppActivated)
     ac.addOnAppDismissedListener(mInfoDisplay.appWindow, AppDismissed)
     ac.setSize(mInfoDisplay.appWindow, 220, 220)
-
     if(mInfoDisplay.appstatus is True):
         mInfoDisplay.currentlaplabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
         ac.setPosition(mInfoDisplay.currentlaplabel, 50, 60)
@@ -896,8 +899,7 @@ def acMain(ac_version):
         ac.setPosition(mInfoDisplay.currentsoundpacklabel, 50, 198)
         ac.setFontColor(mInfoDisplay.currentsoundpacklabel, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.currentsoundpacklabel,'center')
-
-        laptimer.updateTime(infosystem.graphics.completedLaps,infosystem.graphics.iBestTime,infosystem.graphics.iLastTime, infosystem.graphics.iCurrentTime)
+        #laptimer.updateTime(infosystem.graphics.completedLaps,infosystem.graphics.iBestTime,infosystem.graphics.iLastTime, infosystem.graphics.iCurrentTime)
         ac.setText(mInfoDisplay.currentlaplabel, "current lap : -")
         ac.setText(mInfoDisplay.besttimelabel, "best time : -:--:---")
         ac.setText(mInfoDisplay.lasttimelabel, "last time : -:--:---")
@@ -933,7 +935,7 @@ def acUpdate(deltaT):
         ac.setText(mInfoDisplay.besttimelabel, "best time : {0}".format(laptimer.getBestLapTime()))
         ac.setText(mInfoDisplay.lasttimelabel, "last time : {0}".format(laptimer.getLastLapTime()))
         ac.setText(mInfoDisplay.currenttimelabel, "current time : {0}".format(laptimer.getCurrentLapTime()))
-        ac.setText(mInfoDisplay.currentsoundpacklabel, "{0}".format(configuration.getCurrentSoundPack()))
+        ac.setText(mInfoDisplay.currentsoundpacklabel, "{0}".format(soundsystem.getCurrentSoundPack()))
     else:
         laptimer.updateTime(infosystem.graphics.completedLaps,infosystem.graphics.iBestTime,infosystem.graphics.iLastTime, infosystem.graphics.iCurrentTime)
         ac.setFontColor(mInfoDisplay.currentlaplabel, 1.0, 0.0, 0.0, 1)
@@ -960,7 +962,7 @@ def onFormRender(deltaT):
     ac.setText(mInfoDisplay.besttimelabel, "best time : {0}".format(laptimer.getBestLapTime()))
     ac.setText(mInfoDisplay.lasttimelabel, "last time : {0}".format(laptimer.getLastLapTime()))
     ac.setText(mInfoDisplay.currenttimelabel, "current time : {0}".format(laptimer.getCurrentLapTime()))
-    ac.setText(mInfoDisplay.currentsoundpacklabel, "{0}".format(configuration.getCurrentSoundPack()))
+    ac.setText(mInfoDisplay.currentsoundpacklabel, "{0}".format(soundsystem.getCurrentSoundPack()))
 
 def acShutdown():
     """on shut down quit pygame so no crash or lockup."""
