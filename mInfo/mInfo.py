@@ -67,7 +67,7 @@ class ConfigClass:
     def saveConfig(self):
         self.config['app']['appstatus'] = self.appstatus
         self.config['soundpacksets']['soundpackdefault'] = self.currentsoundpack
-        #self.config['soundpacksets']['soundpackdefault']['folder'] = self.currentsoundpackfolder
+        self.config['soundpacksets']['soundpackdefault']['folder'] = self.currentsoundpackfolder
         self.config.write(open(self.configpath,"w"))
 
     def setAppStatusEnabled(self):
@@ -82,7 +82,7 @@ class ConfigClass:
     def setInitialAppStatus(self):
         self.appstatus =  self.config['app']['appstatus']
         self.currentsoundpack = self.config['soundpacksets']['soundpackdefault']
-        #self.currentsoundpackfolder = self.config['soundpackdefault']['folder']
+        self.currentsoundpackfolder = self.config['soundpackdefault']['folder']
 
     def getCurrentSoundPack(self,):
         return self.currentsoundpack
@@ -95,7 +95,6 @@ class ConfigClass:
 
     def setCurrentSoundPackFolder(self,xxx):
         self.currentsoundpackfolder = xxx
-
 
 class SoundClass:
     """Define sound paths and sound object containers define pygame mixer and channel define variables for sound manipulation and playback."""
@@ -172,13 +171,16 @@ class SoundClass:
         self.currentsoundpack_folder = configuration.getCurrentSoundPackFolder()
 
     def getCurrentSoundPack(self,):
-        return self.currentsoundpack_name
+        return str(self.currentsoundpack_name)
 
     def getCurrentSoundPackFolder(self,):
-        return self.currentsoundpack_folder
+        return str(self.currentsoundpack_folder)
 
     def loadSounds(self):
         """ init mixer freq set channels and volume, load sounds into contained from disk and set volume."""
+        self.setCurrentSoundPack()
+        # ac.console(str(self.getCurrentSoundPack()))
+        # ac.console(str(self.getCurrentSoundPackFolder()))
         self.mixer.init(frequency=44100, size=-16, channels=1, buffer=4096)
         self.mixer.set_num_channels(2)
         self.chan = pygame.mixer.Channel(0)
