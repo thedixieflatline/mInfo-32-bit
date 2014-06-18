@@ -22,7 +22,7 @@
 # TODO Perhaps add more features, report other drivers times, fuel report, temp warnings, average speed, lap countdowns  etc
 #
 # TODO Need to do a better recording on the audio to sweeten it, make timing and volume more consistent. It sounds bad because I recorded on a headphone mic as a test so next version will be a nice microphone.
-# TODO clean up some of the code to be more efficent. Create enable/disable switch. Add ability for config fie to remember settings.
+# TODO clean up some of the code to be more efficient. Create enable/disable switch. Add ability for config fie to remember settings.
 # TODO Review code and refactor when the game is released and python API and or shared memory is ver 1.0
 # TODO add additional languages and voice sets and volume control
 # TODO Perhaps add more features, report other drivers times, fuel report, temp warnings, average speed, lap countdowns  etc
@@ -55,18 +55,17 @@ class ConfigClass:
     def __init__(self):
         self.config = None
         self.configpath = 'apps/python/mInfo/mInfo.ini'
-        self.appstatus = "enabled"
-        self.currentsoundpack = None
-        self.currentsoundpack_folder = None
-        self.soundpacksets = []
+        self.appstatus = ""
+        self.soundpack = ""
 
     def loadConfig(self):
         self.config = configparser.ConfigParser()
         self.config.read(self.configpath)
 
     def saveConfig(self):
+        self.config['app']['appstatus'] = self.appstatus
+        self.config['app']['soundfolder'] = self.soundpack
         self.config.write(open(self.configpath,"w"))
-
 
     def setAppStatusEnabled(self):
          self.appstatus = "enabled"
@@ -77,16 +76,9 @@ class ConfigClass:
     def getAppStatus(self):
         return self.appstatus
 
-    def setAppStatus(self):
-        self.appstatus =  self.config['app']['appstatus']
-
-    def getCurrentSoundPack(self,soundpack,folder):
-        soundpack = self.currentsoundpack
-        folder = self.currentsoundpack_folder
-
-    def setCurrentSoundPack(self,soundpack,folder):
-        self.currentsoundpack = soundpack
-        self.currentsoundpack_folder = folder
+    def setInitialAppStatus(self):
+        self.appstatus = self.config['app']['appstatus']
+        self.soundpack = self.config['app']['soundfolder']
 
 class SoundClass:
     """Define sound paths and sound object containers define pygame mixer and channel define variables for sound manipulation and playback."""
@@ -96,79 +88,109 @@ class SoundClass:
         self.chan = None
         self.currentsoundpack_name = ""
         self.currentsoundpack_folder = ""
+        self.currentsoundpack_folder_root = "sounds/"
         self.hasplayedLastLap = 0
         self.soundlist = {}
         self.playlist = []
         self.joinsounds = None
         self.playsounds =  None
         self.sound_silence = None
-        self.filepathsound_silence = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_silence.wav')
+        self.filepathsound_silence = None
         self.sound_point = None
-        self.filepathsound_point = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_point.wav')
+        self.filepathsound_point = None
         self.sound_minute = None
-        self.filepathsound_minute = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_minute.wav')
+        self.filepathsound_minute = None
         self.sound_minutes = None
-        self.filepathsound_minutes = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_minutes.wav')
+        self.filepathsound_minutes = None
         self.sound_zero = None
-        self.filepathsound_zero = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_zero.wav')
+        self.filepathsound_zero = None
         self.sound_one = None
-        self.filepathsound_one = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_one.wav')
+        self.filepathsound_one = None
         self.sound_two = None
-        self.filepathsound_two = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_two.wav')
+        self.filepathsound_two = None
         self.sound_three = None
-        self.filepathsound_three = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_three.wav')
+        self.filepathsound_three = None
         self.sound_four = None
-        self.filepathsound_four  = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_four.wav')
+        self.filepathsound_four  = None
         self.sound_five = None
-        self.filepathsound_five = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_five.wav')
+        self.filepathsound_five = None
         self.sound_six = None
-        self.filepathsound_six = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_six.wav')
+        self.filepathsound_six = None
         self.sound_seven = None
-        self.filepathsound_seven = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_seven.wav')
+        self.filepathsound_seven = None
         self.sound_eight = None
-        self.filepathsound_eight = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_eight.wav')
+        self.filepathsound_eight = None
         self.sound_nine = None
-        self.filepathsound_nine = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_nine.wav')
+        self.filepathsound_nine = None
         self.sound_ten = None
-        self.filepathsound_ten = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_ten.wav')
+        self.filepathsound_ten = None
         self.sound_eleven = None
-        self.filepathsound_eleven = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_eleven.wav')
+        self.filepathsound_eleven = None
         self.sound_twelve = None
-        self.filepathsound_twelve = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_twelve.wav')
+        self.filepathsound_twelve = None
         self.sound_thirteen = None
-        self.filepathsound_thirteen = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_thirteen.wav')
+        self.filepathsound_thirteen = None
         self.sound_fourteen = None
-        self.filepathsound_fourteen = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_fourteen.wav')
+        self.filepathsound_fourteen = None
         self.sound_fifteen = None
-        self.filepathsound_fifteen = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_fifteen.wav')
+        self.filepathsound_fifteen = None
         self.sound_sixteen = None
-        self.filepathsound_sixteen = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_sixteen.wav')
+        self.filepathsound_sixteen = None
         self.sound_seventeen = None
-        self.filepathsound_seventeen = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_seventeen.wav')
+        self.filepathsound_seventeen = None
         self.sound_eighteen = None
-        self.filepathsound_eighteen = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_eighteen.wav')
+        self.filepathsound_eighteen = None
         self.sound_nineteen = None
-        self.filepathsound_nineteen = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_nineteen.wav')
+        self.filepathsound_nineteen = None
         self.sound_twenty = None
-        self.filepathsound_twenty = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_twenty.wav')
+        self.filepathsound_twenty = None
         self.sound_thirty = None
-        self.filepathsound_thirty = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_thirty.wav')
+        self.filepathsound_thirty = None
         self.sound_forty = None
-        self.filepathsound_forty = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_forty.wav')
+        self.filepathsound_forty = None
         self.sound_fifty = None
-        self.filepathsound_fifty = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_fifty.wav')
+        self.filepathsound_fifty = None
 
-    def setCurrentSoundPack(self,soundpack,folder):
-        self.currentsoundpack_name = soundpack
-        self.currentsoundpack_folder = folder
+    def setCurrentSoundPack(self,):
+        self.currentsoundpack_name = configuration.soundpack
+        self.currentsoundpack_folder = self.currentsoundpack_folder_root + configuration.soundpack
 
     def loadSounds(self):
         """ init mixer freq set channels and volume, load sounds into contained from disk and set volume."""
+        self.currentsoundpack_name = configuration.soundpack
+        self.currentsoundpack_folder = self.currentsoundpack_folder_root + configuration.soundpack
+        self.filepathsound_silence = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_silence.wav')
+        self.filepathsound_point = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_point.wav')
+        self.filepathsound_minute = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_minute.wav')
+        self.filepathsound_minutes = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_minutes.wav')
+        self.filepathsound_zero = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_zero.wav')
+        self.filepathsound_one = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_one.wav')
+        self.filepathsound_two = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_two.wav')
+        self.filepathsound_three = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_three.wav')
+        self.filepathsound_four  = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_four.wav')
+        self.filepathsound_five = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_five.wav')
+        self.filepathsound_six = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_six.wav')
+        self.filepathsound_seven = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_seven.wav')
+        self.filepathsound_eight = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_eight.wav')
+        self.filepathsound_nine = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_nine.wav')
+        self.filepathsound_ten = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_ten.wav')
+        self.filepathsound_eleven = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_eleven.wav')
+        self.filepathsound_twelve = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_twelve.wav')
+        self.filepathsound_thirteen = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_thirteen.wav')
+        self.filepathsound_fourteen = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_fourteen.wav')
+        self.filepathsound_fifteen = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_fifteen.wav')
+        self.filepathsound_sixteen = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_sixteen.wav')
+        self.filepathsound_seventeen = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_seventeen.wav')
+        self.filepathsound_eighteen = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_eighteen.wav')
+        self.filepathsound_nineteen = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_nineteen.wav')
+        self.filepathsound_twenty = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_twenty.wav')
+        self.filepathsound_thirty = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_thirty.wav')
+        self.filepathsound_forty = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_forty.wav')
+        self.filepathsound_fifty = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_fifty.wav')
         self.mixer.init(frequency=44100, size=-16, channels=1, buffer=4096)
         self.mixer.set_num_channels(2)
         self.chan = pygame.mixer.Channel(0)
         self.chan.set_volume(1.0)
-        #self.setCurrentSoundPack(configuration.getCurrentSoundPack())
         self.joinsounds = self.mixer.Sound(self.filepathsound_point)
         self.joinsounds.set_volume(1.0)
         self.playsounds = self.mixer.Sound(self.filepathsound_point)
@@ -579,34 +601,6 @@ class TimerClass:
         else:
             return "-:--:---"
 
-class DisplayClass:
-    """eventually move all of the display elements into this class like labels buttons and settings """
-    def __init__(self,):
-        self.appstatus = None
-        self.appWindow = 0
-        self.currentlaplabel = 0
-        self.besttimelabel = 0
-        self.lasttimelabel = 0
-        self.currenttimelabel = 0
-        self.checkboxlabel = 0
-
-# Checkbox container and callback
-#Have to have it like this for now cannot get the callback to work as a class member
-
-checkboxContainer=0
-
-def checkboxEvent(x,y):
-    global configuration
-    if(mInfoDisplay.appstatus):
-        mInfoDisplay.appstatus = False
-        ac.setText(mInfoDisplay.checkboxlabel, "Disabled")
-        ac.setFontColor(mInfoDisplay.checkboxlabel, 1.0, 0.0, 0.0, 1)
-        configuration.setAppStatusDisabled()
-    else:
-        mInfoDisplay.appstatus = True
-        ac.setText(mInfoDisplay.checkboxlabel, "Enabled")
-        ac.setFontColor(mInfoDisplay.checkboxlabel, 0.0, 1.0, 0.1, 1)
-        configuration.setAppStatusEnabled()
 
 #------------------------------------------------------------------------------------------------------------------------------------------
 # SIM INFO by @Rombik
@@ -755,16 +749,54 @@ class SimInfo:
 # END SIM INFO
 #------------------------------------------------------------------------------------------------------------------------------------------
 
+class DisplayClass:
+    """eventually move all of the display elements into this class like labels buttons and settings """
+    def __init__(self,):
+        global checkboxContainer
+        global listboxContainer
+        self.appstatus = None
+        self.appWindow = None
+        self.currentlaplabel = None
+        self.besttimelabel = None
+        self.lasttimelabel = None
+        self.currenttimelabel = None
+        self.checkboxlabel = None
+        self.spinner = None
+        self.currentsoundpacklabel = None
+
+# Checkbox container and callback Have to have it like this for now cannot get the callback to work as a class member
+
+checkboxContainer=0
+
+def checkboxEvent(x,y):
+    global configuration
+    if(mInfoDisplay.appstatus):
+        mInfoDisplay.appstatus = False
+        ac.setText(mInfoDisplay.checkboxlabel, "Disabled")
+        ac.setFontColor(mInfoDisplay.checkboxlabel, 1.0, 0.0, 0.0, 1)
+        configuration.setAppStatusDisabled()
+    else:
+        mInfoDisplay.appstatus = True
+        ac.setText(mInfoDisplay.checkboxlabel, "Enabled")
+        ac.setFontColor(mInfoDisplay.checkboxlabel, 0.0, 1.0, 0.1, 1)
+        configuration.setAppStatusEnabled()
+
+def spinnerEvent(x):
+    #ac.console("hit")
+    #ac.console(str(ac.getValue(mInfoDisplay.spinner)))
+    #configuration.setCurrentSoundPack()
+    pass
 
 #---------------------------------------------------------
-# declare class instance objects
+# declare class instance objects and secondary init
 
 configuration = ConfigClass()
+configuration.loadConfig()
+configuration.setInitialAppStatus()
 infosystem = SimInfo()
 laptimer = TimerClass()
 soundsystem = SoundClass()
 mInfoDisplay = DisplayClass()
-configuration.loadConfig()
 
 #---------------------------------------------------------
 
@@ -781,84 +813,108 @@ def AppDismissed(val):
 def acMain(ac_version):
     """main init function which runs on game startup."""
     global checkboxContainer
-    configuration.setAppStatus()
     if(configuration.getAppStatus()=="enabled"):
         mInfoDisplay.appstatus = True
     elif(configuration.getAppStatus()=="disabled"):
         mInfoDisplay.appstatus = False
     # ac.console(str(configuration.getAppStatus()))
     # ac.console(str(mInfoDisplay.appstatus))
+    #ac.console(soundsystem.getCurrentSoundPack())
+    #ac.console(soundsystem.getCurrentSoundPackFolder())
+
     mInfoDisplay.appWindow = ac.newApp("mInfo")
     ac.addRenderCallback(mInfoDisplay.appWindow, onFormRender)
     ac.addOnAppActivatedListener(mInfoDisplay.appWindow, AppActivated)
     ac.addOnAppDismissedListener(mInfoDisplay.appWindow, AppDismissed)
-    ac.setSize(mInfoDisplay.appWindow, 220, 180)
-
+    ac.setSize(mInfoDisplay.appWindow, 220, 220)
     if(mInfoDisplay.appstatus is True):
         mInfoDisplay.currentlaplabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.currentlaplabel, 50, 60)
+        ac.setPosition(mInfoDisplay.currentlaplabel, 50, 70)
         ac.setFontColor(mInfoDisplay.currentlaplabel, 1.0, 1.0, 1.0, 1)
         ac.setFontAlignment(mInfoDisplay.currentlaplabel,'left')
 
         mInfoDisplay.besttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.besttimelabel, 60, 80)
+        ac.setPosition(mInfoDisplay.besttimelabel, 60, 90)
         ac.setFontColor(mInfoDisplay.besttimelabel, 1.0, 1.0, 1.0, 1)
         ac.setFontAlignment(mInfoDisplay.besttimelabel,'left')
 
         mInfoDisplay.lasttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.lasttimelabel, 65, 96)
+        ac.setPosition(mInfoDisplay.lasttimelabel, 65, 110)
         ac.setFontColor(mInfoDisplay.lasttimelabel, 1.0, 1.0, 1.0, 1)
         ac.setFontAlignment(mInfoDisplay.lasttimelabel,'left')
 
         mInfoDisplay.currenttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.currenttimelabel, 41, 116)
+        ac.setPosition(mInfoDisplay.currenttimelabel, 41, 130)
         ac.setFontColor(mInfoDisplay.currenttimelabel, 1.0, 1.0, 1.0, 1)
         ac.setFontAlignment(mInfoDisplay.currenttimelabel,'left')
 
         checkboxContainer = ac.addCheckBox(mInfoDisplay.appWindow, "")
-        ac.setPosition(checkboxContainer, 8, 148)
+        ac.setPosition(checkboxContainer, 24, 172)
+        ac.setSize(checkboxContainer,20,20)
         ac.addOnCheckBoxChanged(checkboxContainer,checkboxEvent)
 
         mInfoDisplay.checkboxlabel = ac.addLabel(mInfoDisplay.appWindow, "Enabled")
-        ac.setPosition(mInfoDisplay.checkboxlabel, 44, 148)
+        ac.setPosition(mInfoDisplay.checkboxlabel, 8, 197)
         ac.setFontColor(mInfoDisplay.checkboxlabel, 0.0, 1.0, 0.1, 1)
         ac.setFontAlignment(mInfoDisplay.checkboxlabel,'left')
+
+        # mInfoDisplay.spinner = ac.addSpinner(mInfoDisplay.appWindow, "soundpack")
+        # ac.setPosition(mInfoDisplay.spinner,116,170)
+        # ac.setSize(mInfoDisplay.spinner,70,24)
+        # ac.setRange(mInfoDisplay.spinner,1,1)
+        # ac.setValue(mInfoDisplay.spinner,1)
+        # ac.addOnValueChangeListener(mInfoDisplay.spinner,spinnerEvent)
+        #
+        # mInfoDisplay.currentsoundpacklabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
+        # ac.setPosition(mInfoDisplay.currentsoundpacklabel, 50, 198)
+        # ac.setFontColor(mInfoDisplay.currentsoundpacklabel, 1.0, 1.0, 1.0, 1)
+        # ac.setFontAlignment(mInfoDisplay.currentsoundpacklabel,'center')
     else:
         mInfoDisplay.currentlaplabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.currentlaplabel, 50, 60)
+        ac.setPosition(mInfoDisplay.currentlaplabel, 50, 70)
         ac.setFontColor(mInfoDisplay.currentlaplabel, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.currentlaplabel,'left')
 
         mInfoDisplay.besttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.besttimelabel, 60, 80)
+        ac.setPosition(mInfoDisplay.besttimelabel, 60, 90)
         ac.setFontColor(mInfoDisplay.besttimelabel, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.besttimelabel,'left')
 
         mInfoDisplay.lasttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.lasttimelabel, 65, 96)
+        ac.setPosition(mInfoDisplay.lasttimelabel, 65, 110)
         ac.setFontColor(mInfoDisplay.lasttimelabel, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.lasttimelabel,'left')
 
         mInfoDisplay.currenttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.currenttimelabel, 41, 116)
+        ac.setPosition(mInfoDisplay.currenttimelabel, 41, 130)
         ac.setFontColor(mInfoDisplay.currenttimelabel, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.currenttimelabel,'left')
 
         checkboxContainer = ac.addCheckBox(mInfoDisplay.appWindow, "")
-        ac.setPosition(checkboxContainer, 8, 148)
+        ac.setPosition(checkboxContainer, 24, 172)
         ac.addOnCheckBoxChanged(checkboxContainer,checkboxEvent)
 
         mInfoDisplay.checkboxlabel = ac.addLabel(mInfoDisplay.appWindow, "Disabled")
-        ac.setPosition(mInfoDisplay.checkboxlabel, 44, 148)
+        ac.setPosition(mInfoDisplay.checkboxlabel, 8, 197)
         ac.setFontColor(mInfoDisplay.checkboxlabel, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.checkboxlabel,'left')
 
-        laptimer.updateTime(infosystem.graphics.completedLaps,infosystem.graphics.iBestTime,infosystem.graphics.iLastTime, infosystem.graphics.iCurrentTime)
+        # mInfoDisplay.spinner = ac.addSpinner(mInfoDisplay.appWindow, "soundpack")
+        # ac.setPosition(mInfoDisplay.spinner,116,170)
+        # ac.setSize(mInfoDisplay.spinner,70,24)
+        # ac.setRange(mInfoDisplay.spinner,1,1)
+        # ac.setValue(mInfoDisplay.spinner,1)
+        # ac.addOnValueChangeListener(mInfoDisplay.spinner,spinnerEvent)
+        #
+        # mInfoDisplay.currentsoundpacklabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
+        # ac.setPosition(mInfoDisplay.currentsoundpacklabel, 50, 198)
+        # ac.setFontColor(mInfoDisplay.currentsoundpacklabel, 1.0, 0.0, 0.0, 1)
+        # ac.setFontAlignment(mInfoDisplay.currentsoundpacklabel,'center')
+        #laptimer.updateTime(infosystem.graphics.completedLaps,infosystem.graphics.iBestTime,infosystem.graphics.iLastTime, infosystem.graphics.iCurrentTime)
         ac.setText(mInfoDisplay.currentlaplabel, "current lap : -")
         ac.setText(mInfoDisplay.besttimelabel, "best time : -:--:---")
         ac.setText(mInfoDisplay.lasttimelabel, "last time : -:--:---")
         ac.setText(mInfoDisplay.currenttimelabel, "current time : -:--:---")
-
     ac.setBackgroundTexture(mInfoDisplay.appWindow, "apps/python/mInfo/images/mInfoBackground.png")
     pygame.init()
     soundsystem.loadSounds()
@@ -867,6 +923,7 @@ def acMain(ac_version):
 def acUpdate(deltaT):
     """main loop.only update lap once and play sound once required as we are in a loop."""
     global checkboxContainer
+    global label
     if(mInfoDisplay.appstatus is True):
         soundsystem.hasplayedLastLap = 0
         if(laptimer.currentlap==0):
@@ -883,20 +940,26 @@ def acUpdate(deltaT):
         ac.setFontColor(mInfoDisplay.besttimelabel, 1.0, 1.0, 1.0, 1)
         ac.setFontColor(mInfoDisplay.lasttimelabel, 1.0, 1.0, 1.0, 1)
         ac.setFontColor(mInfoDisplay.currenttimelabel, 1.0, 1.0, 1.0, 1)
+        # ac.setFontColor(mInfoDisplay.spinner, 1.0, 1.0, 1.0, 1)
+        # ac.setFontColor(mInfoDisplay.currentsoundpacklabel, 1.0, 1.0, 1.0, 1)
         ac.setText(mInfoDisplay.currentlaplabel, "current lap : {0}".format(laptimer.getCurrentLap()))
         ac.setText(mInfoDisplay.besttimelabel, "best time : {0}".format(laptimer.getBestLapTime()))
         ac.setText(mInfoDisplay.lasttimelabel, "last time : {0}".format(laptimer.getLastLapTime()))
         ac.setText(mInfoDisplay.currenttimelabel, "current time : {0}".format(laptimer.getCurrentLapTime()))
+        # ac.setText(mInfoDisplay.currentsoundpacklabel, "hhhhhh")
     else:
         laptimer.updateTime(infosystem.graphics.completedLaps,infosystem.graphics.iBestTime,infosystem.graphics.iLastTime, infosystem.graphics.iCurrentTime)
         ac.setFontColor(mInfoDisplay.currentlaplabel, 1.0, 0.0, 0.0, 1)
         ac.setFontColor(mInfoDisplay.besttimelabel, 1.0, 0.0, 0.0, 1)
         ac.setFontColor(mInfoDisplay.lasttimelabel, 1.0, 0.0, 0.0, 1)
         ac.setFontColor(mInfoDisplay.currenttimelabel, 1.0, 0.0, 0.0, 1)
+        # ac.setFontColor(mInfoDisplay.spinner, 1.0, 0.0, 0.0, 1)
+        # ac.setFontColor(mInfoDisplay.currentsoundpacklabel, 1.0, 0.0, 0.0, 1)
         ac.setText(mInfoDisplay.currentlaplabel, "current lap : -")
         ac.setText(mInfoDisplay.besttimelabel, "best time : -:--:---")
         ac.setText(mInfoDisplay.lasttimelabel, "last time : -:--:---")
         ac.setText(mInfoDisplay.currenttimelabel, "current time : -:--:---")
+        # ac.setText(mInfoDisplay.currentsoundpacklabel, "-----------------")
 
 def onFormRender(deltaT):
     """only update app when app form is visible then update only the following note call back method for this function defined in acMain above."""
@@ -904,10 +967,13 @@ def onFormRender(deltaT):
     ac.setFontColor(mInfoDisplay.besttimelabel, 1.0, 1.0, 1.0, 1)
     ac.setFontColor(mInfoDisplay.lasttimelabel, 1.0, 1.0, 1.0, 1)
     ac.setFontColor(mInfoDisplay.currenttimelabel, 1.0, 1.0, 1.0, 1)
+    # ac.setFontColor(mInfoDisplay.currentsoundpacklabel, 1.0, 1.0, 1.0, 1)
+    # ac.setFontColor(mInfoDisplay.spinner, 1.0, 1.0, 1.0, 1)
     ac.setText(mInfoDisplay.currentlaplabel, "current lap : {0}".format(laptimer.getCurrentLap()))
     ac.setText(mInfoDisplay.besttimelabel, "best time : {0}".format(laptimer.getBestLapTime()))
     ac.setText(mInfoDisplay.lasttimelabel, "last time : {0}".format(laptimer.getLastLapTime()))
     ac.setText(mInfoDisplay.currenttimelabel, "current time : {0}".format(laptimer.getCurrentLapTime()))
+    # ac.setText(mInfoDisplay.currentsoundpacklabel, "hhhhhh")
 
 def acShutdown():
     """on shut down quit pygame so no crash or lockup."""
