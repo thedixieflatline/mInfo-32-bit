@@ -792,13 +792,12 @@ def spinnerEvent(x):
 
 configuration = ConfigClass()
 configuration.loadConfig()
-
+configuration.setInitialAppStatus()
 infosystem = SimInfo()
 laptimer = TimerClass()
 soundsystem = SoundClass()
-
 mInfoDisplay = DisplayClass()
-configuration.setInitialAppStatus()
+
 #---------------------------------------------------------
 
 def AppActivated(val):
@@ -830,22 +829,22 @@ def acMain(ac_version):
     ac.setSize(mInfoDisplay.appWindow, 220, 220)
     if(mInfoDisplay.appstatus is True):
         mInfoDisplay.currentlaplabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.currentlaplabel, 50, 60)
+        ac.setPosition(mInfoDisplay.currentlaplabel, 50, 70)
         ac.setFontColor(mInfoDisplay.currentlaplabel, 1.0, 1.0, 1.0, 1)
         ac.setFontAlignment(mInfoDisplay.currentlaplabel,'left')
 
         mInfoDisplay.besttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.besttimelabel, 60, 80)
+        ac.setPosition(mInfoDisplay.besttimelabel, 60, 90)
         ac.setFontColor(mInfoDisplay.besttimelabel, 1.0, 1.0, 1.0, 1)
         ac.setFontAlignment(mInfoDisplay.besttimelabel,'left')
 
         mInfoDisplay.lasttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.lasttimelabel, 65, 100)
+        ac.setPosition(mInfoDisplay.lasttimelabel, 65, 110)
         ac.setFontColor(mInfoDisplay.lasttimelabel, 1.0, 1.0, 1.0, 1)
         ac.setFontAlignment(mInfoDisplay.lasttimelabel,'left')
 
         mInfoDisplay.currenttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.currenttimelabel, 41, 120)
+        ac.setPosition(mInfoDisplay.currenttimelabel, 41, 130)
         ac.setFontColor(mInfoDisplay.currenttimelabel, 1.0, 1.0, 1.0, 1)
         ac.setFontAlignment(mInfoDisplay.currenttimelabel,'left')
 
@@ -859,35 +858,35 @@ def acMain(ac_version):
         ac.setFontColor(mInfoDisplay.checkboxlabel, 0.0, 1.0, 0.1, 1)
         ac.setFontAlignment(mInfoDisplay.checkboxlabel,'left')
 
-        mInfoDisplay.spinner = ac.addSpinner(mInfoDisplay.appWindow, "soundpack")
-        ac.setPosition(mInfoDisplay.spinner,116,170)
-        ac.setSize(mInfoDisplay.spinner,70,24)
-        ac.setRange(mInfoDisplay.spinner,1,1)
-        ac.setValue(mInfoDisplay.spinner,1)
-        ac.addOnValueChangeListener(mInfoDisplay.spinner,spinnerEvent)
-
-        mInfoDisplay.currentsoundpacklabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.currentsoundpacklabel, 50, 198)
-        ac.setFontColor(mInfoDisplay.currentsoundpacklabel, 1.0, 1.0, 1.0, 1)
-        ac.setFontAlignment(mInfoDisplay.currentsoundpacklabel,'center')
+        # mInfoDisplay.spinner = ac.addSpinner(mInfoDisplay.appWindow, "soundpack")
+        # ac.setPosition(mInfoDisplay.spinner,116,170)
+        # ac.setSize(mInfoDisplay.spinner,70,24)
+        # ac.setRange(mInfoDisplay.spinner,1,1)
+        # ac.setValue(mInfoDisplay.spinner,1)
+        # ac.addOnValueChangeListener(mInfoDisplay.spinner,spinnerEvent)
+        #
+        # mInfoDisplay.currentsoundpacklabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
+        # ac.setPosition(mInfoDisplay.currentsoundpacklabel, 50, 198)
+        # ac.setFontColor(mInfoDisplay.currentsoundpacklabel, 1.0, 1.0, 1.0, 1)
+        # ac.setFontAlignment(mInfoDisplay.currentsoundpacklabel,'center')
     else:
         mInfoDisplay.currentlaplabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.currentlaplabel, 50, 60)
+        ac.setPosition(mInfoDisplay.currentlaplabel, 50, 70)
         ac.setFontColor(mInfoDisplay.currentlaplabel, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.currentlaplabel,'left')
 
         mInfoDisplay.besttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.besttimelabel, 60, 80)
+        ac.setPosition(mInfoDisplay.besttimelabel, 60, 90)
         ac.setFontColor(mInfoDisplay.besttimelabel, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.besttimelabel,'left')
 
         mInfoDisplay.lasttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.lasttimelabel, 65, 100)
+        ac.setPosition(mInfoDisplay.lasttimelabel, 65, 110)
         ac.setFontColor(mInfoDisplay.lasttimelabel, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.lasttimelabel,'left')
 
         mInfoDisplay.currenttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.currenttimelabel, 41, 120)
+        ac.setPosition(mInfoDisplay.currenttimelabel, 41, 130)
         ac.setFontColor(mInfoDisplay.currenttimelabel, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.currenttimelabel,'left')
 
@@ -900,17 +899,17 @@ def acMain(ac_version):
         ac.setFontColor(mInfoDisplay.checkboxlabel, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.checkboxlabel,'left')
 
-        mInfoDisplay.spinner = ac.addSpinner(mInfoDisplay.appWindow, "soundpack")
-        ac.setPosition(mInfoDisplay.spinner,116,170)
-        ac.setSize(mInfoDisplay.spinner,70,24)
-        ac.setRange(mInfoDisplay.spinner,1,1)
-        ac.setValue(mInfoDisplay.spinner,1)
-        ac.addOnValueChangeListener(mInfoDisplay.spinner,spinnerEvent)
-
-        mInfoDisplay.currentsoundpacklabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.currentsoundpacklabel, 50, 198)
-        ac.setFontColor(mInfoDisplay.currentsoundpacklabel, 1.0, 0.0, 0.0, 1)
-        ac.setFontAlignment(mInfoDisplay.currentsoundpacklabel,'center')
+        # mInfoDisplay.spinner = ac.addSpinner(mInfoDisplay.appWindow, "soundpack")
+        # ac.setPosition(mInfoDisplay.spinner,116,170)
+        # ac.setSize(mInfoDisplay.spinner,70,24)
+        # ac.setRange(mInfoDisplay.spinner,1,1)
+        # ac.setValue(mInfoDisplay.spinner,1)
+        # ac.addOnValueChangeListener(mInfoDisplay.spinner,spinnerEvent)
+        #
+        # mInfoDisplay.currentsoundpacklabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
+        # ac.setPosition(mInfoDisplay.currentsoundpacklabel, 50, 198)
+        # ac.setFontColor(mInfoDisplay.currentsoundpacklabel, 1.0, 0.0, 0.0, 1)
+        # ac.setFontAlignment(mInfoDisplay.currentsoundpacklabel,'center')
         #laptimer.updateTime(infosystem.graphics.completedLaps,infosystem.graphics.iBestTime,infosystem.graphics.iLastTime, infosystem.graphics.iCurrentTime)
         ac.setText(mInfoDisplay.currentlaplabel, "current lap : -")
         ac.setText(mInfoDisplay.besttimelabel, "best time : -:--:---")
@@ -941,26 +940,26 @@ def acUpdate(deltaT):
         ac.setFontColor(mInfoDisplay.besttimelabel, 1.0, 1.0, 1.0, 1)
         ac.setFontColor(mInfoDisplay.lasttimelabel, 1.0, 1.0, 1.0, 1)
         ac.setFontColor(mInfoDisplay.currenttimelabel, 1.0, 1.0, 1.0, 1)
-        ac.setFontColor(mInfoDisplay.spinner, 1.0, 1.0, 1.0, 1)
-        ac.setFontColor(mInfoDisplay.currentsoundpacklabel, 1.0, 1.0, 1.0, 1)
+        # ac.setFontColor(mInfoDisplay.spinner, 1.0, 1.0, 1.0, 1)
+        # ac.setFontColor(mInfoDisplay.currentsoundpacklabel, 1.0, 1.0, 1.0, 1)
         ac.setText(mInfoDisplay.currentlaplabel, "current lap : {0}".format(laptimer.getCurrentLap()))
         ac.setText(mInfoDisplay.besttimelabel, "best time : {0}".format(laptimer.getBestLapTime()))
         ac.setText(mInfoDisplay.lasttimelabel, "last time : {0}".format(laptimer.getLastLapTime()))
         ac.setText(mInfoDisplay.currenttimelabel, "current time : {0}".format(laptimer.getCurrentLapTime()))
-        ac.setText(mInfoDisplay.currentsoundpacklabel, "hhhhhh")
+        # ac.setText(mInfoDisplay.currentsoundpacklabel, "hhhhhh")
     else:
         laptimer.updateTime(infosystem.graphics.completedLaps,infosystem.graphics.iBestTime,infosystem.graphics.iLastTime, infosystem.graphics.iCurrentTime)
         ac.setFontColor(mInfoDisplay.currentlaplabel, 1.0, 0.0, 0.0, 1)
         ac.setFontColor(mInfoDisplay.besttimelabel, 1.0, 0.0, 0.0, 1)
         ac.setFontColor(mInfoDisplay.lasttimelabel, 1.0, 0.0, 0.0, 1)
         ac.setFontColor(mInfoDisplay.currenttimelabel, 1.0, 0.0, 0.0, 1)
-        ac.setFontColor(mInfoDisplay.spinner, 1.0, 0.0, 0.0, 1)
-        ac.setFontColor(mInfoDisplay.currentsoundpacklabel, 1.0, 0.0, 0.0, 1)
+        # ac.setFontColor(mInfoDisplay.spinner, 1.0, 0.0, 0.0, 1)
+        # ac.setFontColor(mInfoDisplay.currentsoundpacklabel, 1.0, 0.0, 0.0, 1)
         ac.setText(mInfoDisplay.currentlaplabel, "current lap : -")
         ac.setText(mInfoDisplay.besttimelabel, "best time : -:--:---")
         ac.setText(mInfoDisplay.lasttimelabel, "last time : -:--:---")
         ac.setText(mInfoDisplay.currenttimelabel, "current time : -:--:---")
-        ac.setText(mInfoDisplay.currentsoundpacklabel, "-----------------")
+        # ac.setText(mInfoDisplay.currentsoundpacklabel, "-----------------")
 
 def onFormRender(deltaT):
     """only update app when app form is visible then update only the following note call back method for this function defined in acMain above."""
@@ -968,13 +967,13 @@ def onFormRender(deltaT):
     ac.setFontColor(mInfoDisplay.besttimelabel, 1.0, 1.0, 1.0, 1)
     ac.setFontColor(mInfoDisplay.lasttimelabel, 1.0, 1.0, 1.0, 1)
     ac.setFontColor(mInfoDisplay.currenttimelabel, 1.0, 1.0, 1.0, 1)
-    ac.setFontColor(mInfoDisplay.currentsoundpacklabel, 1.0, 1.0, 1.0, 1)
-    ac.setFontColor(mInfoDisplay.spinner, 1.0, 1.0, 1.0, 1)
+    # ac.setFontColor(mInfoDisplay.currentsoundpacklabel, 1.0, 1.0, 1.0, 1)
+    # ac.setFontColor(mInfoDisplay.spinner, 1.0, 1.0, 1.0, 1)
     ac.setText(mInfoDisplay.currentlaplabel, "current lap : {0}".format(laptimer.getCurrentLap()))
     ac.setText(mInfoDisplay.besttimelabel, "best time : {0}".format(laptimer.getBestLapTime()))
     ac.setText(mInfoDisplay.lasttimelabel, "last time : {0}".format(laptimer.getLastLapTime()))
     ac.setText(mInfoDisplay.currenttimelabel, "current time : {0}".format(laptimer.getCurrentLapTime()))
-    ac.setText(mInfoDisplay.currentsoundpacklabel, "hhhhhh")
+    # ac.setText(mInfoDisplay.currentsoundpacklabel, "hhhhhh")
 
 def acShutdown():
     """on shut down quit pygame so no crash or lockup."""
