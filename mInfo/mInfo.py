@@ -56,9 +56,9 @@ class ConfigClass:
         self.config = None
         self.configpath = 'apps/python/mInfo/mInfo.ini'
         self.appstatus = "enabled"
-        self.currentsoundpack = ""
-        self.currentsoundpackfolder = ""
-        # self.soundpacksets = []
+        self.currentsoundpack = "Soundset-David"
+        self.currentsoundpackfolder = "Soundset-David"
+        self.soundsets = []
 
     def loadConfig(self):
         self.config = configparser.ConfigParser()
@@ -66,8 +66,7 @@ class ConfigClass:
 
     def saveConfig(self):
         self.config['app']['appstatus'] = self.appstatus
-        self.config['soundpacksets']['soundpackdefault'] = self.currentsoundpack
-        #self.config['soundpacksets']['soundpackdefault']['folder'] = self.currentsoundpackfolder
+        self.config['app']['currentsoundpack'] = self.currentsoundpack
         self.config.write(open(self.configpath,"w"))
 
     def setAppStatusEnabled(self):
@@ -80,9 +79,20 @@ class ConfigClass:
         return self.appstatus
 
     def setInitialAppStatus(self):
-        self.appstatus =  self.config['app']['appstatus']
-        self.currentsoundpack = self.config['soundpacksets']['soundpackdefault']
-        #self.currentsoundpackfolder = self.config['soundpackdefault']['folder']
+        # self.appstatus =  self.config['app']['appstatus']
+        # self.currentsoundpack = self.config['app']['currentsoundpack']
+        # self.currentsoundpackfolder = self.config['Soundset-David']['soundset-david']
+        #self.config['soundpack'][self.currentsoundpack]['folder'] = self.currentsoundpackfolder
+        #self.currentsoundpackfolder = self.config['soundset'][str(self.currentsoundpack)]['folder']
+        # value = self.config["soundset"]
+        # self.soundsets.append("null")
+        # for key in value:
+        #     self.soundsets.append(key)
+        # #ac.console(str(self.soundsets)
+        pass
+    #
+    # def loadAllSoundSets(self):
+    #     pass
 
     def getCurrentSoundPack(self,):
         return self.currentsoundpack
@@ -90,11 +100,8 @@ class ConfigClass:
     def getCurrentSoundPackFolder(self,):
         return self.currentsoundpackfolder
 
-    def setCurrentSoundPack(self,xxx):
-        self.currentsoundpack = xxx
-
-    def setCurrentSoundPackFolder(self,xxx):
-        self.currentsoundpackfolder = xxx
+    def setCurrentSoundPack(self,):
+        pass
 
 class SoundClass:
     """Define sound paths and sound object containers define pygame mixer and channel define variables for sound manipulation and playback."""
@@ -104,71 +111,74 @@ class SoundClass:
         self.chan = None
         self.currentsoundpack_name = ""
         self.currentsoundpack_folder = ""
+        self.currentsoundpack_folder_root = "sounds/"
         self.hasplayedLastLap = 0
         self.soundlist = {}
         self.playlist = []
         self.joinsounds = None
         self.playsounds =  None
         self.sound_silence = None
-        self.filepathsound_silence = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_silence.wav')
+        self.filepathsound_silence = None
         self.sound_point = None
-        self.filepathsound_point = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_point.wav')
+        self.filepathsound_point = None
         self.sound_minute = None
-        self.filepathsound_minute = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_minute.wav')
+        self.filepathsound_minute = None
         self.sound_minutes = None
-        self.filepathsound_minutes = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_minutes.wav')
+        self.filepathsound_minutes = None
         self.sound_zero = None
-        self.filepathsound_zero = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_zero.wav')
+        self.filepathsound_zero = None
         self.sound_one = None
-        self.filepathsound_one = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_one.wav')
+        self.filepathsound_one = None
         self.sound_two = None
-        self.filepathsound_two = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_two.wav')
+        self.filepathsound_two = None
         self.sound_three = None
-        self.filepathsound_three = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_three.wav')
+        self.filepathsound_three = None
         self.sound_four = None
-        self.filepathsound_four  = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_four.wav')
+        self.filepathsound_four  = None
         self.sound_five = None
-        self.filepathsound_five = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_five.wav')
+        self.filepathsound_five = None
         self.sound_six = None
-        self.filepathsound_six = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_six.wav')
+        self.filepathsound_six = None
         self.sound_seven = None
-        self.filepathsound_seven = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_seven.wav')
+        self.filepathsound_seven = None
         self.sound_eight = None
-        self.filepathsound_eight = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_eight.wav')
+        self.filepathsound_eight = None
         self.sound_nine = None
-        self.filepathsound_nine = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_nine.wav')
+        self.filepathsound_nine = None
         self.sound_ten = None
-        self.filepathsound_ten = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_ten.wav')
+        self.filepathsound_ten = None
         self.sound_eleven = None
-        self.filepathsound_eleven = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_eleven.wav')
+        self.filepathsound_eleven = None
         self.sound_twelve = None
-        self.filepathsound_twelve = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_twelve.wav')
+        self.filepathsound_twelve = None
         self.sound_thirteen = None
-        self.filepathsound_thirteen = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_thirteen.wav')
+        self.filepathsound_thirteen = None
         self.sound_fourteen = None
-        self.filepathsound_fourteen = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_fourteen.wav')
+        self.filepathsound_fourteen = None
         self.sound_fifteen = None
-        self.filepathsound_fifteen = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_fifteen.wav')
+        self.filepathsound_fifteen = None
         self.sound_sixteen = None
-        self.filepathsound_sixteen = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_sixteen.wav')
+        self.filepathsound_sixteen = None
         self.sound_seventeen = None
-        self.filepathsound_seventeen = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_seventeen.wav')
+        self.filepathsound_seventeen = None
         self.sound_eighteen = None
-        self.filepathsound_eighteen = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_eighteen.wav')
+        self.filepathsound_eighteen = None
         self.sound_nineteen = None
-        self.filepathsound_nineteen = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_nineteen.wav')
+        self.filepathsound_nineteen = None
         self.sound_twenty = None
-        self.filepathsound_twenty = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_twenty.wav')
+        self.filepathsound_twenty = None
         self.sound_thirty = None
-        self.filepathsound_thirty = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_thirty.wav')
+        self.filepathsound_thirty = None
         self.sound_forty = None
-        self.filepathsound_forty = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_forty.wav')
+        self.filepathsound_forty = None
         self.sound_fifty = None
-        self.filepathsound_fifty = os.path.join(self.maindir, 'sounds/Soundset-David', 'sound_fifty.wav')
+        self.filepathsound_fifty = None
 
     def setCurrentSoundPack(self,):
         self.currentsoundpack_name = configuration.getCurrentSoundPack()
-        #self.currentsoundpack_folder = configuration.getCurrentSoundPackFolder()
+        self.currentsoundpack_folder = self.currentsoundpack_folder_root + configuration.getCurrentSoundPackFolder()
+        # self.currentsoundpack_name = "Soundset-David"
+        # self.currentsoundpack_folder = "Soundset-David"
 
     def getCurrentSoundPack(self,):
         return str(self.currentsoundpack_name)
@@ -179,8 +189,34 @@ class SoundClass:
     def loadSounds(self):
         """ init mixer freq set channels and volume, load sounds into contained from disk and set volume."""
         self.setCurrentSoundPack()
-        # ac.console(str(self.getCurrentSoundPack()))
-        # ac.console(str(self.getCurrentSoundPackFolder()))
+        self.filepathsound_silence = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_silence.wav')
+        self.filepathsound_point = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_point.wav')
+        self.filepathsound_minute = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_minute.wav')
+        self.filepathsound_minutes = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_minutes.wav')
+        self.filepathsound_zero = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_zero.wav')
+        self.filepathsound_one = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_one.wav')
+        self.filepathsound_two = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_two.wav')
+        self.filepathsound_three = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_three.wav')
+        self.filepathsound_four  = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_four.wav')
+        self.filepathsound_five = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_five.wav')
+        self.filepathsound_six = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_six.wav')
+        self.filepathsound_seven = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_seven.wav')
+        self.filepathsound_eight = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_eight.wav')
+        self.filepathsound_nine = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_nine.wav')
+        self.filepathsound_ten = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_ten.wav')
+        self.filepathsound_eleven = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_eleven.wav')
+        self.filepathsound_twelve = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_twelve.wav')
+        self.filepathsound_thirteen = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_thirteen.wav')
+        self.filepathsound_fourteen = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_fourteen.wav')
+        self.filepathsound_fifteen = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_fifteen.wav')
+        self.filepathsound_sixteen = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_sixteen.wav')
+        self.filepathsound_seventeen = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_seventeen.wav')
+        self.filepathsound_eighteen = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_eighteen.wav')
+        self.filepathsound_nineteen = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_nineteen.wav')
+        self.filepathsound_twenty = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_twenty.wav')
+        self.filepathsound_thirty = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_thirty.wav')
+        self.filepathsound_forty = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_forty.wav')
+        self.filepathsound_fifty = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_fifty.wav')
         self.mixer.init(frequency=44100, size=-16, channels=1, buffer=4096)
         self.mixer.set_num_channels(2)
         self.chan = pygame.mixer.Channel(0)
@@ -776,8 +812,10 @@ def checkboxEvent(x,y):
         configuration.setAppStatusEnabled()
 
 def spinnerEvent(x):
-    ac.console("hit")
-    ac.console(str(ac.getValue(mInfoDisplay.spinner)))
+    #ac.console("hit")
+    #ac.console(str(ac.getValue(mInfoDisplay.spinner)))
+    #configuration.setCurrentSoundPack()
+    pass
 
 #---------------------------------------------------------
 # declare class instance objects and secondary init
@@ -791,7 +829,6 @@ soundsystem = SoundClass()
 
 mInfoDisplay = DisplayClass()
 configuration.setInitialAppStatus()
-soundsystem.setCurrentSoundPack()
 #---------------------------------------------------------
 
 def AppActivated(val):
@@ -813,6 +850,9 @@ def acMain(ac_version):
         mInfoDisplay.appstatus = False
     # ac.console(str(configuration.getAppStatus()))
     # ac.console(str(mInfoDisplay.appstatus))
+    #ac.console(soundsystem.getCurrentSoundPack())
+    #ac.console(soundsystem.getCurrentSoundPackFolder())
+
     mInfoDisplay.appWindow = ac.newApp("mInfo")
     ac.addRenderCallback(mInfoDisplay.appWindow, onFormRender)
     ac.addOnAppActivatedListener(mInfoDisplay.appWindow, AppActivated)
