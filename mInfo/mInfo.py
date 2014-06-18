@@ -1,4 +1,4 @@
-# mInfo ver 0.75  June 2014
+# mInfo ver 0.77  June 2014
 # GitHub Page: https://github.com/thedixieflatline/assettocorsa
 #
 # To activate copy mInfo folder to C:\Program Files (x86)\Steam\steamapps\common\assettocorsa\apps\python
