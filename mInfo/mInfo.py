@@ -1,4 +1,4 @@
-# mInfo ver 0.77  June 2014
+# mInfo ver 0.78  June 2014
 # GitHub Page: https://github.com/thedixieflatline/assettocorsa
 #
 # To activate copy mInfo folder to C:\Program Files (x86)\Steam\steamapps\common\assettocorsa\apps\python
@@ -33,7 +33,7 @@ import acsys
 import mmap
 import functools
 import ctypes
-from ctypes import c_int32, c_float, c_char, c_wchar, c_bool, c_int
+from ctypes import c_int32, c_float, c_char
 import pygame
 import pygame.mixer
 import pygame.sndarray
@@ -622,12 +622,12 @@ AC_DRAG = 6
 class SPageFilePhysics(ctypes.Structure):
     _pack_ = 4
     _fields_ = [
-        ('packetId' , c_int32),
+        ('packetId', c_int32),
         ('gas', c_float),
         ('brake', c_float),
         ('fuel', c_float),
-        ('gear' , c_int32),
-        ('rpms' , c_int32),
+        ('gear', c_int32),
+        ('rpms', c_int32),
         ('steerAngle', c_float),
         ('speedKmh', c_float),
         ('velocity', c_float * 3),
@@ -648,34 +648,34 @@ class SPageFilePhysics(ctypes.Structure):
         ('roll', c_float),
         ('cgHeight', c_float),
         ('carDamage', c_float * 5),
-        ('numberOfTyresOut' , c_int32),
-        ('pitLimiterOn' , c_int32),
+        ('numberOfTyresOut', c_int32),
+        ('pitLimiterOn', c_int32),
         ('abs', c_float),
     ]
 
 class SPageFileGraphic(ctypes.Structure):
     _pack_ = 4
     _fields_ = [
-        ('packetId' , c_int32),
+        ('packetId', c_int32),
         ('status', AC_STATUS),
         ('session', AC_SESSION_TYPE),
          # NOTE: if you want str instead bytes, access it without '_'
-        ('_currentTime', c_char * 10),
-        ('_lastTime', c_char * 10),
-        ('_bestTime', c_char * 10),
-        ('_split', c_char * 10),
-        ('completedLaps' , c_int32),
-        ('position' , c_int32),
-        ('iCurrentTime' , c_int32),
-        ('iLastTime' , c_int32),
-        ('iBestTime' , c_int32),
+        ('_currentTime', c_char * 15),
+        ('_lastTime', c_char * 15),
+        ('_bestTime', c_char * 15),
+        ('_split', c_char * 15),
+        ('completedLaps', c_int32),
+        ('position', c_int32),
+        ('iCurrentTime', c_int32),
+        ('iLastTime', c_int32),
+        ('iBestTime', c_int32),
         ('sessionTimeLeft', c_float),
         ('distanceTraveled', c_float),
-        ('isInPit' , c_int32),
-        ('currentSectorIndex' , c_int32),
-        ('lastSectorTime' , c_int32),
-        ('numberOfLaps' , c_int32),
-        ('_tyreCompound', c_char * 32),
+        ('isInPit', c_int32),
+        ('currentSectorIndex', c_int32),
+        ('lastSectorTime', c_int32),
+        ('numberOfLaps', c_int32),
+        ('_tyreCompound', c_char * 33),
 
         ('replayTimeMultiplier', c_float),
         ('normalizedCarPosition', c_float),
@@ -685,28 +685,28 @@ class SPageFileGraphic(ctypes.Structure):
 class SPageFileStatic(ctypes.Structure):
     _pack_ = 4
     _fields_ = [
-        ('_smVersion', c_char * 10),
-        ('_acVersion', c_char * 10),
+        ('_smVersion', c_char * 15),
+        ('_acVersion', c_char * 15),
         # session static info
-        ('numberOfSessions' , c_int32),
-        ('numCars' , c_int32),
-        ('_carModel', c_char * 32),
-        ('_track', c_char * 32),
-        ('_playerName', c_char * 32),
-        ('_playerSurname', c_char * 32),
-        ('_playerNick', c_char * 32),
-        ('sectorCount' , c_int32),
+        ('numberOfSessions', c_int32),
+        ('numCars', c_int32),
+        ('_carModel', c_char * 33),
+        ('_track', c_char * 33),
+        ('_playerName', c_char * 33),
+        ('_playerSurname', c_char * 33),
+        ('_playerNick', c_char * 33),
+        ('sectorCount', c_int32),
 
         # car static info
         ('maxTorque', c_float),
         ('maxPower', c_float),
-        ('maxRpm' , c_int32),
+        ('maxRpm', c_int32),
         ('maxFuel', c_float),
         ('suspensionMaxTravel', c_float * 4),
         ('tyreRadius', c_float * 4),
     ]
 
-#make _char_p properties return unicode strings not needed now here maybe later
+#make _char_p properties return unicode strings
 for cls in (SPageFilePhysics, SPageFileGraphic, SPageFileStatic):
     for name, typ in cls._fields_:
         if name.startswith("_"):
