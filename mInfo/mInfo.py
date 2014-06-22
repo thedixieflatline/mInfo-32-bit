@@ -1,76 +1,89 @@
-# mInfo ver 0.78  June 2014
-# GitHub Page: https://github.com/thedixieflatline/assettocorsa
-#
-# To activate copy mInfo folder to C:\Program Files (x86)\Steam\steamapps\common\assettocorsa\apps\python
-# 
-# Motorheadz present mInfo an app for the game Assetto Corsa.
-# Allowing compiling sequence of sounds then playback of wave files of speech or sounds in the game as alerts or reports
-# First alert developed is lap times for players car as they cross the line.
-#
-# App developed by David Trenear
-# Additional Testing by Jason Madigan and Tyson Cierpial
-# Big thanks to Rombik who wrote the original sim info  module.
-#
-# This is an alpha proof of concept if people like it I will develop this concept further.
-# Please submit bugs or requests to the Assetto Corsa forum
-# http://www.assettocorsa.net/forum/index.php
+"""mInfo ver 0.78  June 2014
+GitHub Page: https://github.com/thedixieflatline/assettocorsa
 
-# TODO Need to do a better recording on the audio to sweeten it, make timing and volume more consistent. It sounds bad because I recorded on a headphone mic as a test so next version will be a nice microphone.
-# TODO add volume control
-# TODO Review code and refactor when the game is released and python API and or shared memory is ver 1.0 clean up some of the code to be more efficent.
-# TODO add more features, fuel report, temp warnings, tire temp warnings
+To activate copy mInfo folder to C:\Program Files (x86)\Steam\steamapps\common\assettocorsa\apps\python
+
+Motorheadz present mInfo an app for the game Assetto Corsa.
+Allowing compiling sequence of sounds then playback of wave files of speech or sounds in the game as alerts or reports
+First alert developed is lap times for players car as they cross the line.
+
+App developed by David Trenear
+Additional Testing by Jason Madigan and Tyson Cierpial
+Big thanks to Rombik who wrote the original sim info  module.
+
+Please submit bugs or requests to the Assetto Corsa forum
+http://www.assettocorsa.net/forum/index.php
+
+TODO Need to do a better recording on the audio to sweeten it, make timing and volume more consistent. It sounds bad because I recorded on a headphone mic as a test so next version will be a nice microphone.
+TODO add volume control ang get fuel report audio working
+TODO Review code and refactor when the game is released and python API and or shared memory is ver 1.0 clean up some of the code to be more efficent.
+TODO add more features, fuel report, temp warnings, tire temp warnings"""
 
 import sys
 import os
 import os.path
-# Check Python path
+import ac
+import acsys
+import configparser
+"""Add Modules to Python path"""
 sys.path.insert(0, "apps/python/mInfo/pygame")
 sys.path.insert(0, "apps/python/mInfo/numpy")
 sys.path.insert(0, "apps/python/mInfo/ctypes")
 import numpy as np
-import ac
-import acsys
-import mmap
-import functools
-import ctypes
-from ctypes import c_int32, c_float, c_char
 import pygame
 import pygame.mixer
 import pygame.sndarray
-import configparser
+import mmap
+import functools
+import ctypes
+from ctypes import c_int32, c_float, c_char, c_wchar, c_bool, c_int
 
-# #Check Python path
-# for d in sys.path:
-#     ac.console("{0}".format(d))
+
+def CheckPythonPath():
+    """Report Modules on Python path"""
+    for d in sys.path:
+        ac.console("{0}".format(d))
 
 class ConfigClass:
     """Config file loader (mInfo.ini) and data process"""
     def __init__(self):
         self.config = None
         self.configpath = 'apps/python/mInfo/mInfo.ini'
-        self.appstatus = ""
+        self.lapswitch = ""
         self.soundpack = ""
+        self.fuelswitch = ""
 
     def loadConfig(self):
         self.config = configparser.ConfigParser()
         self.config.read(self.configpath)
 
     def saveConfig(self):
-        self.config['app']['appstatus'] = self.appstatus
+        self.config['app']['lapswitch'] = self.lapswitch
+        self.config['app']['fuelswitch'] = self.fuelswitch
         self.config['app']['soundfolder'] = self.soundpack
         self.config.write(open(self.configpath,"w"))
 
-    def setAppStatusEnabled(self):
-         self.appstatus = "enabled"
+    def setLapSwitchEnabled(self):
+        self.lapswitch = "enabled"
 
-    def setAppStatusDisabled(self):
-        self.appstatus = "disabled"
+    def setLapSwitchDisabled(self):
+        self.lapswitch = "disabled"
 
-    def getAppStatus(self):
-        return self.appstatus
+    def getLapSwitchStatus(self):
+        return self.lapswitch
 
-    def setInitialAppStatus(self):
-        self.appstatus = self.config['app']['appstatus']
+    def setFuelSwitchEnabled(self):
+        self.fuelswitch = "enabled"
+
+    def setFuelSwitchDisabled(self):
+        self.fuelswitch = "disabled"
+
+    def getFuelSwitchStatus(self):
+        return self.fuelswitch
+
+    def setInitialStatus(self):
+        self.lapswitch = self.config['app']['lapswitch']
+        self.fuelswitch = self.config['app']['fuelswitch']
         self.soundpack = self.config['app']['soundfolder']
 
 class SoundClass:
@@ -144,7 +157,7 @@ class SoundClass:
         self.sound_fifty = None
         self.filepathsound_fifty = None
 
-    def setCurrentSoundPack(self,):
+    def setCurrentSoundPack(self):
         self.currentsoundpack_name = configuration.soundpack
         self.currentsoundpack_folder = self.currentsoundpack_folder_root + configuration.soundpack
 
@@ -459,8 +472,7 @@ class SoundClass:
 
 class TimerClass:
     """ Controls time recording storage combination output of laptimes input to getTime() is milliseconds from siminfo class obj instance laptimer. """
-    def __init__(self,):
-
+    def __init__(self):
         self.currentlap = 0
         self.completedlaps = 0
         self.bestlapminutes = 0.0
@@ -496,11 +508,11 @@ class TimerClass:
         self.lastlapmilliseconds = thetime2
         self.currentlapmilliseconds = thetime3
 
-    def getCurrentLap(self,):
+    def getCurrentLap(self):
         return self.currentlap
         #return str(self.currentlap) + " " + str(self.completedlaps)
 
-    def getBestLapTime(self,):
+    def getBestLapTime(self):
         if(self.bestlapmilliseconds):
             if(self.bestlapmilliseconds<60000):
                 self.bestlapminutes = 0
@@ -531,7 +543,7 @@ class TimerClass:
         else:
             return "-:--:---"
 
-    def getLastLapTime(self,):
+    def getLastLapTime(self):
         if(self.lastlapmilliseconds):
             if(self.lastlapmilliseconds<60000):
                 self.lastlapminutes = 0
@@ -562,7 +574,7 @@ class TimerClass:
         else:
             return "-:--:---"
 
-    def getCurrentLapTime(self,):
+    def getCurrentLapTime(self):
         if(self.currentlapmilliseconds):
             if(self.currentlapmilliseconds<60000):
                 self.currentlapminutes = 0
@@ -719,73 +731,107 @@ for cls in (SPageFilePhysics, SPageFileGraphic, SPageFileStatic):
 
 class SimInfo:
     def __init__(self):
-        #self._acpmf_physics = mmap.mmap(0, ctypes.sizeof(SPageFilePhysics), "acpmf_physics")
+        self._acpmf_physics = mmap.mmap(0, ctypes.sizeof(SPageFilePhysics), "acpmf_physics")
         self._acpmf_graphics = mmap.mmap(0, ctypes.sizeof(SPageFileGraphic), "acpmf_graphics")
         #self._acpmf_static = mmap.mmap(0, ctypes.sizeof(SPageFileStatic), "acpmf_static")
-        #self.physics = SPageFilePhysics.from_buffer(self._acpmf_physics)
+        self.physics = SPageFilePhysics.from_buffer(self._acpmf_physics)
         self.graphics = SPageFileGraphic.from_buffer(self._acpmf_graphics)
         #self.static = SPageFileStatic.from_buffer(self._acpmf_static)
 
     def close(self):
-        #self._acpmf_physics.close()
+        self._acpmf_physics.close()
         self._acpmf_graphics.close()
         #self._acpmf_static.close()
 
     def __del__(self):
         self.close()
 
-# def demo(self):
-#     infoDemo = SimInfo()
-#     for _ in range(400):
-#         ac.console(Demo.static.track, Demo.graphics.tyreCompound, Demo.physics.rpms, Demo.graphics.currentTime)
-
-# END SIM INFO
-#------------------------------------------------------------------------------------------------------------------------------------------
-
 class DisplayClass:
-    """eventually move all of the display elements into this class like labels buttons and settings """
-    def __init__(self,):
-        global checkboxContainer
-        global listboxContainer
-        self.appstatus = None
+    """display elements labels buttons and callback functions """
+    def __init__(self):
+        self.lapswitch = None
+        self.fuelswitch = None
         self.appWindow = None
         self.currentlaplabel = None
         self.besttimelabel = None
         self.lasttimelabel = None
         self.currenttimelabel = None
-        self.checkboxlabel = None
+        self.currentfuellabel = None
         self.spinner = None
-        self.currentsoundpacklabel = None
+        self.spinnerEvent = self.spinnerEventFunction
+        self.checkboxContainerLaptime = None
+        self.checkboxLabelLaptime = None
+        self.checkboxEventLaptime = self.checkboxEventFunctionLaptime
+        self.checkboxContainerFuel = None
+        self.checkboxLabelFuel = None
+        self.checkboxEventFuel = self.checkboxEventFunctionFuel
+        self.checkboxContainerBestLap = None
+        self.checkboxLabelBestLap = None
+        self.checkboxEventBestLap = self.checkboxEventFunctionBestLap
+        self.AppActivated = self.AppActivatedFunction
+        self.AppDismissed = self.AppDismissedFunction
 
-# Checkbox container and callback Have to have it like this for now cannot get the callback to work as a class member
+    def spinnerEventFunction(self,x):
+        ac.console("hit")
+        #ac.console(str(ac.getValue(mInfoDisplay.spinner)))
+        #configuration.setCurrentSoundPack()
 
-checkboxContainer=0
 
-def checkboxEvent(x,y):
-    global configuration
-    if(mInfoDisplay.appstatus):
-        mInfoDisplay.appstatus = False
-        ac.setText(mInfoDisplay.checkboxlabel, "Disabled")
-        ac.setFontColor(mInfoDisplay.checkboxlabel, 1.0, 0.0, 0.0, 1)
-        configuration.setAppStatusDisabled()
-    else:
-        mInfoDisplay.appstatus = True
-        ac.setText(mInfoDisplay.checkboxlabel, "Enabled")
-        ac.setFontColor(mInfoDisplay.checkboxlabel, 0.0, 1.0, 0.1, 1)
-        configuration.setAppStatusEnabled()
+    def checkboxEventFunctionFuel(self,x,y):
+        ac.console("Fuel sound and settings coming soon")
+        if(mInfoDisplay.fuelswitch):
+            mInfoDisplay.fuelswitch = False
+            ac.setText(mInfoDisplay.checkboxLabelFuel, "Disabled")
+            ac.setFontColor(mInfoDisplay.checkboxLabelFuel, 1.0, 0.0, 0.0, 1)
+            configuration.setFuelSwitchDisabled()
+        else:
+            mInfoDisplay.fuelswitch = True
+            ac.setText(mInfoDisplay.checkboxLabelFuel, "Enabled")
+            ac.setFontColor(mInfoDisplay.checkboxLabelFuel, 0.0, 1.0, 0.1, 1)
+            configuration.setFuelSwitchEnabled()
 
-def spinnerEvent(x):
-    #ac.console("hit")
-    #ac.console(str(ac.getValue(mInfoDisplay.spinner)))
-    #configuration.setCurrentSoundPack()
-    pass
+    def checkboxEventFunctionBestLap(self,x,y):
+        ac.console("Best lap sound and settings coming soon")
+
+    def checkboxEventFunctionLaptime(self,x,y):
+        if(mInfoDisplay.lapswitch):
+            mInfoDisplay.lapswitch = False
+            ac.setText(mInfoDisplay.checkboxLabelLaptime, "Disabled")
+            ac.setFontColor(mInfoDisplay.checkboxLabelLaptime, 1.0, 0.0, 0.0, 1)
+            configuration.setLapSwitchDisabled()
+        else:
+            mInfoDisplay.lapswitch = True
+            ac.setText(mInfoDisplay.checkboxLabelLaptime, "Enabled")
+            ac.setFontColor(mInfoDisplay.checkboxLabelLaptime, 0.0, 1.0, 0.1, 1)
+            configuration.setLapSwitchEnabled()
+
+    def AppActivatedFunction(self,val):
+        #must have a pass completion or crash!!!
+        #ac.console("AppActivated")
+        configuration.setLapSwitchEnabled()
+        configuration.setFuelSwitchEnabled()
+        self.lapswitch = True
+        self.fuelswitch = True
+        #pygame.init()
+        #soundsystem.loadSounds()
+
+    def AppDismissedFunction(self,val):
+        #must have a pass completion or crash!!!
+        #ac.console("AppDismissed")
+        configuration.setLapSwitchDisabled()
+        configuration.setFuelSwitchDisabled()
+        self.lapswitch = False
+        self.fuelswitch =False
+        configuration.saveConfig()
+        #pygame.quit()
+
 
 #---------------------------------------------------------
 # declare class instance objects and secondary init
 
 configuration = ConfigClass()
 configuration.loadConfig()
-configuration.setInitialAppStatus()
+configuration.setInitialStatus()
 infosystem = SimInfo()
 laptimer = TimerClass()
 soundsystem = SoundClass()
@@ -793,116 +839,151 @@ mInfoDisplay = DisplayClass()
 
 #---------------------------------------------------------
 
-def AppActivated(val):
-    #must have a pass completion or crash!!!
-    pass
-    #ac.console("AppActivated")
-
-def AppDismissed(val):
-    #must have a pass completion or crash!!!
-    pass
-    #ac.console("AppDismissed")
 
 def acMain(ac_version):
     """main init function which runs on game startup."""
-    global checkboxContainer
-    if(configuration.getAppStatus()=="enabled"):
-        mInfoDisplay.appstatus = True
-    elif(configuration.getAppStatus()=="disabled"):
-        mInfoDisplay.appstatus = False
-    # ac.console(str(configuration.getAppStatus()))
-    # ac.console(str(mInfoDisplay.appstatus))
-    #ac.console(soundsystem.getCurrentSoundPack())
-    #ac.console(soundsystem.getCurrentSoundPackFolder())
-
+    #ac.console("Apprun-01")
+    if(configuration.getLapSwitchStatus()=="enabled"):
+        mInfoDisplay.lapswitch = True
+    elif(configuration.getLapSwitchStatus()=="disabled"):
+        mInfoDisplay.lapswitch = False
+    if(configuration.getFuelSwitchStatus() =="enabled"):
+        mInfoDisplay.fuelswitch = True
+    elif(configuration.getFuelSwitchStatus()=="disabled"):
+        mInfoDisplay.fuelswitch = False
     mInfoDisplay.appWindow = ac.newApp("mInfo")
     ac.addRenderCallback(mInfoDisplay.appWindow, onFormRender)
-    ac.addOnAppActivatedListener(mInfoDisplay.appWindow, AppActivated)
-    ac.addOnAppDismissedListener(mInfoDisplay.appWindow, AppDismissed)
-    ac.setSize(mInfoDisplay.appWindow, 220, 220)
-    if(mInfoDisplay.appstatus is True):
+    ac.addOnAppActivatedListener(mInfoDisplay.appWindow, mInfoDisplay.AppActivated)
+    ac.addOnAppDismissedListener(mInfoDisplay.appWindow, mInfoDisplay.AppDismissed)
+    ac.setSize(mInfoDisplay.appWindow, 250, 250)
+
+    if(mInfoDisplay.fuelswitch is True):
+        mInfoDisplay.currentfuellabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
+        ac.setPosition(mInfoDisplay.currentfuellabel, 11, 212)
+        ac.setFontColor(mInfoDisplay.currentfuellabel, 1.0, 1.0, 1.0, 1)
+        ac.setFontAlignment(mInfoDisplay.currentfuellabel,'left')
+
+        mInfoDisplay.checkboxContainerFuel = ac.addCheckBox(mInfoDisplay.appWindow, "")
+        ac.setPosition(mInfoDisplay.checkboxContainerFuel, 230, 174)
+        ac.setSize(mInfoDisplay.checkboxContainerFuel,15,15)
+        ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerFuel,mInfoDisplay.checkboxEventFuel)
+
+        mInfoDisplay.checkboxLabelFuel = ac.addLabel(mInfoDisplay.appWindow, "Enabled")
+        ac.setPosition(mInfoDisplay.checkboxLabelFuel, 26, 171)
+        ac.setFontColor(mInfoDisplay.checkboxLabelFuel, 0.0, 1.0, 0.1, 1)
+        ac.setFontAlignment(mInfoDisplay.checkboxLabelFuel,'right')
+    else:
+        mInfoDisplay.currentfuellabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
+        ac.setPosition(mInfoDisplay.currentfuellabel, 11, 212)
+        ac.setFontColor(mInfoDisplay.currentfuellabel, 1.0, 0.0, 0.0, 1)
+        ac.setFontAlignment(mInfoDisplay.currentfuellabel,'left')
+
+        mInfoDisplay.checkboxContainerFuel = ac.addCheckBox(mInfoDisplay.appWindow, "")
+        ac.setPosition(mInfoDisplay.checkboxContainerFuel, 230,174)
+        ac.setSize(mInfoDisplay.checkboxContainerFuel,15,15)
+        ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerFuel,mInfoDisplay.checkboxEventFuel)
+
+        mInfoDisplay.checkboxLabelFuel = ac.addLabel(mInfoDisplay.appWindow, "Disabled")
+        ac.setPosition(mInfoDisplay.checkboxLabelFuel, 26, 171)
+        ac.setFontColor(mInfoDisplay.checkboxLabelFuel, 0.0, 1.0, 0.1, 1)
+        ac.setFontAlignment(mInfoDisplay.checkboxLabelFuel,'right')
+        ac.setText(mInfoDisplay.currentfuellabel, "Fuel Remaining : ----- Liters")
+
+    if(mInfoDisplay.lapswitch is True):
         mInfoDisplay.currentlaplabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.currentlaplabel, 50, 70)
+        ac.setPosition(mInfoDisplay.currentlaplabel, 20, 65)
         ac.setFontColor(mInfoDisplay.currentlaplabel, 1.0, 1.0, 1.0, 1)
         ac.setFontAlignment(mInfoDisplay.currentlaplabel,'left')
 
         mInfoDisplay.besttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.besttimelabel, 60, 90)
+        ac.setPosition(mInfoDisplay.besttimelabel, 30, 85)
         ac.setFontColor(mInfoDisplay.besttimelabel, 1.0, 1.0, 1.0, 1)
         ac.setFontAlignment(mInfoDisplay.besttimelabel,'left')
 
         mInfoDisplay.lasttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.lasttimelabel, 65, 110)
+        ac.setPosition(mInfoDisplay.lasttimelabel, 25, 105)
         ac.setFontColor(mInfoDisplay.lasttimelabel, 1.0, 1.0, 1.0, 1)
         ac.setFontAlignment(mInfoDisplay.lasttimelabel,'left')
 
         mInfoDisplay.currenttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.currenttimelabel, 41, 130)
+        ac.setPosition(mInfoDisplay.currenttimelabel, 11, 125)
         ac.setFontColor(mInfoDisplay.currenttimelabel, 1.0, 1.0, 1.0, 1)
         ac.setFontAlignment(mInfoDisplay.currenttimelabel,'left')
 
-        checkboxContainer = ac.addCheckBox(mInfoDisplay.appWindow, "")
-        ac.setPosition(checkboxContainer, 24, 172)
-        ac.setSize(checkboxContainer,20,20)
-        ac.addOnCheckBoxChanged(checkboxContainer,checkboxEvent)
+        mInfoDisplay.checkboxContainerLaptime = ac.addCheckBox(mInfoDisplay.appWindow, "")
+        ac.setPosition(mInfoDisplay.checkboxContainerLaptime, 230, 38)
+        ac.setSize(mInfoDisplay.checkboxContainerLaptime,15,15)
+        ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerLaptime,mInfoDisplay.checkboxEventLaptime)
 
-        mInfoDisplay.checkboxlabel = ac.addLabel(mInfoDisplay.appWindow, "Enabled")
-        ac.setPosition(mInfoDisplay.checkboxlabel, 8, 197)
-        ac.setFontColor(mInfoDisplay.checkboxlabel, 0.0, 1.0, 0.1, 1)
-        ac.setFontAlignment(mInfoDisplay.checkboxlabel,'left')
+        mInfoDisplay.checkboxLabelLaptime = ac.addLabel(mInfoDisplay.appWindow, "Enabled")
+        ac.setPosition(mInfoDisplay.checkboxLabelLaptime, 26, 35)
+        ac.setFontColor(mInfoDisplay.checkboxLabelLaptime, 0.0, 1.0, 0.1, 1)
+        ac.setFontAlignment(mInfoDisplay.checkboxLabelLaptime,'right')
+
+        mInfoDisplay.checkboxContainerBestLap = ac.addCheckBox(mInfoDisplay.appWindow, "")
+        ac.setPosition(mInfoDisplay.checkboxContainerBestLap, 230, 90)
+        ac.setSize(mInfoDisplay.checkboxContainerBestLap,15,15)
+        ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerBestLap,mInfoDisplay.checkboxEventBestLap)
+
+        mInfoDisplay.checkboxLabelBestLap = ac.addLabel(mInfoDisplay.appWindow, "Best Lap")
+        ac.setPosition(mInfoDisplay.checkboxLabelBestLap, 27, 87)
+        ac.setFontColor(mInfoDisplay.checkboxLabelBestLap, 1.0, 0.0, 0.0, 1)
+        ac.setFontAlignment(mInfoDisplay.checkboxLabelBestLap,'right')
 
         # mInfoDisplay.spinner = ac.addSpinner(mInfoDisplay.appWindow, "soundpack")
         # ac.setPosition(mInfoDisplay.spinner,116,170)
         # ac.setSize(mInfoDisplay.spinner,70,24)
         # ac.setRange(mInfoDisplay.spinner,1,1)
         # ac.setValue(mInfoDisplay.spinner,1)
-        # ac.addOnValueChangeListener(mInfoDisplay.spinner,spinnerEvent)
-        #
-        # mInfoDisplay.currentsoundpacklabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        # ac.setPosition(mInfoDisplay.currentsoundpacklabel, 50, 198)
-        # ac.setFontColor(mInfoDisplay.currentsoundpacklabel, 1.0, 1.0, 1.0, 1)
-        # ac.setFontAlignment(mInfoDisplay.currentsoundpacklabel,'center')
+        # ac.addOnValueChangeListener(mInfoDisplay.spinner,mInfoDisplay.spinnerEvent)
     else:
         mInfoDisplay.currentlaplabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.currentlaplabel, 50, 70)
+        ac.setPosition(mInfoDisplay.currentlaplabel, 20, 65)
         ac.setFontColor(mInfoDisplay.currentlaplabel, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.currentlaplabel,'left')
 
         mInfoDisplay.besttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.besttimelabel, 60, 90)
+        ac.setPosition(mInfoDisplay.besttimelabel, 30, 85)
         ac.setFontColor(mInfoDisplay.besttimelabel, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.besttimelabel,'left')
 
         mInfoDisplay.lasttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.lasttimelabel, 65, 110)
+        ac.setPosition(mInfoDisplay.lasttimelabel, 25, 105)
         ac.setFontColor(mInfoDisplay.lasttimelabel, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.lasttimelabel,'left')
 
         mInfoDisplay.currenttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.currenttimelabel, 41, 130)
+        ac.setPosition(mInfoDisplay.currenttimelabel, 11, 125)
         ac.setFontColor(mInfoDisplay.currenttimelabel, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.currenttimelabel,'left')
 
-        checkboxContainer = ac.addCheckBox(mInfoDisplay.appWindow, "")
-        ac.setPosition(checkboxContainer, 24, 172)
-        ac.addOnCheckBoxChanged(checkboxContainer,checkboxEvent)
+        mInfoDisplay.checkboxContainerLaptime = ac.addCheckBox(mInfoDisplay.appWindow, "")
+        ac.setPosition(mInfoDisplay.checkboxContainerLaptime, 230, 38)
+        ac.setSize(mInfoDisplay.checkboxContainerLaptime,15,15)
+        ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerLaptime,mInfoDisplay.checkboxEventLaptime)
 
-        mInfoDisplay.checkboxlabel = ac.addLabel(mInfoDisplay.appWindow, "Disabled")
-        ac.setPosition(mInfoDisplay.checkboxlabel, 8, 197)
-        ac.setFontColor(mInfoDisplay.checkboxlabel, 1.0, 0.0, 0.0, 1)
-        ac.setFontAlignment(mInfoDisplay.checkboxlabel,'left')
+        mInfoDisplay.checkboxLabelLaptime = ac.addLabel(mInfoDisplay.appWindow, "Disabled")
+        ac.setPosition(mInfoDisplay.checkboxLabelLaptime, 26, 35)
+        ac.setFontColor(mInfoDisplay.checkboxLabelLaptime, 1.0, 0.0, 0.0, 1)
+        ac.setFontAlignment(mInfoDisplay.checkboxLabelLaptime,'right')
+
+        mInfoDisplay.checkboxContainerBestLap = ac.addCheckBox(mInfoDisplay.appWindow, "")
+        ac.setPosition(mInfoDisplay.checkboxContainerBestLap, 230, 90)
+        ac.setSize(mInfoDisplay.checkboxContainerBestLap,15,15)
+        ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerBestLap,mInfoDisplay.checkboxEventBestLap)
+
+        mInfoDisplay.checkboxLabelBestLap = ac.addLabel(mInfoDisplay.appWindow, "Best Lap")
+        ac.setPosition(mInfoDisplay.checkboxLabelBestLap, 27, 87)
+        ac.setFontColor(mInfoDisplay.checkboxLabelBestLap, 1.0, 0.0, 0.0, 1)
+        ac.setFontAlignment(mInfoDisplay.checkboxLabelBestLap,'right')
 
         # mInfoDisplay.spinner = ac.addSpinner(mInfoDisplay.appWindow, "soundpack")
         # ac.setPosition(mInfoDisplay.spinner,116,170)
         # ac.setSize(mInfoDisplay.spinner,70,24)
         # ac.setRange(mInfoDisplay.spinner,1,1)
         # ac.setValue(mInfoDisplay.spinner,1)
-        # ac.addOnValueChangeListener(mInfoDisplay.spinner,spinnerEvent)
-        #
-        # mInfoDisplay.currentsoundpacklabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        # ac.setPosition(mInfoDisplay.currentsoundpacklabel, 50, 198)
-        # ac.setFontColor(mInfoDisplay.currentsoundpacklabel, 1.0, 0.0, 0.0, 1)
-        # ac.setFontAlignment(mInfoDisplay.currentsoundpacklabel,'center')
+        # ac.addOnValueChangeListener(mInfoDisplay.spinner,mInfoDisplay.spinnerEvent)
+
         #laptimer.updateTime(infosystem.graphics.completedLaps,infosystem.graphics.iBestTime,infosystem.graphics.iLastTime, infosystem.graphics.iCurrentTime)
         ac.setText(mInfoDisplay.currentlaplabel, "current lap : -")
         ac.setText(mInfoDisplay.besttimelabel, "best time : -:--:---")
@@ -915,9 +996,7 @@ def acMain(ac_version):
 
 def acUpdate(deltaT):
     """main loop.only update lap once and play sound once required as we are in a loop."""
-    global checkboxContainer
-    global label
-    if(mInfoDisplay.appstatus is True):
+    if(mInfoDisplay.lapswitch is True):
         soundsystem.hasplayedLastLap = 0
         if(laptimer.currentlap==0):
             laptimer.completedlaps = laptimer.currentlap
@@ -933,26 +1012,46 @@ def acUpdate(deltaT):
         ac.setFontColor(mInfoDisplay.besttimelabel, 1.0, 1.0, 1.0, 1)
         ac.setFontColor(mInfoDisplay.lasttimelabel, 1.0, 1.0, 1.0, 1)
         ac.setFontColor(mInfoDisplay.currenttimelabel, 1.0, 1.0, 1.0, 1)
-        # ac.setFontColor(mInfoDisplay.spinner, 1.0, 1.0, 1.0, 1)
-        # ac.setFontColor(mInfoDisplay.currentsoundpacklabel, 1.0, 1.0, 1.0, 1)
+        ac.setFontColor(mInfoDisplay.checkboxLabelFuel, 0.0, 1.0, 0.1, 1)
+        ac.setFontColor(mInfoDisplay.checkboxLabelBestLap, 1.0, 0.0, 0.0, 1)
+        #ac.setFontColor(mInfoDisplay.spinner, 1.0, 1.0, 1.0, 1)
         ac.setText(mInfoDisplay.currentlaplabel, "current lap : {0}".format(laptimer.getCurrentLap()))
         ac.setText(mInfoDisplay.besttimelabel, "best time : {0}".format(laptimer.getBestLapTime()))
         ac.setText(mInfoDisplay.lasttimelabel, "last time : {0}".format(laptimer.getLastLapTime()))
         ac.setText(mInfoDisplay.currenttimelabel, "current time : {0}".format(laptimer.getCurrentLapTime()))
-        # ac.setText(mInfoDisplay.currentsoundpacklabel, "hhhhhh")
     else:
         laptimer.updateTime(infosystem.graphics.completedLaps,infosystem.graphics.iBestTime,infosystem.graphics.iLastTime, infosystem.graphics.iCurrentTime)
         ac.setFontColor(mInfoDisplay.currentlaplabel, 1.0, 0.0, 0.0, 1)
         ac.setFontColor(mInfoDisplay.besttimelabel, 1.0, 0.0, 0.0, 1)
         ac.setFontColor(mInfoDisplay.lasttimelabel, 1.0, 0.0, 0.0, 1)
         ac.setFontColor(mInfoDisplay.currenttimelabel, 1.0, 0.0, 0.0, 1)
-        # ac.setFontColor(mInfoDisplay.spinner, 1.0, 0.0, 0.0, 1)
-        # ac.setFontColor(mInfoDisplay.currentsoundpacklabel, 1.0, 0.0, 0.0, 1)
+        ac.setFontColor(mInfoDisplay.checkboxLabelFuel, 1.0, 0.0, 0.0, 1)
+        ac.setFontColor(mInfoDisplay.checkboxLabelBestLap, 1.0, 0.0, 0.0, 1)
+        #ac.setFontColor(mInfoDisplay.spinner, 1.0, 0.0, 0.0, 1)
         ac.setText(mInfoDisplay.currentlaplabel, "current lap : -")
         ac.setText(mInfoDisplay.besttimelabel, "best time : -:--:---")
         ac.setText(mInfoDisplay.lasttimelabel, "last time : -:--:---")
         ac.setText(mInfoDisplay.currenttimelabel, "current time : -:--:---")
-        # ac.setText(mInfoDisplay.currentsoundpacklabel, "-----------------")
+
+    if(mInfoDisplay.fuelswitch is True):
+        #soundsystem.hasplayedLastLap = 0
+        # if(laptimer.currentlap==0):
+        #     laptimer.completedlaps = laptimer.currentlap
+        # if(laptimer.completedlaps < laptimer.currentlap):
+        #     laptimer.completedlaps = laptimer.currentlap
+        #     soundsystem.hasplayedLastLap = 1
+        #     if(soundsystem.hasplayedLastLap==1):
+        #         #ac.console("play sound")
+        #         soundsystem.playSoundLastLap()
+        #         soundsystem.hasplayedLastLap = 0
+        #laptimer.updateTime(infosystem.graphics.completedLaps,infosystem.graphics.iBestTime,infosystem.graphics.iLastTime, infosystem.graphics.iCurrentTime)
+        ac.setFontColor(mInfoDisplay.checkboxLabelFuel, 0.0, 1.0, 0.1, 1)
+        ac.setText(mInfoDisplay.currentfuellabel, "Fuel Remaining : {0} Liters".format(round(infosystem.physics.fuel,2)))
+    else:
+        #laptimer.updateTime(infosystem.graphics.completedLaps,infosystem.graphics.iBestTime,infosystem.graphics.iLastTime, infosystem.graphics.iCurrentTime)
+        ac.setFontColor(mInfoDisplay.checkboxLabelFuel, 1.0, 0.0, 0.0, 1)
+        ac.setFontColor(mInfoDisplay.currentfuellabel, 1.0, 0.0, 0.0, 1)
+        ac.setText(mInfoDisplay.currentfuellabel, "Fuel Remaining : ----- Liters")
 
 def onFormRender(deltaT):
     """only update app when app form is visible then update only the following note call back method for this function defined in acMain above."""
@@ -960,13 +1059,15 @@ def onFormRender(deltaT):
     ac.setFontColor(mInfoDisplay.besttimelabel, 1.0, 1.0, 1.0, 1)
     ac.setFontColor(mInfoDisplay.lasttimelabel, 1.0, 1.0, 1.0, 1)
     ac.setFontColor(mInfoDisplay.currenttimelabel, 1.0, 1.0, 1.0, 1)
-    # ac.setFontColor(mInfoDisplay.currentsoundpacklabel, 1.0, 1.0, 1.0, 1)
-    # ac.setFontColor(mInfoDisplay.spinner, 1.0, 1.0, 1.0, 1)
+    ac.setFontColor(mInfoDisplay.checkboxLabelFuel, 0.0, 1.0, 0.1, 1)
+    ac.setFontColor(mInfoDisplay.checkboxLabelBestLap, 0.0, 1.0, 0.1, 1)
+    ac.setFontColor(mInfoDisplay.currentfuellabel, 1.0, 1.0, 1.0, 1)
+    #ac.setFontColor(mInfoDisplay.spinner, 1.0, 1.0, 1.0, 1)
     ac.setText(mInfoDisplay.currentlaplabel, "current lap : {0}".format(laptimer.getCurrentLap()))
     ac.setText(mInfoDisplay.besttimelabel, "best time : {0}".format(laptimer.getBestLapTime()))
     ac.setText(mInfoDisplay.lasttimelabel, "last time : {0}".format(laptimer.getLastLapTime()))
     ac.setText(mInfoDisplay.currenttimelabel, "current time : {0}".format(laptimer.getCurrentLapTime()))
-    # ac.setText(mInfoDisplay.currentsoundpacklabel, "hhhhhh")
+    ac.setText(mInfoDisplay.currentfuellabel, "Fuel Remaining : {0} Liters".format(round(infosystem.physics.fuel,2)))
 
 def acShutdown():
     """on shut down quit pygame so no crash or lockup."""
