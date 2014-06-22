@@ -1,4 +1,4 @@
-"""mInfo ver 0.78  June 2014
+"""mInfo ver 0.80  June 2014
 GitHub Page: https://github.com/thedixieflatline/assettocorsa
 
 To activate copy mInfo folder to C:\Program Files (x86)\Steam\steamapps\common\assettocorsa\apps\python
@@ -901,7 +901,7 @@ def acMain(ac_version):
         ac.setFontAlignment(mInfoDisplay.besttimelabel,'left')
 
         mInfoDisplay.lasttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.lasttimelabel, 25, 105)
+        ac.setPosition(mInfoDisplay.lasttimelabel, 35, 105)
         ac.setFontColor(mInfoDisplay.lasttimelabel, 1.0, 1.0, 1.0, 1)
         ac.setFontAlignment(mInfoDisplay.lasttimelabel,'left')
 
@@ -948,7 +948,7 @@ def acMain(ac_version):
         ac.setFontAlignment(mInfoDisplay.besttimelabel,'left')
 
         mInfoDisplay.lasttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.lasttimelabel, 25, 105)
+        ac.setPosition(mInfoDisplay.lasttimelabel, 35, 105)
         ac.setFontColor(mInfoDisplay.lasttimelabel, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.lasttimelabel,'left')
 
