@@ -855,14 +855,15 @@ class DisplayClass:
     def checkboxEventFunctionFuel(self,x,y):
         if(mInfoDisplay.fuelswitch):
             mInfoDisplay.fuelswitch = False
+            configuration.setFuelSwitchDisabled()
             ac.setText(mInfoDisplay.checkboxLabelFuel, "Disabled")
             ac.setFontColor(mInfoDisplay.checkboxLabelFuel, 1.0, 0.0, 0.0, 1)
-            configuration.setFuelSwitchDisabled()
+
         else:
             mInfoDisplay.fuelswitch = True
+            configuration.setFuelSwitchEnabled()
             ac.setText(mInfoDisplay.checkboxLabelFuel, "Enabled")
             ac.setFontColor(mInfoDisplay.checkboxLabelFuel, 0.0, 1.0, 0.1, 1)
-            configuration.setFuelSwitchEnabled()
 
     def checkboxEventFunctionBestLap(self,x,y):
         ac.console("Best lap sound and settings coming soon")
@@ -870,17 +871,20 @@ class DisplayClass:
     def checkboxEventFunctionLaptime(self,x,y):
         if(mInfoDisplay.lapswitch):
             mInfoDisplay.lapswitch = False
+            configuration.setLapSwitchDisabled()
             ac.setText(mInfoDisplay.checkboxLabelLaptime, "Disabled")
             ac.setFontColor(mInfoDisplay.checkboxLabelLaptime, 1.0, 0.0, 0.0, 1)
-            configuration.setLapSwitchDisabled()
         else:
             mInfoDisplay.lapswitch = True
+            configuration.setLapSwitchEnabled()
             ac.setText(mInfoDisplay.checkboxLabelLaptime, "Enabled")
             ac.setFontColor(mInfoDisplay.checkboxLabelLaptime, 0.0, 1.0, 0.1, 1)
-            configuration.setLapSwitchEnabled()
+
 
     def AppActivatedFunction(self,val):
         #must have a pass completion or crash!!!
+        timesystem.updateLapTime(infosystem.graphics.completedLaps,infosystem.graphics.iBestTime,infosystem.graphics.iLastTime, infosystem.graphics.iCurrentTime)
+        fuelsystem.updateFuel(infosystem.physics.fuel)
         configuration.setLapSwitchEnabled()
         configuration.setFuelSwitchEnabled()
         soundsystem.hasplayedLastFuel = 0
