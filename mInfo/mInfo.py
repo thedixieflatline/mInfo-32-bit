@@ -1,4 +1,4 @@
-"""mInfo ver 0.80  June 2014
+"""mInfo ver 0.81  June 2014
 GitHub Page: https://github.com/thedixieflatline/assettocorsa
 
 To activate copy mInfo folder to C:\Program Files (x86)\Steam\steamapps\common\assettocorsa\apps\python
@@ -14,10 +14,13 @@ Big thanks to Rombik who wrote the original sim info  module.
 Please submit bugs or requests to the Assetto Corsa forum
 http://www.assettocorsa.net/forum/index.php
 
+TODO add volume control
+TODO Laptime add alert when new best lap achieved
+TODO Fuel add ability to alert at lap finish or when fuel reaches set amount
 TODO Need to do a better recording on the audio to sweeten it, make timing and volume more consistent. It sounds bad because I recorded on a headphone mic as a test so next version will be a nice microphone.
-TODO add volume control ang get fuel report audio working
-TODO Review code and refactor when the game is released and python API and or shared memory is ver 1.0 clean up some of the code to be more efficent.
-TODO add more features, fuel report, temp warnings, tire temp warnings"""
+TODO Splits ahead or behind last split
+TODO add more features, temp warnings, tires
+TODO Review code and refactor when the game is released and python API and or shared memory is ver 1.0"""
 
 import sys
 import os
@@ -92,14 +95,19 @@ class SoundClass:
         self.maindir = os.path.split(os.path.abspath(__file__))[0]
         self.mixer = pygame.mixer
         self.chan = None
+        self.test = 0
         self.currentsoundpack_name = ""
         self.currentsoundpack_folder = ""
         self.currentsoundpack_folder_root = "sounds/"
-        self.hasplayedLastLap = 0
+        self.hasplayedLastLaptime = 0
+        self.hasplayedLastFuel = 0
         self.soundlist = {}
-        self.playlist = []
-        self.joinsounds = None
-        self.playsounds =  None
+        self.playlist_laptime = []
+        self.joinsounds_laptime = None
+        self.playsounds_laptime =  None
+        self.playlist_fuel = []
+        self.joinsounds_fuel = None
+        self.playsounds_fuel=  None
         self.sound_silence = None
         self.filepathsound_silence = None
         self.sound_point = None
@@ -108,6 +116,10 @@ class SoundClass:
         self.filepathsound_minute = None
         self.sound_minutes = None
         self.filepathsound_minutes = None
+        self.sound_fuel = None
+        self.filepathsound_fuel = None
+        self.sound_fuel_liters = None
+        self.filepathsound_fuel_liters = None
         self.sound_zero = None
         self.filepathsound_zero = None
         self.sound_one = None
@@ -169,6 +181,8 @@ class SoundClass:
         self.filepathsound_point = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_point.wav')
         self.filepathsound_minute = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_minute.wav')
         self.filepathsound_minutes = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_minutes.wav')
+        self.filepathsound_fuel = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_fuel.wav')
+        self.filepathsound_fuel_liters = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_fuel_liters.wav')
         self.filepathsound_zero = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_zero.wav')
         self.filepathsound_one = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_one.wav')
         self.filepathsound_two = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_two.wav')
@@ -197,10 +211,10 @@ class SoundClass:
         self.mixer.set_num_channels(2)
         self.chan = pygame.mixer.Channel(0)
         self.chan.set_volume(1.0)
-        self.joinsounds = self.mixer.Sound(self.filepathsound_point)
-        self.joinsounds.set_volume(1.0)
-        self.playsounds = self.mixer.Sound(self.filepathsound_point)
-        self.playsounds.set_volume(1.0)
+        self.joinsounds_laptime = self.mixer.Sound(self.filepathsound_point)
+        self.joinsounds_laptime.set_volume(1.0)
+        self.playsounds_laptime = self.mixer.Sound(self.filepathsound_point)
+        self.playsounds_laptime.set_volume(1.0)
         self.sound_silence = self.mixer.Sound(self.filepathsound_silence)
         self.sound_silence.set_volume(1.0)
         self.sound_point = self.mixer.Sound(self.filepathsound_point)
@@ -209,6 +223,10 @@ class SoundClass:
         self.sound_minute.set_volume(1.0)
         self.sound_minutes = self.mixer.Sound(self.filepathsound_minutes)
         self.sound_minutes.set_volume(1.0)
+        self.sound_fuel = self.mixer.Sound(self.filepathsound_fuel)
+        self.sound_fuel.set_volume(1.0)
+        self.sound_fuel_liters = self.mixer.Sound(self.filepathsound_fuel_liters)
+        self.sound_fuel_liters.set_volume(1.0)
         self.sound_zero = self.mixer.Sound(self.filepathsound_zero)
         self.sound_zero.set_volume(1.0)
         self.sound_one = self.mixer.Sound(self.filepathsound_one)
@@ -365,12 +383,15 @@ class SoundClass:
         self.sound_fifty_nine_array = np.concatenate((self.sound_fifty,self.sound_silence,self.sound_nine))
         self.sound_fifty_nine = pygame.sndarray.make_sound(self.sound_fifty_nine_array)
         self.sound_fifty_nine.set_volume(1.0)
-        self.playlist = [self.sound_point,self.sound_point, self.sound_point, self.sound_point, self.sound_point, self.sound_point, self.sound_point]
+        self.playlist_laptime = [self.sound_point,self.sound_point, self.sound_point, self.sound_point, self.sound_point, self.sound_point, self.sound_point]
+        self.playlist_fuel = [self.sound_point,self.sound_point, self.sound_point, self.sound_point, self.sound_point, self.sound_point, self.sound_point]
         self.soundlist = {
             's': self.sound_silence,
             'p': self.sound_point,
             'm': self.sound_minute,
             'ms': self.sound_minutes,
+            'f': self.sound_fuel,
+            'l': self.sound_fuel_liters,
             '0': self.sound_zero,
             '1': self.sound_one,
             '2': self.sound_two,
@@ -433,45 +454,69 @@ class SoundClass:
             '59': self.sound_fifty_nine,
             }
 
-    def playSoundLastLap(self):
-        if(laptimer.lastlapminutes==0):
-            self.playlist[0] = self.sound_silence
-            self.playlist[1] = self.sound_silence
+    def playSoundLaptime(self):
+        if(timesystem.lastlapminutes==0):
+            self.playlist_laptime[0] = self.sound_silence
+            self.playlist_laptime[1] = self.sound_silence
         else:
-            # self.playlist[0] = self.soundlist.get(str(laptimer.lastlapminutes))
-            # self.playlist[1] = self.soundlist.get("m")
-            if(laptimer.lastlapminutes == 1):
-                self.playlist[0] = self.soundlist.get(str(laptimer.lastlapminutes))
-                self.playlist[1] = self.soundlist.get("m")
+            # self.playlist_laptime[0] = self.soundlist.get(str(timesystem.lastlapminutes))
+            # self.playlist_laptime[1] = self.soundlist.get("m")
+            if(timesystem.lastlapminutes == 1):
+                self.playlist_laptime[0] = self.soundlist.get(str(timesystem.lastlapminutes))
+                self.playlist_laptime[1] = self.soundlist.get("m")
             else:
-                self.playlist[0] = self.soundlist.get(str(laptimer.lastlapminutes))
-                self.playlist[1] = self.soundlist.get("ms")
-        self.playlist[2] = self.soundlist.get(str(laptimer.lastlapsecondsint))
-        self.playlist[3] = self.soundlist.get("p")
-        self.playlist[4] = self.soundlist.get(str(laptimer.lastlapmilliseconds1))
-        self.playlist[5] = self.soundlist.get(str(laptimer.lastlapmilliseconds2))
-        self.playlist[6] = self.soundlist.get(str(laptimer.lastlapmilliseconds3))
-        # self.playlist[0] = self.sound_one
-        # self.playlist[1] = self.sound_minute
-        # self.playlist[2] = self.sound_twenty_one
-        # self.playlist[3] = self.sound_point
-        # self.playlist[4] = self.sound_three
-        # self.playlist[5] = self.sound_three
-        # self.playlist[6] = self.sound_two
-        self.joinsounds = np.concatenate((self.playlist[0],self.playlist[1], self.playlist[2],self.playlist[3], self.playlist[4],self.playlist[5], self.playlist[6]), axis=0)
-        self.playsounds = pygame.sndarray.make_sound(self.joinsounds)
-        self.chan.play(self.playsounds)
+                self.playlist_laptime[0] = self.soundlist.get(str(timesystem.lastlapminutes))
+                self.playlist_laptime[1] = self.soundlist.get("ms")
+        self.playlist_laptime[2] = self.soundlist.get(str(timesystem.lastlapsecondsint))
+        self.playlist_laptime[3] = self.soundlist.get("p")
+        self.playlist_laptime[4] = self.soundlist.get(str(timesystem.lastlapmilliseconds1))
+        self.playlist_laptime[5] = self.soundlist.get(str(timesystem.lastlapmilliseconds2))
+        self.playlist_laptime[6] = self.soundlist.get(str(timesystem.lastlapmilliseconds3))
+        # self.playlist_laptime[0] = self.sound_one
+        # self.playlist_laptime[1] = self.sound_minute
+        # self.playlist_laptime[2] = self.sound_twenty_one
+        # self.playlist_laptime[3] = self.sound_point
+        # self.playlist_laptime[4] = self.sound_three
+        # self.playlist_laptime[5] = self.sound_three
+        # self.playlist_laptime[6] = self.sound_two
+        self.joinsounds_laptime = np.concatenate((self.playlist_laptime[0],self.playlist_laptime[1], self.playlist_laptime[2],self.playlist_laptime[3], self.playlist_laptime[4],self.playlist_laptime[5], self.playlist_laptime[6]), axis=0)
+        self.playsounds_laptime = pygame.sndarray.make_sound(self.joinsounds_laptime)
+        self.chan.play(self.playsounds_laptime)
+        self.hasplayedLastFuel = 1
 
+    def playSoundFuel(self):
+        if(fuelsystem.currentfuel>10):
+            self.playlist_fuel[0] = self.sound_fuel
+            self.playlist_fuel[1] = self.sound_silence
+            self.playlist_fuel[2] = self.soundlist.get(fuelsystem.currentfuel_100+fuelsystem.currentfuel_10)
+            self.playlist_fuel[3] = self.sound_point
+            self.playlist_fuel[4] = self.soundlist.get(fuelsystem.currentfuel_0)
+            self.playlist_fuel[5] = self.soundlist.get(fuelsystem.currentfuel_00)
+            self.playlist_fuel[6] = self.sound_fuel_liters
+            self.joinsounds_fuel = np.concatenate((self.playlist_fuel[0],self.playlist_fuel[1], self.playlist_fuel[2],self.playlist_fuel[3], self.playlist_fuel[4],self.playlist_fuel[5], self.playlist_fuel[6]), axis=0)
+            self.playsounds_fuel = pygame.sndarray.make_sound(self.joinsounds_fuel)
+            self.chan.queue(self.playsounds_fuel)
+        else:
+            self.playlist_fuel[0] = self.sound_fuel
+            self.playlist_fuel[1] = self.sound_silence
+            self.playlist_fuel[2] = self.soundlist.get(fuelsystem.currentfuel_10)
+            self.playlist_fuel[3] = self.sound_point
+            self.playlist_fuel[4] = self.soundlist.get(fuelsystem.currentfuel_0)
+            self.playlist_fuel[5] = self.soundlist.get(fuelsystem.currentfuel_00)
+            self.playlist_fuel[6] = self.sound_fuel_liters
+            self.joinsounds_fuel = np.concatenate((self.playlist_fuel[0],self.playlist_fuel[1], self.playlist_fuel[2],self.playlist_fuel[3], self.playlist_fuel[4],self.playlist_fuel[5], self.playlist_fuel[6]), axis=0)
+            self.playsounds_fuel = pygame.sndarray.make_sound(self.joinsounds_fuel)
+            self.chan.queue(self.playsounds_fuel)
 
     def playSound(self):
-        """ join sounds to form laptime sound in container self.joinsounds format and copy to playback container self.playsounds then play thru channel in mixer."""
-        self.joinsounds = np.concatenate((self.playlist[0],self.playlist[1], self.playlist[2],self.playlist[3], self.playlist[4],self.playlist[5],self.playlist[6]), axis=0)
-        self.playsounds = pygame.sndarray.make_sound(self.joinsounds)
-        self.chan.play(self.playsounds)
+        """ join sounds to form laptime sound in container self.joinsounds_laptime format and copy to playback container self.playsounds then play thru channel in mixer."""
+        self.joinsounds_laptime = np.concatenate((self.playlist_laptime[0],self.playlist_laptime[1], self.playlist_laptime[2],self.playlist_laptime[3], self.playlist_laptime[4],self.playlist_laptime[5],self.playlist_laptime[6]), axis=0)
+        self.playsounds_laptime = pygame.sndarray.make_sound(self.joinsounds_laptime)
+        self.chan.play(self.playsounds_laptime)
         #ac.console("playSound")
 
 class TimerClass:
-    """ Controls time recording storage combination output of laptimes input to getTime() is milliseconds from siminfo class obj instance laptimer. """
+    """ Controls time recording storage combination output of laptimes input to getTime() is milliseconds from siminfo class obj instance timesystem. """
     def __init__(self):
         self.currentlap = 0
         self.completedlaps = 0
@@ -502,7 +547,7 @@ class TimerClass:
         self.currentlapmilliseconds3 = "0"
         self.insertzeroatminutescurrent = ""
 
-    def updateTime(self,thelap,thetime1,thetime2,thetime3):
+    def updateLapTime(self,thelap,thetime1,thetime2,thetime3):
         self.currentlap = thelap
         self.bestlapmilliseconds = thetime1
         self.lastlapmilliseconds = thetime2
@@ -606,6 +651,36 @@ class TimerClass:
         else:
             return "-:--:---"
 
+class FuelClass:
+    """ Controls fuel record value storage output of fuel input to getTime() is float from siminfo class instance fuelsystem"""
+    def __init__(self):
+        self.currentfuel = 0.0
+        self.currentfuelstr = ""
+        self.currentfuel_100 = ""
+        self.currentfuel_10 = ""
+        self.currentfuel_0 = ""
+        self.currentfuel_00 = ""
+        self.currentfuel_display = ""
+        self.totalfuel = 0.0
+        self.usedfuel = 0.0
+
+    def updateFuel(self,fuel):
+        self.currentfuel = fuel
+        self.currentfuelstr = '{:.3f}'.format(self.currentfuel)
+        if(fuelsystem.currentfuel>10.00):
+            self.currentfuel_100 = str(self.currentfuelstr[0])
+            self.currentfuel_10 = str(self.currentfuelstr[1])
+            self.currentfuel_0 = str(self.currentfuelstr[3])
+            self.currentfuel_00 =  str(self.currentfuelstr[4])
+            self.currentfuel_display = self.currentfuel_100 + self.currentfuel_10 + "." + self.currentfuel_0 + self.currentfuel_00
+        else:
+            self.currentfuel_10 = str(self.currentfuelstr[0])
+            self.currentfuel_0 = str(self.currentfuelstr[2])
+            self.currentfuel_00 =  str(self.currentfuelstr[3])
+            self.currentfuel_display = self.currentfuel_10 + "." + self.currentfuel_0 + self.currentfuel_00
+
+    def getCurrentFuel(self):
+        return self.currentfuel_display
 
 #------------------------------------------------------------------------------------------------------------------------------------------
 # SIM INFO by @Rombik
@@ -778,7 +853,6 @@ class DisplayClass:
 
 
     def checkboxEventFunctionFuel(self,x,y):
-        ac.console("Fuel sound and settings coming soon")
         if(mInfoDisplay.fuelswitch):
             mInfoDisplay.fuelswitch = False
             ac.setText(mInfoDisplay.checkboxLabelFuel, "Disabled")
@@ -807,21 +881,16 @@ class DisplayClass:
 
     def AppActivatedFunction(self,val):
         #must have a pass completion or crash!!!
-        #ac.console("AppActivated")
         configuration.setLapSwitchEnabled()
         configuration.setFuelSwitchEnabled()
-        self.lapswitch = True
-        self.fuelswitch = True
+        soundsystem.hasplayedLastFuel = 0
         #pygame.init()
         #soundsystem.loadSounds()
 
     def AppDismissedFunction(self,val):
         #must have a pass completion or crash!!!
-        #ac.console("AppDismissed")
         configuration.setLapSwitchDisabled()
         configuration.setFuelSwitchDisabled()
-        self.lapswitch = False
-        self.fuelswitch =False
         configuration.saveConfig()
         #pygame.quit()
 
@@ -833,7 +902,8 @@ configuration = ConfigClass()
 configuration.loadConfig()
 configuration.setInitialStatus()
 infosystem = SimInfo()
-laptimer = TimerClass()
+timesystem = TimerClass()
+fuelsystem = FuelClass()
 soundsystem = SoundClass()
 mInfoDisplay = DisplayClass()
 
@@ -885,7 +955,7 @@ def acMain(ac_version):
 
         mInfoDisplay.checkboxLabelFuel = ac.addLabel(mInfoDisplay.appWindow, "Disabled")
         ac.setPosition(mInfoDisplay.checkboxLabelFuel, 26, 171)
-        ac.setFontColor(mInfoDisplay.checkboxLabelFuel, 0.0, 1.0, 0.1, 1)
+        ac.setFontColor(mInfoDisplay.checkboxLabelFuel, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.checkboxLabelFuel,'right')
         ac.setText(mInfoDisplay.currentfuellabel, "Fuel Remaining : ----- Liters")
 
@@ -920,15 +990,15 @@ def acMain(ac_version):
         ac.setFontColor(mInfoDisplay.checkboxLabelLaptime, 0.0, 1.0, 0.1, 1)
         ac.setFontAlignment(mInfoDisplay.checkboxLabelLaptime,'right')
 
-        mInfoDisplay.checkboxContainerBestLap = ac.addCheckBox(mInfoDisplay.appWindow, "")
-        ac.setPosition(mInfoDisplay.checkboxContainerBestLap, 230, 90)
-        ac.setSize(mInfoDisplay.checkboxContainerBestLap,15,15)
-        ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerBestLap,mInfoDisplay.checkboxEventBestLap)
+        # mInfoDisplay.checkboxContainerBestLap = ac.addCheckBox(mInfoDisplay.appWindow, "")
+        # ac.setPosition(mInfoDisplay.checkboxContainerBestLap, 230, 90)
+        # ac.setSize(mInfoDisplay.checkboxContainerBestLap,15,15)
+        # ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerBestLap,mInfoDisplay.checkboxEventBestLap)
 
-        mInfoDisplay.checkboxLabelBestLap = ac.addLabel(mInfoDisplay.appWindow, "Best Lap")
-        ac.setPosition(mInfoDisplay.checkboxLabelBestLap, 27, 87)
-        ac.setFontColor(mInfoDisplay.checkboxLabelBestLap, 1.0, 0.0, 0.0, 1)
-        ac.setFontAlignment(mInfoDisplay.checkboxLabelBestLap,'right')
+        # mInfoDisplay.checkboxLabelBestLap = ac.addLabel(mInfoDisplay.appWindow, "Best Lap")
+        # ac.setPosition(mInfoDisplay.checkboxLabelBestLap, 27, 87)
+        # ac.setFontColor(mInfoDisplay.checkboxLabelBestLap, 1.0, 0.0, 0.0, 1)
+        # ac.setFontAlignment(mInfoDisplay.checkboxLabelBestLap,'right')
 
         # mInfoDisplay.spinner = ac.addSpinner(mInfoDisplay.appWindow, "soundpack")
         # ac.setPosition(mInfoDisplay.spinner,116,170)
@@ -962,20 +1032,20 @@ def acMain(ac_version):
         ac.setSize(mInfoDisplay.checkboxContainerLaptime,15,15)
         ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerLaptime,mInfoDisplay.checkboxEventLaptime)
 
-        mInfoDisplay.checkboxLabelLaptime = ac.addLabel(mInfoDisplay.appWindow, "Disabled")
-        ac.setPosition(mInfoDisplay.checkboxLabelLaptime, 26, 35)
-        ac.setFontColor(mInfoDisplay.checkboxLabelLaptime, 1.0, 0.0, 0.0, 1)
-        ac.setFontAlignment(mInfoDisplay.checkboxLabelLaptime,'right')
+        # mInfoDisplay.checkboxLabelLaptime = ac.addLabel(mInfoDisplay.appWindow, "Disabled")
+        # ac.setPosition(mInfoDisplay.checkboxLabelLaptime, 26, 35)
+        # ac.setFontColor(mInfoDisplay.checkboxLabelLaptime, 1.0, 0.0, 0.0, 1)
+        # ac.setFontAlignment(mInfoDisplay.checkboxLabelLaptime,'right')
 
-        mInfoDisplay.checkboxContainerBestLap = ac.addCheckBox(mInfoDisplay.appWindow, "")
-        ac.setPosition(mInfoDisplay.checkboxContainerBestLap, 230, 90)
-        ac.setSize(mInfoDisplay.checkboxContainerBestLap,15,15)
-        ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerBestLap,mInfoDisplay.checkboxEventBestLap)
-
-        mInfoDisplay.checkboxLabelBestLap = ac.addLabel(mInfoDisplay.appWindow, "Best Lap")
-        ac.setPosition(mInfoDisplay.checkboxLabelBestLap, 27, 87)
-        ac.setFontColor(mInfoDisplay.checkboxLabelBestLap, 1.0, 0.0, 0.0, 1)
-        ac.setFontAlignment(mInfoDisplay.checkboxLabelBestLap,'right')
+        # mInfoDisplay.checkboxContainerBestLap = ac.addCheckBox(mInfoDisplay.appWindow, "")
+        # ac.setPosition(mInfoDisplay.checkboxContainerBestLap, 230, 90)
+        # ac.setSize(mInfoDisplay.checkboxContainerBestLap,15,15)
+        # ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerBestLap,mInfoDisplay.checkboxEventBestLap)
+        #
+        # mInfoDisplay.checkboxLabelBestLap = ac.addLabel(mInfoDisplay.appWindow, "Best Lap")
+        # ac.setPosition(mInfoDisplay.checkboxLabelBestLap, 27, 87)
+        # ac.setFontColor(mInfoDisplay.checkboxLabelBestLap, 1.0, 0.0, 0.0, 1)
+        # ac.setFontAlignment(mInfoDisplay.checkboxLabelBestLap,'right')
 
         # mInfoDisplay.spinner = ac.addSpinner(mInfoDisplay.appWindow, "soundpack")
         # ac.setPosition(mInfoDisplay.spinner,116,170)
@@ -984,7 +1054,7 @@ def acMain(ac_version):
         # ac.setValue(mInfoDisplay.spinner,1)
         # ac.addOnValueChangeListener(mInfoDisplay.spinner,mInfoDisplay.spinnerEvent)
 
-        #laptimer.updateTime(infosystem.graphics.completedLaps,infosystem.graphics.iBestTime,infosystem.graphics.iLastTime, infosystem.graphics.iCurrentTime)
+        #timesystem.updateLapTime(infosystem.graphics.completedLaps,infosystem.graphics.iBestTime,infosystem.graphics.iLastTime, infosystem.graphics.iCurrentTime)
         ac.setText(mInfoDisplay.currentlaplabel, "current lap : -")
         ac.setText(mInfoDisplay.besttimelabel, "best time : -:--:---")
         ac.setText(mInfoDisplay.lasttimelabel, "last time : -:--:---")
@@ -997,58 +1067,61 @@ def acMain(ac_version):
 def acUpdate(deltaT):
     """main loop.only update lap once and play sound once required as we are in a loop."""
     if(mInfoDisplay.lapswitch is True):
-        soundsystem.hasplayedLastLap = 0
-        if(laptimer.currentlap==0):
-            laptimer.completedlaps = laptimer.currentlap
-        if(laptimer.completedlaps < laptimer.currentlap):
-            laptimer.completedlaps = laptimer.currentlap
-            soundsystem.hasplayedLastLap = 1
-            if(soundsystem.hasplayedLastLap==1):
+        soundsystem.hasplayedLastLaptime = 0
+        if(timesystem.currentlap==0):
+            timesystem.completedlaps = timesystem.currentlap
+        if(timesystem.completedlaps < timesystem.currentlap):
+            timesystem.completedlaps = timesystem.currentlap
+            soundsystem.hasplayedLastLaptime = 1
+            if(soundsystem.hasplayedLastLaptime==1):
                 #ac.console("play sound")
-                soundsystem.playSoundLastLap()
-                soundsystem.hasplayedLastLap = 0
-        laptimer.updateTime(infosystem.graphics.completedLaps,infosystem.graphics.iBestTime,infosystem.graphics.iLastTime, infosystem.graphics.iCurrentTime)
+                soundsystem.playSoundLaptime()
+                soundsystem.hasplayedLastLaptime = 0
+        timesystem.updateLapTime(infosystem.graphics.completedLaps,infosystem.graphics.iBestTime,infosystem.graphics.iLastTime, infosystem.graphics.iCurrentTime)
+        timesystem.getLastLapTime()
         ac.setFontColor(mInfoDisplay.currentlaplabel, 1.0, 1.0, 1.0, 1)
         ac.setFontColor(mInfoDisplay.besttimelabel, 1.0, 1.0, 1.0, 1)
         ac.setFontColor(mInfoDisplay.lasttimelabel, 1.0, 1.0, 1.0, 1)
         ac.setFontColor(mInfoDisplay.currenttimelabel, 1.0, 1.0, 1.0, 1)
-        ac.setFontColor(mInfoDisplay.checkboxLabelFuel, 0.0, 1.0, 0.1, 1)
-        ac.setFontColor(mInfoDisplay.checkboxLabelBestLap, 1.0, 0.0, 0.0, 1)
+        #ac.setFontColor(mInfoDisplay.checkboxLabelBestLap, 1.0, 0.0, 0.0, 1)
         #ac.setFontColor(mInfoDisplay.spinner, 1.0, 1.0, 1.0, 1)
-        ac.setText(mInfoDisplay.currentlaplabel, "current lap : {0}".format(laptimer.getCurrentLap()))
-        ac.setText(mInfoDisplay.besttimelabel, "best time : {0}".format(laptimer.getBestLapTime()))
-        ac.setText(mInfoDisplay.lasttimelabel, "last time : {0}".format(laptimer.getLastLapTime()))
-        ac.setText(mInfoDisplay.currenttimelabel, "current time : {0}".format(laptimer.getCurrentLapTime()))
+        ac.setText(mInfoDisplay.currentlaplabel, "current lap : {0}".format(timesystem.getCurrentLap()))
+        ac.setText(mInfoDisplay.besttimelabel, "best time : {0}".format(timesystem.getBestLapTime()))
+        ac.setText(mInfoDisplay.lasttimelabel, "last time : {0}".format(timesystem.getLastLapTime()))
+        ac.setText(mInfoDisplay.currenttimelabel, "current time : {0}".format(timesystem.getCurrentLapTime()))
     else:
-        laptimer.updateTime(infosystem.graphics.completedLaps,infosystem.graphics.iBestTime,infosystem.graphics.iLastTime, infosystem.graphics.iCurrentTime)
+        timesystem.updateLapTime(infosystem.graphics.completedLaps,infosystem.graphics.iBestTime,infosystem.graphics.iLastTime, infosystem.graphics.iCurrentTime)
+        timesystem.getLastLapTime()
         ac.setFontColor(mInfoDisplay.currentlaplabel, 1.0, 0.0, 0.0, 1)
         ac.setFontColor(mInfoDisplay.besttimelabel, 1.0, 0.0, 0.0, 1)
         ac.setFontColor(mInfoDisplay.lasttimelabel, 1.0, 0.0, 0.0, 1)
         ac.setFontColor(mInfoDisplay.currenttimelabel, 1.0, 0.0, 0.0, 1)
-        ac.setFontColor(mInfoDisplay.checkboxLabelFuel, 1.0, 0.0, 0.0, 1)
-        ac.setFontColor(mInfoDisplay.checkboxLabelBestLap, 1.0, 0.0, 0.0, 1)
+        #ac.setFontColor(mInfoDisplay.checkboxLabelBestLap, 1.0, 0.0, 0.0, 1)
         #ac.setFontColor(mInfoDisplay.spinner, 1.0, 0.0, 0.0, 1)
         ac.setText(mInfoDisplay.currentlaplabel, "current lap : -")
         ac.setText(mInfoDisplay.besttimelabel, "best time : -:--:---")
         ac.setText(mInfoDisplay.lasttimelabel, "last time : -:--:---")
         ac.setText(mInfoDisplay.currenttimelabel, "current time : -:--:---")
-
     if(mInfoDisplay.fuelswitch is True):
-        #soundsystem.hasplayedLastLap = 0
-        # if(laptimer.currentlap==0):
-        #     laptimer.completedlaps = laptimer.currentlap
-        # if(laptimer.completedlaps < laptimer.currentlap):
-        #     laptimer.completedlaps = laptimer.currentlap
-        #     soundsystem.hasplayedLastLap = 1
-        #     if(soundsystem.hasplayedLastLap==1):
-        #         #ac.console("play sound")
-        #         soundsystem.playSoundLastLap()
-        #         soundsystem.hasplayedLastLap = 0
-        #laptimer.updateTime(infosystem.graphics.completedLaps,infosystem.graphics.iBestTime,infosystem.graphics.iLastTime, infosystem.graphics.iCurrentTime)
+        fuelsystem.updateFuel(infosystem.physics.fuel)
         ac.setFontColor(mInfoDisplay.checkboxLabelFuel, 0.0, 1.0, 0.1, 1)
-        ac.setText(mInfoDisplay.currentfuellabel, "Fuel Remaining : {0} Liters".format(round(infosystem.physics.fuel,2)))
+        ac.setFontColor(mInfoDisplay.currentfuellabel, 1.0, 1.0, 1.0, 1)
+        ac.setText(mInfoDisplay.currentfuellabel, "Fuel Remaining : {0} Liters".format(fuelsystem.getCurrentFuel()))
+        if(mInfoDisplay.lapswitch is False):
+            if(timesystem.currentlap==0):
+                timesystem.completedlaps = timesystem.currentlap
+            if(timesystem.completedlaps < timesystem.currentlap):
+                timesystem.completedlaps = timesystem.currentlap
+                soundsystem.hasplayedLastFuel = 1
+                if(soundsystem.hasplayedLastFuel == 1):
+                    soundsystem.playSoundFuel()
+                    soundsystem.hasplayedLastFuel = 0
+        else:
+            if(soundsystem.hasplayedLastFuel == 1):
+                soundsystem.playSoundFuel()
+                soundsystem.hasplayedLastFuel = 0
     else:
-        #laptimer.updateTime(infosystem.graphics.completedLaps,infosystem.graphics.iBestTime,infosystem.graphics.iLastTime, infosystem.graphics.iCurrentTime)
+        fuelsystem.updateFuel(infosystem.physics.fuel)
         ac.setFontColor(mInfoDisplay.checkboxLabelFuel, 1.0, 0.0, 0.0, 1)
         ac.setFontColor(mInfoDisplay.currentfuellabel, 1.0, 0.0, 0.0, 1)
         ac.setText(mInfoDisplay.currentfuellabel, "Fuel Remaining : ----- Liters")
@@ -1059,15 +1132,14 @@ def onFormRender(deltaT):
     ac.setFontColor(mInfoDisplay.besttimelabel, 1.0, 1.0, 1.0, 1)
     ac.setFontColor(mInfoDisplay.lasttimelabel, 1.0, 1.0, 1.0, 1)
     ac.setFontColor(mInfoDisplay.currenttimelabel, 1.0, 1.0, 1.0, 1)
-    ac.setFontColor(mInfoDisplay.checkboxLabelFuel, 0.0, 1.0, 0.1, 1)
-    ac.setFontColor(mInfoDisplay.checkboxLabelBestLap, 0.0, 1.0, 0.1, 1)
+    #ac.setFontColor(mInfoDisplay.checkboxLabelBestLap, 0.0, 1.0, 0.1, 1)
     ac.setFontColor(mInfoDisplay.currentfuellabel, 1.0, 1.0, 1.0, 1)
     #ac.setFontColor(mInfoDisplay.spinner, 1.0, 1.0, 1.0, 1)
-    ac.setText(mInfoDisplay.currentlaplabel, "current lap : {0}".format(laptimer.getCurrentLap()))
-    ac.setText(mInfoDisplay.besttimelabel, "best time : {0}".format(laptimer.getBestLapTime()))
-    ac.setText(mInfoDisplay.lasttimelabel, "last time : {0}".format(laptimer.getLastLapTime()))
-    ac.setText(mInfoDisplay.currenttimelabel, "current time : {0}".format(laptimer.getCurrentLapTime()))
-    ac.setText(mInfoDisplay.currentfuellabel, "Fuel Remaining : {0} Liters".format(round(infosystem.physics.fuel,2)))
+    ac.setText(mInfoDisplay.currentlaplabel, "current lap : {0}".format(timesystem.getCurrentLap()))
+    ac.setText(mInfoDisplay.besttimelabel, "best time : {0}".format(timesystem.getBestLapTime()))
+    ac.setText(mInfoDisplay.lasttimelabel, "last time : {0}".format(timesystem.getLastLapTime()))
+    ac.setText(mInfoDisplay.currenttimelabel, "current time : {0}".format(timesystem.getCurrentLapTime()))
+    ac.setText(mInfoDisplay.currentfuellabel, "Fuel Remaining : {0} Liters".format(fuelsystem.getCurrentFuel()))
 
 def acShutdown():
     """on shut down quit pygame so no crash or lockup."""
