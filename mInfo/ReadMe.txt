@@ -1,4 +1,4 @@
-mInfo ver 0.81  June 2014
+mInfo ver 0.82  June 2014
 
 GitHub Page: https://github.com/thedixieflatline/assettocorsa
 
