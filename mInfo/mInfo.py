@@ -1,4 +1,4 @@
-"""mInfo ver 0.82  June 2014
+"""mInfo ver 0.83  June 2014
 GitHub Page: https://github.com/thedixieflatline/assettocorsa
 
 To activate copy mInfo folder to C:\Program Files (x86)\Steam\steamapps\common\assettocorsa\apps\python
@@ -215,6 +215,10 @@ class SoundClass:
         self.joinsounds_laptime.set_volume(1.0)
         self.playsounds_laptime = self.mixer.Sound(self.filepathsound_point)
         self.playsounds_laptime.set_volume(1.0)
+        self.joinsounds_fuel = self.mixer.Sound(self.filepathsound_point)
+        self.joinsounds_fuel.set_volume(1.0)
+        self.playsounds_fuel = self.mixer.Sound(self.filepathsound_point)
+        self.playsounds_fuel.set_volume(1.0)
         self.sound_silence = self.mixer.Sound(self.filepathsound_silence)
         self.sound_silence.set_volume(1.0)
         self.sound_point = self.mixer.Sound(self.filepathsound_point)
@@ -455,12 +459,11 @@ class SoundClass:
             }
 
     def playSoundLaptime(self):
+        timesystem.getLastLapTime()
         if(timesystem.lastlapminutes==0):
             self.playlist_laptime[0] = self.sound_silence
             self.playlist_laptime[1] = self.sound_silence
         else:
-            # self.playlist_laptime[0] = self.soundlist.get(str(timesystem.lastlapminutes))
-            # self.playlist_laptime[1] = self.soundlist.get("m")
             if(timesystem.lastlapminutes == 1):
                 self.playlist_laptime[0] = self.soundlist.get(str(timesystem.lastlapminutes))
                 self.playlist_laptime[1] = self.soundlist.get("m")
@@ -469,9 +472,9 @@ class SoundClass:
                 self.playlist_laptime[1] = self.soundlist.get("ms")
         self.playlist_laptime[2] = self.soundlist.get(str(timesystem.lastlapsecondsint))
         self.playlist_laptime[3] = self.soundlist.get("p")
-        self.playlist_laptime[4] = self.soundlist.get(str(timesystem.lastlapmilliseconds1))
-        self.playlist_laptime[5] = self.soundlist.get(str(timesystem.lastlapmilliseconds2))
-        self.playlist_laptime[6] = self.soundlist.get(str(timesystem.lastlapmilliseconds3))
+        self.playlist_laptime[4] = self.soundlist.get(timesystem.lastlapmilliseconds1)
+        self.playlist_laptime[5] = self.soundlist.get(timesystem.lastlapmilliseconds2)
+        self.playlist_laptime[6] = self.soundlist.get(timesystem.lastlapmilliseconds3)
         # self.playlist_laptime[0] = self.sound_one
         # self.playlist_laptime[1] = self.sound_minute
         # self.playlist_laptime[2] = self.sound_twenty_one
@@ -555,17 +558,16 @@ class TimerClass:
 
     def getCurrentLap(self):
         return self.currentlap
-        #return str(self.currentlap) + " " + str(self.completedlaps)
 
     def getBestLapTime(self):
         if(self.bestlapmilliseconds):
             if(self.bestlapmilliseconds<60000):
                 self.bestlapminutes = 0
                 self.bestlapsecondsint = int((self.bestlapmilliseconds/1000) // 1 * 1)
-                self.bestlapmillisecondsStr = str(self.bestlapmilliseconds/1000)
-                self.bestlapmilliseconds1 = str(self.bestlapmillisecondsStr[-3:-2])
-                self.bestlapmilliseconds2 = str(self.bestlapmillisecondsStr[-2:-1])
-                self.bestlapmilliseconds3 = str(self.bestlapmillisecondsStr[-1])
+                self.bestlapmillisecondsStr = format(self.bestlapmilliseconds/1000, '.3f')
+                self.bestlapmilliseconds1 = self.bestlapmillisecondsStr[-3:-2]
+                self.bestlapmilliseconds2 = self.bestlapmillisecondsStr[-2:-1]
+                self.bestlapmilliseconds3 = self.bestlapmillisecondsStr[-1]
                 if(self.bestlapsecondsint<10):
                     self.insertzeroatminutesbest = "0{0}".format(self.bestlapsecondsint)
                     return "{0}:{1}:{2}{3}{4}".format(self.bestlapminutes,self.insertzeroatminutesbest,self.bestlapmilliseconds1,self.bestlapmilliseconds2,self.bestlapmilliseconds3)
@@ -575,10 +577,10 @@ class TimerClass:
             else:
                 self.bestlapminutes = int((self.bestlapmilliseconds/1000)/60)
                 self.bestlapsecondsint = int((self.bestlapmilliseconds/1000) - (self.bestlapminutes*60))
-                self.bestlapmillisecondsStr = str(self.bestlapmilliseconds/1000)
-                self.bestlapmilliseconds1 = str(self.bestlapmillisecondsStr[-3:-2])
-                self.bestlapmilliseconds2 = str(self.bestlapmillisecondsStr[-2:-1])
-                self.bestlapmilliseconds3 = str(self.bestlapmillisecondsStr[-1])
+                self.bestlapmillisecondsStr = format(self.bestlapmilliseconds/1000, '.3f')
+                self.bestlapmilliseconds1 = self.bestlapmillisecondsStr[-3:-2]
+                self.bestlapmilliseconds2 = self.bestlapmillisecondsStr[-2:-1]
+                self.bestlapmilliseconds3 = self.bestlapmillisecondsStr[-1]
                 if(self.bestlapsecondsint<10):
                     self.insertzeroatminutesbest = "0{0}".format(self.bestlapsecondsint)
                     return "{0}:{1}:{2}{3}{4}".format(self.bestlapminutes,self.insertzeroatminutesbest,self.bestlapmilliseconds1,self.bestlapmilliseconds2,self.bestlapmilliseconds3)
@@ -593,10 +595,10 @@ class TimerClass:
             if(self.lastlapmilliseconds<60000):
                 self.lastlapminutes = 0
                 self.lastlapsecondsint = int((self.lastlapmilliseconds/1000) // 1 * 1)
-                self.lastlapmillisecondsStr = str(self.lastlapmilliseconds/1000)
-                self.lastlapmilliseconds1 = str(self.lastlapmillisecondsStr[-3:-2])
-                self.lastlapmilliseconds2 = str(self.lastlapmillisecondsStr[-2:-1])
-                self.lastlapmilliseconds3 = str(self.lastlapmillisecondsStr[-1])
+                self.lastlapmillisecondsStr = format(self.lastlapmilliseconds/1000, '.3f')
+                self.lastlapmilliseconds1 = self.lastlapmillisecondsStr[-3:-2]
+                self.lastlapmilliseconds2 = self.lastlapmillisecondsStr[-2:-1]
+                self.lastlapmilliseconds3 = self.lastlapmillisecondsStr[-1]
                 if(self.lastlapsecondsint<10):
                     self.insertzeroatminuteslast = "0{0}".format(self.lastlapsecondsint)
                     return "{0}:{1}:{2}{3}{4}".format(self.lastlapminutes,self.insertzeroatminuteslast,self.lastlapmilliseconds1,self.lastlapmilliseconds2,self.lastlapmilliseconds3)
@@ -606,10 +608,10 @@ class TimerClass:
             else:
                 self.lastlapminutes = int((self.lastlapmilliseconds/1000)/60)
                 self.lastlapsecondsint = int((self.lastlapmilliseconds/1000) - (self.lastlapminutes*60))
-                self.lastlapmillisecondsStr = str(self.lastlapmilliseconds/1000)
-                self.lastlapmilliseconds1 = str(self.lastlapmillisecondsStr[-3:-2])
-                self.lastlapmilliseconds2 = str(self.lastlapmillisecondsStr[-2:-1])
-                self.lastlapmilliseconds3 = str(self.lastlapmillisecondsStr[-1])
+                self.lastlapmillisecondsStr = format(self.lastlapmilliseconds/1000, '.3f')
+                self.lastlapmilliseconds1 = self.lastlapmillisecondsStr[-3:-2]
+                self.lastlapmilliseconds2 = self.lastlapmillisecondsStr[-2:-1]
+                self.lastlapmilliseconds3 = self.lastlapmillisecondsStr[-1]
                 if(self.lastlapsecondsint<10):
                     self.insertzeroatminuteslast = "0{0}".format(self.lastlapsecondsint)
                     return "{0}:{1}:{2}{3}{4}".format(self.lastlapminutes,self.insertzeroatminuteslast,self.lastlapmilliseconds1,self.lastlapmilliseconds2,self.lastlapmilliseconds3)
@@ -624,11 +626,10 @@ class TimerClass:
             if(self.currentlapmilliseconds<60000):
                 self.currentlapminutes = 0
                 self.currentlapsecondsint = int((self.currentlapmilliseconds/1000) // 1 * 1)
-                self.currentlapmillisecondsStr = str(self.currentlapmilliseconds/1000)
-                self.currentlapmilliseconds1 = str(self.currentlapmillisecondsStr[-3:-2])
-                self.currentlapmilliseconds2 = str(self.currentlapmillisecondsStr[-2:-1])
-                self.currentlapmilliseconds3 = str(self.currentlapmillisecondsStr[-1])
-                #return "{0}:{1}:{2}{3}{4}".format(self.currentlapminutes,self.currentlapsecondsint,self.currentlapmilliseconds1,self.currentlapmilliseconds2,self.currentlapmilliseconds3)
+                self.currentlapmillisecondsStr = format(self.currentlapmilliseconds/1000, '.3f')
+                self.currentlapmilliseconds1 = self.currentlapmillisecondsStr[-3:-2]
+                self.currentlapmilliseconds2 = self.currentlapmillisecondsStr[-2:-1]
+                self.currentlapmilliseconds3 = self.currentlapmillisecondsStr[-1]
                 if(self.currentlapsecondsint<10):
                     self.insertzeroatminutescurrent = "0{0}".format(self.currentlapsecondsint)
                     return "{0}:{1}:{2}{3}{4}".format(self.currentlapminutes,self.insertzeroatminutescurrent,self.currentlapmilliseconds1,self.currentlapmilliseconds2,self.currentlapmilliseconds3)
@@ -638,10 +639,10 @@ class TimerClass:
             else:
                 self.currentlapminutes = int((self.currentlapmilliseconds/1000)/60)
                 self.currentlapsecondsint = int((self.currentlapmilliseconds/1000) - (self.currentlapminutes*60))
-                self.currentlapmillisecondsStr = str(self.currentlapmilliseconds/1000)
-                self.currentlapmilliseconds1 = str(self.currentlapmillisecondsStr[-3:-2])
-                self.currentlapmilliseconds2 = str(self.currentlapmillisecondsStr[-2:-1])
-                self.currentlapmilliseconds3 = str(self.currentlapmillisecondsStr[-1])
+                self.currentlapmillisecondsStr = format(self.currentlapmilliseconds/1000, '.3f')
+                self.currentlapmilliseconds1 = self.currentlapmillisecondsStr[-3:-2]
+                self.currentlapmilliseconds2 = self.currentlapmillisecondsStr[-2:-1]
+                self.currentlapmilliseconds3 = self.currentlapmillisecondsStr[-1]
                 if(self.currentlapsecondsint<10):
                     self.insertzeroatminutescurrent = "0{0}".format(self.currentlapsecondsint)
                     return "{0}:{1}:{2}{3}{4}".format(self.currentlapminutes,self.insertzeroatminutescurrent,self.currentlapmilliseconds1,self.currentlapmilliseconds2,self.currentlapmilliseconds3)
@@ -666,17 +667,17 @@ class FuelClass:
 
     def updateFuel(self,fuel):
         self.currentfuel = fuel
-        self.currentfuelstr = '{:.3f}'.format(self.currentfuel)
+        self.currentfuelstr = format(self.currentfuel, '.3f')
         if(fuelsystem.currentfuel>10.00):
-            self.currentfuel_100 = str(self.currentfuelstr[0])
-            self.currentfuel_10 = str(self.currentfuelstr[1])
-            self.currentfuel_0 = str(self.currentfuelstr[3])
-            self.currentfuel_00 =  str(self.currentfuelstr[4])
+            self.currentfuel_100 = self.currentfuelstr[0]
+            self.currentfuel_10 = self.currentfuelstr[1]
+            self.currentfuel_0 = self.currentfuelstr[3]
+            self.currentfuel_00 =  self.currentfuelstr[4]
             self.currentfuel_display = self.currentfuel_100 + self.currentfuel_10 + "." + self.currentfuel_0 + self.currentfuel_00
         else:
-            self.currentfuel_10 = str(self.currentfuelstr[0])
-            self.currentfuel_0 = str(self.currentfuelstr[2])
-            self.currentfuel_00 =  str(self.currentfuelstr[3])
+            self.currentfuel_10 = self.currentfuelstr[0]
+            self.currentfuel_0 = self.currentfuelstr[2]
+            self.currentfuel_00 =  self.currentfuelstr[3]
             self.currentfuel_display = self.currentfuel_10 + "." + self.currentfuel_0 + self.currentfuel_00
 
     def getCurrentFuel(self):
@@ -848,20 +849,16 @@ class DisplayClass:
 
     def spinnerEventFunction(self,x):
         ac.console("hit")
-        #ac.console(str(ac.getValue(mInfoDisplay.spinner)))
-        #configuration.setCurrentSoundPack()
-
 
     def checkboxEventFunctionFuel(self,x,y):
         if(mInfoDisplay.fuelswitch):
-            mInfoDisplay.fuelswitch = False
             configuration.setFuelSwitchDisabled()
+            mInfoDisplay.fuelswitch = False
             ac.setText(mInfoDisplay.checkboxLabelFuel, "Disabled")
             ac.setFontColor(mInfoDisplay.checkboxLabelFuel, 1.0, 0.0, 0.0, 1)
-
         else:
-            mInfoDisplay.fuelswitch = True
             configuration.setFuelSwitchEnabled()
+            mInfoDisplay.fuelswitch = True
             ac.setText(mInfoDisplay.checkboxLabelFuel, "Enabled")
             ac.setFontColor(mInfoDisplay.checkboxLabelFuel, 0.0, 1.0, 0.1, 1)
 
@@ -1057,8 +1054,8 @@ def acMain(ac_version):
         # ac.setRange(mInfoDisplay.spinner,1,1)
         # ac.setValue(mInfoDisplay.spinner,1)
         # ac.addOnValueChangeListener(mInfoDisplay.spinner,mInfoDisplay.spinnerEvent)
-
         #timesystem.updateLapTime(infosystem.graphics.completedLaps,infosystem.graphics.iBestTime,infosystem.graphics.iLastTime, infosystem.graphics.iCurrentTime)
+
         ac.setText(mInfoDisplay.currentlaplabel, "current lap : -")
         ac.setText(mInfoDisplay.besttimelabel, "best time : -:--:---")
         ac.setText(mInfoDisplay.lasttimelabel, "last time : -:--:---")
@@ -1082,7 +1079,6 @@ def acUpdate(deltaT):
                 soundsystem.playSoundLaptime()
                 soundsystem.hasplayedLastLaptime = 0
         timesystem.updateLapTime(infosystem.graphics.completedLaps,infosystem.graphics.iBestTime,infosystem.graphics.iLastTime, infosystem.graphics.iCurrentTime)
-        timesystem.getLastLapTime()
         ac.setFontColor(mInfoDisplay.currentlaplabel, 1.0, 1.0, 1.0, 1)
         ac.setFontColor(mInfoDisplay.besttimelabel, 1.0, 1.0, 1.0, 1)
         ac.setFontColor(mInfoDisplay.lasttimelabel, 1.0, 1.0, 1.0, 1)
@@ -1095,7 +1091,6 @@ def acUpdate(deltaT):
         ac.setText(mInfoDisplay.currenttimelabel, "current time : {0}".format(timesystem.getCurrentLapTime()))
     else:
         timesystem.updateLapTime(infosystem.graphics.completedLaps,infosystem.graphics.iBestTime,infosystem.graphics.iLastTime, infosystem.graphics.iCurrentTime)
-        timesystem.getLastLapTime()
         ac.setFontColor(mInfoDisplay.currentlaplabel, 1.0, 0.0, 0.0, 1)
         ac.setFontColor(mInfoDisplay.besttimelabel, 1.0, 0.0, 0.0, 1)
         ac.setFontColor(mInfoDisplay.lasttimelabel, 1.0, 0.0, 0.0, 1)
