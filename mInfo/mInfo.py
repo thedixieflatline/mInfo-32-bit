@@ -16,7 +16,7 @@ http://www.assettocorsa.net/forum/index.php
 
 TODO add volume control
 TODO Laptime add alert when new best lap achieved
-TODO Fuel add ability to alert at lap finish or when fuel reaches set amount
+TODO Fuel add ability to alert at lap finish or when fuel reaches set amount add galons liters switch
 TODO Need to do a better recording on the audio to sweeten it, make timing and volume more consistent. It sounds bad because I recorded on a headphone mic as a test so next version will be a nice microphone.
 TODO Splits ahead or behind last split
 TODO add more features, temp warnings, tires
@@ -107,9 +107,11 @@ class SoundClass:
         self.playsounds_laptime =  None
         self.playlist_fuel = []
         self.joinsounds_fuel = None
-        self.playsounds_fuel=  None
+        self.playsounds_fuel = None
         self.sound_silence = None
         self.filepathsound_silence = None
+        self.sound_and = None
+        self.filepathsound_and = None
         self.sound_point = None
         self.filepathsound_point = None
         self.sound_minute = None
@@ -168,6 +170,18 @@ class SoundClass:
         self.filepathsound_forty = None
         self.sound_fifty = None
         self.filepathsound_fifty = None
+        self.sound_sixty = None
+        self.filepathsound_sixty = None
+        self.sound_seventy = None
+        self.filepathsound_seventy = None
+        self.sound_eighty = None
+        self.filepathsound_eighty = None
+        self.sound_ninety = None
+        self.filepathsound_ninety = None
+        self.sound_hundred = None
+        self.filepathsound_hundred = None
+
+
 
     def setCurrentSoundPack(self):
         self.currentsoundpack_name = configuration.soundpack
@@ -178,6 +192,7 @@ class SoundClass:
         self.currentsoundpack_name = configuration.soundpack
         self.currentsoundpack_folder = self.currentsoundpack_folder_root + configuration.soundpack
         self.filepathsound_silence = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_silence.wav')
+        self.filepathsound_and = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_and.wav')
         self.filepathsound_point = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_point.wav')
         self.filepathsound_minute = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_minute.wav')
         self.filepathsound_minutes = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_minutes.wav')
@@ -207,6 +222,11 @@ class SoundClass:
         self.filepathsound_thirty = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_thirty.wav')
         self.filepathsound_forty = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_forty.wav')
         self.filepathsound_fifty = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_fifty.wav')
+        self.filepathsound_sixty = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_sixty.wav')
+        self.filepathsound_seventy = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_seventy.wav')
+        self.filepathsound_eighty = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_eighty.wav')
+        self.filepathsound_ninety = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_ninety.wav')
+        self.filepathsound_hundred = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_hundred.wav')
         self.mixer.init(frequency=44100, size=-16, channels=1, buffer=4096)
         self.mixer.set_num_channels(2)
         self.chan = pygame.mixer.Channel(0)
@@ -221,6 +241,8 @@ class SoundClass:
         self.playsounds_fuel.set_volume(1.0)
         self.sound_silence = self.mixer.Sound(self.filepathsound_silence)
         self.sound_silence.set_volume(1.0)
+        self.sound_and = self.mixer.Sound(self.filepathsound_and)
+        self.sound_and.set_volume(1.0)
         self.sound_point = self.mixer.Sound(self.filepathsound_point)
         self.sound_point.set_volume(1.0)
         self.sound_minute = self.mixer.Sound(self.filepathsound_minute)
@@ -387,6 +409,184 @@ class SoundClass:
         self.sound_fifty_nine_array = np.concatenate((self.sound_fifty,self.sound_silence,self.sound_nine))
         self.sound_fifty_nine = pygame.sndarray.make_sound(self.sound_fifty_nine_array)
         self.sound_fifty_nine.set_volume(1.0)
+        self.sound_sixty = self.mixer.Sound(self.filepathsound_sixty)
+        self.sound_sixty.set_volume(1.0)
+        self.sound_sixty_one_array = np.concatenate((self.sound_sixty,self.sound_silence,self.sound_one))
+        self.sound_sixty_one = pygame.sndarray.make_sound(self.sound_sixty_one_array)
+        self.sound_sixty_one.set_volume(1.0)
+        self.sound_sixty_two_array = np.concatenate((self.sound_sixty,self.sound_silence,self.sound_two))
+        self.sound_sixty_two = pygame.sndarray.make_sound(self.sound_sixty_two_array)
+        self.sound_sixty_two.set_volume(1.0)
+        self.sound_sixty_three_array = np.concatenate((self.sound_sixty,self.sound_silence,self.sound_three))
+        self.sound_sixty_three = pygame.sndarray.make_sound(self.sound_sixty_three_array)
+        self.sound_sixty_three.set_volume(1.0)
+        self.sound_sixty_four_array = np.concatenate((self.sound_sixty,self.sound_silence,self.sound_four))
+        self.sound_sixty_four = pygame.sndarray.make_sound(self.sound_sixty_four_array)
+        self.sound_sixty_four.set_volume(1.0)
+        self.sound_sixty_five_array = np.concatenate((self.sound_sixty,self.sound_silence,self.sound_five))
+        self.sound_sixty_five = pygame.sndarray.make_sound(self.sound_sixty_five_array)
+        self.sound_sixty_five.set_volume(1.0)
+        self.sound_sixty_six_array = np.concatenate((self.sound_sixty,self.sound_silence,self.sound_six))
+        self.sound_sixty_six = pygame.sndarray.make_sound(self.sound_sixty_six_array)
+        self.sound_sixty_six.set_volume(1.0)
+        self.sound_sixty_seven_array = np.concatenate((self.sound_sixty,self.sound_silence,self.sound_seven))
+        self.sound_sixty_seven = pygame.sndarray.make_sound(self.sound_sixty_seven_array)
+        self.sound_sixty_seven.set_volume(1.0)
+        self.sound_sixty_eight_array = np.concatenate((self.sound_sixty,self.sound_silence,self.sound_eight))
+        self.sound_sixty_eight = pygame.sndarray.make_sound(self.sound_sixty_eight_array)
+        self.sound_sixty_eight.set_volume(1.0)
+        self.sound_sixty_nine_array = np.concatenate((self.sound_sixty,self.sound_silence,self.sound_nine))
+        self.sound_sixty_nine = pygame.sndarray.make_sound(self.sound_sixty_nine_array)
+        self.sound_sixty_nine.set_volume(1.0)
+        self.sound_seventy = self.mixer.Sound(self.filepathsound_seventy)
+        self.sound_seventy.set_volume(1.0)
+        self.sound_seventy_one_array = np.concatenate((self.sound_seventy,self.sound_silence,self.sound_one))
+        self.sound_seventy_one = pygame.sndarray.make_sound(self.sound_seventy_one_array)
+        self.sound_seventy_one.set_volume(1.0)
+        self.sound_seventy_two_array = np.concatenate((self.sound_seventy,self.sound_silence,self.sound_two))
+        self.sound_seventy_two = pygame.sndarray.make_sound(self.sound_seventy_two_array)
+        self.sound_seventy_two.set_volume(1.0)
+        self.sound_seventy_three_array = np.concatenate((self.sound_seventy,self.sound_silence,self.sound_three))
+        self.sound_seventy_three = pygame.sndarray.make_sound(self.sound_seventy_three_array)
+        self.sound_seventy_three.set_volume(1.0)
+        self.sound_seventy_four_array = np.concatenate((self.sound_seventy,self.sound_silence,self.sound_four))
+        self.sound_seventy_four = pygame.sndarray.make_sound(self.sound_seventy_four_array)
+        self.sound_seventy_four.set_volume(1.0)
+        self.sound_seventy_five_array = np.concatenate((self.sound_seventy,self.sound_silence,self.sound_five))
+        self.sound_seventy_five = pygame.sndarray.make_sound(self.sound_seventy_five_array)
+        self.sound_seventy_five.set_volume(1.0)
+        self.sound_seventy_six_array = np.concatenate((self.sound_seventy,self.sound_silence,self.sound_six))
+        self.sound_seventy_six = pygame.sndarray.make_sound(self.sound_seventy_six_array)
+        self.sound_seventy_six.set_volume(1.0)
+        self.sound_seventy_seven_array = np.concatenate((self.sound_seventy,self.sound_silence,self.sound_seven))
+        self.sound_seventy_seven = pygame.sndarray.make_sound(self.sound_seventy_seven_array)
+        self.sound_seventy_seven.set_volume(1.0)
+        self.sound_seventy_eight_array = np.concatenate((self.sound_seventy,self.sound_silence,self.sound_eight))
+        self.sound_seventy_eight = pygame.sndarray.make_sound(self.sound_seventy_eight_array)
+        self.sound_seventy_eight.set_volume(1.0)
+        self.sound_seventy_nine_array = np.concatenate((self.sound_seventy,self.sound_silence,self.sound_nine))
+        self.sound_seventy_nine = pygame.sndarray.make_sound(self.sound_seventy_nine_array)
+        self.sound_seventy_nine.set_volume(1.0)
+        self.sound_eighty = self.mixer.Sound(self.filepathsound_eighty)
+        self.sound_eighty.set_volume(1.0)
+        self.sound_eighty_one_array = np.concatenate((self.sound_eighty,self.sound_silence,self.sound_one))
+        self.sound_eighty_one = pygame.sndarray.make_sound(self.sound_eighty_one_array)
+        self.sound_eighty_one.set_volume(1.0)
+        self.sound_eighty_two_array = np.concatenate((self.sound_eighty,self.sound_silence,self.sound_two))
+        self.sound_eighty_two = pygame.sndarray.make_sound(self.sound_eighty_two_array)
+        self.sound_eighty_two.set_volume(1.0)
+        self.sound_eighty_three_array = np.concatenate((self.sound_eighty,self.sound_silence,self.sound_three))
+        self.sound_eighty_three = pygame.sndarray.make_sound(self.sound_eighty_three_array)
+        self.sound_eighty_three.set_volume(1.0)
+        self.sound_eighty_four_array = np.concatenate((self.sound_eighty,self.sound_silence,self.sound_four))
+        self.sound_eighty_four = pygame.sndarray.make_sound(self.sound_eighty_four_array)
+        self.sound_eighty_four.set_volume(1.0)
+        self.sound_eighty_five_array = np.concatenate((self.sound_eighty,self.sound_silence,self.sound_five))
+        self.sound_eighty_five = pygame.sndarray.make_sound(self.sound_eighty_five_array)
+        self.sound_eighty_five.set_volume(1.0)
+        self.sound_eighty_six_array = np.concatenate((self.sound_eighty,self.sound_silence,self.sound_six))
+        self.sound_eighty_six = pygame.sndarray.make_sound(self.sound_eighty_six_array)
+        self.sound_eighty_six.set_volume(1.0)
+        self.sound_eighty_seven_array = np.concatenate((self.sound_eighty,self.sound_silence,self.sound_seven))
+        self.sound_eighty_seven = pygame.sndarray.make_sound(self.sound_eighty_seven_array)
+        self.sound_eighty_seven.set_volume(1.0)
+        self.sound_eighty_eight_array = np.concatenate((self.sound_eighty,self.sound_silence,self.sound_eight))
+        self.sound_eighty_eight = pygame.sndarray.make_sound(self.sound_eighty_eight_array)
+        self.sound_eighty_eight.set_volume(1.0)
+        self.sound_eighty_nine_array = np.concatenate((self.sound_eighty,self.sound_silence,self.sound_nine))
+        self.sound_eighty_nine = pygame.sndarray.make_sound(self.sound_eighty_nine_array)
+        self.sound_eighty_nine.set_volume(1.0)
+        self.sound_ninety = self.mixer.Sound(self.filepathsound_ninety)
+        self.sound_ninety.set_volume(1.0)
+        self.sound_ninety_one_array = np.concatenate((self.sound_ninety,self.sound_silence,self.sound_one))
+        self.sound_ninety_one = pygame.sndarray.make_sound(self.sound_ninety_one_array)
+        self.sound_ninety_one.set_volume(1.0)
+        self.sound_ninety_two_array = np.concatenate((self.sound_ninety,self.sound_silence,self.sound_two))
+        self.sound_ninety_two = pygame.sndarray.make_sound(self.sound_ninety_two_array)
+        self.sound_ninety_two.set_volume(1.0)
+        self.sound_ninety_three_array = np.concatenate((self.sound_ninety,self.sound_silence,self.sound_three))
+        self.sound_ninety_three = pygame.sndarray.make_sound(self.sound_ninety_three_array)
+        self.sound_ninety_three.set_volume(1.0)
+        self.sound_ninety_four_array = np.concatenate((self.sound_ninety,self.sound_silence,self.sound_four))
+        self.sound_ninety_four = pygame.sndarray.make_sound(self.sound_ninety_four_array)
+        self.sound_ninety_four.set_volume(1.0)
+        self.sound_ninety_five_array = np.concatenate((self.sound_ninety,self.sound_silence,self.sound_five))
+        self.sound_ninety_five = pygame.sndarray.make_sound(self.sound_ninety_five_array)
+        self.sound_ninety_five.set_volume(1.0)
+        self.sound_ninety_six_array = np.concatenate((self.sound_ninety,self.sound_silence,self.sound_six))
+        self.sound_ninety_six = pygame.sndarray.make_sound(self.sound_ninety_six_array)
+        self.sound_ninety_six.set_volume(1.0)
+        self.sound_ninety_seven_array = np.concatenate((self.sound_ninety,self.sound_silence,self.sound_seven))
+        self.sound_ninety_seven = pygame.sndarray.make_sound(self.sound_ninety_seven_array)
+        self.sound_ninety_seven.set_volume(1.0)
+        self.sound_ninety_eight_array = np.concatenate((self.sound_ninety,self.sound_silence,self.sound_eight))
+        self.sound_ninety_eight = pygame.sndarray.make_sound(self.sound_ninety_eight_array)
+        self.sound_ninety_eight.set_volume(1.0)
+        self.sound_ninety_nine_array = np.concatenate((self.sound_ninety,self.sound_silence,self.sound_nine))
+        self.sound_ninety_nine = pygame.sndarray.make_sound(self.sound_ninety_nine_array)
+        self.sound_ninety_nine.set_volume(1.0)
+        self.sound_hundred = self.mixer.Sound(self.filepathsound_hundred)
+        self.sound_hundred.set_volume(1.0)
+        self.sound_hundred_one_array = np.concatenate((self.sound_hundred,self.sound_silence,self.sound_one))
+        self.sound_hundred_one = pygame.sndarray.make_sound(self.sound_hundred_one_array)
+        self.sound_hundred_one.set_volume(1.0)
+        self.sound_hundred_two_array = np.concatenate((self.sound_hundred,self.sound_silence,self.sound_two))
+        self.sound_hundred_two = pygame.sndarray.make_sound(self.sound_hundred_two_array)
+        self.sound_hundred_two.set_volume(1.0)
+        self.sound_hundred_three_array = np.concatenate((self.sound_hundred,self.sound_silence,self.sound_three))
+        self.sound_hundred_three = pygame.sndarray.make_sound(self.sound_hundred_three_array)
+        self.sound_hundred_three.set_volume(1.0)
+        self.sound_hundred_four_array = np.concatenate((self.sound_hundred,self.sound_silence,self.sound_four))
+        self.sound_hundred_four = pygame.sndarray.make_sound(self.sound_hundred_four_array)
+        self.sound_hundred_four.set_volume(1.0)
+        self.sound_hundred_five_array = np.concatenate((self.sound_hundred,self.sound_silence,self.sound_five))
+        self.sound_hundred_five = pygame.sndarray.make_sound(self.sound_hundred_five_array)
+        self.sound_hundred_five.set_volume(1.0)
+        self.sound_hundred_six_array = np.concatenate((self.sound_hundred,self.sound_silence,self.sound_six))
+        self.sound_hundred_six = pygame.sndarray.make_sound(self.sound_hundred_six_array)
+        self.sound_hundred_six.set_volume(1.0)
+        self.sound_hundred_seven_array = np.concatenate((self.sound_hundred,self.sound_silence,self.sound_seven))
+        self.sound_hundred_seven = pygame.sndarray.make_sound(self.sound_hundred_seven_array)
+        self.sound_hundred_seven.set_volume(1.0)
+        self.sound_hundred_eight_array = np.concatenate((self.sound_hundred,self.sound_silence,self.sound_eight))
+        self.sound_hundred_eight = pygame.sndarray.make_sound(self.sound_hundred_eight_array)
+        self.sound_hundred_eight.set_volume(1.0)
+        self.sound_hundred_nine_array = np.concatenate((self.sound_hundred,self.sound_silence,self.sound_nine))
+        self.sound_hundred_nine = pygame.sndarray.make_sound(self.sound_hundred_nine_array)
+        self.sound_hundred_nine.set_volume(1.0)
+        self.sound_hundred_ten_array = np.concatenate((self.sound_hundred,self.sound_silence,self.sound_ten))
+        self.sound_hundred_ten = pygame.sndarray.make_sound(self.sound_hundred_ten_array)
+        self.sound_hundred_ten.set_volume(1.0)
+        self.sound_hundred_eleven_array = np.concatenate((self.sound_hundred,self.sound_silence,self.sound_eleven))
+        self.sound_hundred_eleven = pygame.sndarray.make_sound(self.sound_hundred_eleven_array)
+        self.sound_hundred_eleven.set_volume(1.0)
+        self.sound_hundred_twelve_array = np.concatenate((self.sound_hundred,self.sound_silence,self.sound_twelve))
+        self.sound_hundred_twelve = pygame.sndarray.make_sound(self.sound_hundred_twelve_array)
+        self.sound_hundred_twelve.set_volume(1.0)
+        self.sound_hundred_thirteen_array = np.concatenate((self.sound_hundred,self.sound_silence,self.sound_thirteen))
+        self.sound_hundred_thirteen = pygame.sndarray.make_sound(self.sound_hundred_thirteen_array)
+        self.sound_hundred_thirteen.set_volume(1.0)
+        self.sound_hundred_fourteen_array = np.concatenate((self.sound_hundred,self.sound_silence,self.sound_fourteen))
+        self.sound_hundred_fourteen = pygame.sndarray.make_sound(self.sound_hundred_fourteen_array)
+        self.sound_hundred_fourteen.set_volume(1.0)
+        self.sound_hundred_fifteen_array = np.concatenate((self.sound_hundred,self.sound_silence,self.sound_fifteen))
+        self.sound_hundred_fifteen = pygame.sndarray.make_sound(self.sound_hundred_fifteen_array)
+        self.sound_hundred_fifteen.set_volume(1.0)
+        self.sound_hundred_sixteen_array = np.concatenate((self.sound_hundred,self.sound_silence,self.sound_sixteen))
+        self.sound_hundred_sixteen = pygame.sndarray.make_sound(self.sound_hundred_sixteen_array)
+        self.sound_hundred_sixteen.set_volume(1.0)
+        self.sound_hundred_seventeen_array = np.concatenate((self.sound_hundred,self.sound_silence,self.sound_seventeen))
+        self.sound_hundred_seventeen = pygame.sndarray.make_sound(self.sound_hundred_seventeen_array)
+        self.sound_hundred_seventeen.set_volume(1.0)
+        self.sound_hundred_eighteen_array = np.concatenate((self.sound_hundred,self.sound_silence,self.sound_eighteen))
+        self.sound_hundred_eighteen = pygame.sndarray.make_sound(self.sound_hundred_eighteen_array)
+        self.sound_hundred_eighteen.set_volume(1.0)
+        self.sound_hundred_nineteen_array = np.concatenate((self.sound_hundred,self.sound_silence,self.sound_nineteen))
+        self.sound_hundred_nineteen = pygame.sndarray.make_sound(self.sound_hundred_nineteen_array)
+        self.sound_hundred_nineteen.set_volume(1.0)
+        self.sound_hundred_twenty_array = np.concatenate((self.sound_hundred,self.sound_silence,self.sound_twenty))
+        self.sound_hundred_twenty = pygame.sndarray.make_sound(self.sound_hundred_twenty_array)
+        self.sound_hundred_twenty.set_volume(1.0)
         self.playlist_laptime = [self.sound_point,self.sound_point, self.sound_point, self.sound_point, self.sound_point, self.sound_point, self.sound_point]
         self.playlist_fuel = [self.sound_point,self.sound_point, self.sound_point, self.sound_point, self.sound_point, self.sound_point, self.sound_point]
         self.soundlist = {
@@ -456,6 +656,67 @@ class SoundClass:
             '57': self.sound_fifty_seven,
             '58': self.sound_fifty_eight,
             '59': self.sound_fifty_nine,
+            '60': self.sound_sixty,
+            '61': self.sound_sixty_one,
+            '62': self.sound_sixty_two,
+            '63': self.sound_sixty_three,
+            '64': self.sound_sixty_four,
+            '65': self.sound_sixty_five,
+            '66': self.sound_sixty_six,
+            '67': self.sound_sixty_seven,
+            '68': self.sound_sixty_eight,
+            '69': self.sound_sixty_nine,
+            '70': self.sound_seventy,
+            '71': self.sound_seventy_one,
+            '72': self.sound_seventy_two,
+            '73': self.sound_seventy_three,
+            '74': self.sound_seventy_four,
+            '75': self.sound_seventy_five,
+            '76': self.sound_seventy_six,
+            '77': self.sound_seventy_seven,
+            '78': self.sound_seventy_eight,
+            '79': self.sound_seventy_nine,
+            '80': self.sound_eighty,
+            '81': self.sound_eighty_one,
+            '82': self.sound_eighty_two,
+            '83': self.sound_eighty_three,
+            '84': self.sound_eighty_four,
+            '85': self.sound_eighty_five,
+            '86': self.sound_eighty_six,
+            '87': self.sound_eighty_seven,
+            '88': self.sound_eighty_eight,
+            '89': self.sound_eighty_nine,
+            '90': self.sound_ninety,
+            '91': self.sound_ninety_one,
+            '92': self.sound_ninety_two,
+            '93': self.sound_ninety_three,
+            '94': self.sound_ninety_four,
+            '95': self.sound_ninety_five,
+            '96': self.sound_ninety_six,
+            '97': self.sound_ninety_seven,
+            '98': self.sound_ninety_eight,
+            '99': self.sound_ninety_nine,
+            '100': self.sound_hundred,
+            '101': self.sound_hundred_one,
+            '102': self.sound_hundred_two,
+            '103': self.sound_hundred_three,
+            '104': self.sound_hundred_four,
+            '105': self.sound_hundred_five,
+            '106': self.sound_hundred_six,
+            '107': self.sound_hundred_seven,
+            '108': self.sound_hundred_eight,
+            '109': self.sound_hundred_nine,
+            '110': self.sound_hundred_ten,
+            '111': self.sound_hundred_eleven,
+            '112': self.sound_hundred_twelve,
+            '113': self.sound_hundred_thirteen,
+            '114': self.sound_hundred_fourteen,
+            '115': self.sound_hundred_fifteen,
+            '116': self.sound_hundred_sixteen,
+            '117': self.sound_hundred_seventeen,
+            '118': self.sound_hundred_eighteen,
+            '119': self.sound_hundred_nineteen,
+            '120': self.sound_hundred_twenty,
             }
 
     def playSoundLaptime(self):
@@ -488,7 +749,18 @@ class SoundClass:
         self.hasplayedLastFuel = 1
 
     def playSoundFuel(self):
-        if(fuelsystem.currentfuel>10):
+        if(fuelsystem.currentfuel<10.00):
+            self.playlist_fuel[0] = self.sound_fuel
+            self.playlist_fuel[1] = self.sound_silence
+            self.playlist_fuel[2] = self.soundlist.get(fuelsystem.currentfuel_10)
+            self.playlist_fuel[3] = self.sound_point
+            self.playlist_fuel[4] = self.soundlist.get(fuelsystem.currentfuel_0)
+            self.playlist_fuel[5] = self.soundlist.get(fuelsystem.currentfuel_00)
+            self.playlist_fuel[6] = self.sound_fuel_liters
+            self.joinsounds_fuel = np.concatenate((self.playlist_fuel[0],self.playlist_fuel[1], self.playlist_fuel[2],self.playlist_fuel[3], self.playlist_fuel[4],self.playlist_fuel[5], self.playlist_fuel[6]), axis=0)
+            self.playsounds_fuel = pygame.sndarray.make_sound(self.joinsounds_fuel)
+            self.chan.queue(self.playsounds_fuel)
+        elif(fuelsystem.currentfuel>10.00 and fuelsystem.currentfuel < 100.00):
             self.playlist_fuel[0] = self.sound_fuel
             self.playlist_fuel[1] = self.sound_silence
             self.playlist_fuel[2] = self.soundlist.get(fuelsystem.currentfuel_100+fuelsystem.currentfuel_10)
@@ -499,10 +771,10 @@ class SoundClass:
             self.joinsounds_fuel = np.concatenate((self.playlist_fuel[0],self.playlist_fuel[1], self.playlist_fuel[2],self.playlist_fuel[3], self.playlist_fuel[4],self.playlist_fuel[5], self.playlist_fuel[6]), axis=0)
             self.playsounds_fuel = pygame.sndarray.make_sound(self.joinsounds_fuel)
             self.chan.queue(self.playsounds_fuel)
-        else:
-            self.playlist_fuel[0] = self.sound_fuel
-            self.playlist_fuel[1] = self.sound_silence
-            self.playlist_fuel[2] = self.soundlist.get(fuelsystem.currentfuel_10)
+        elif(fuelsystem.currentfuel>100.00):
+            self.playlist_fuel[0] = self.sound_silence
+            self.playlist_fuel[1] = self.sound_fuel
+            self.playlist_fuel[2] = self.soundlist.get(fuelsystem.currentfuel_100+fuelsystem.currentfuel_10)
             self.playlist_fuel[3] = self.sound_point
             self.playlist_fuel[4] = self.soundlist.get(fuelsystem.currentfuel_0)
             self.playlist_fuel[5] = self.soundlist.get(fuelsystem.currentfuel_00)
@@ -668,17 +940,23 @@ class FuelClass:
     def updateFuel(self,fuel):
         self.currentfuel = fuel
         self.currentfuelstr = format(self.currentfuel, '.3f')
-        if(fuelsystem.currentfuel>10.00):
+        if(fuelsystem.currentfuel<10.00):
+            self.currentfuel_10 = self.currentfuelstr[0]
+            self.currentfuel_0 = self.currentfuelstr[2]
+            self.currentfuel_00 =  self.currentfuelstr[3]
+            self.currentfuel_display = self.currentfuel_10 + "." + self.currentfuel_0 + self.currentfuel_00
+        elif(fuelsystem.currentfuel > 10.00 and fuelsystem.currentfuel < 100.00):
             self.currentfuel_100 = self.currentfuelstr[0]
             self.currentfuel_10 = self.currentfuelstr[1]
             self.currentfuel_0 = self.currentfuelstr[3]
             self.currentfuel_00 =  self.currentfuelstr[4]
             self.currentfuel_display = self.currentfuel_100 + self.currentfuel_10 + "." + self.currentfuel_0 + self.currentfuel_00
-        else:
-            self.currentfuel_10 = self.currentfuelstr[0]
-            self.currentfuel_0 = self.currentfuelstr[2]
-            self.currentfuel_00 =  self.currentfuelstr[3]
-            self.currentfuel_display = self.currentfuel_10 + "." + self.currentfuel_0 + self.currentfuel_00
+        elif(fuelsystem.currentfuel>100.00):
+            self.currentfuel_100 = self.currentfuelstr[0] + self.currentfuelstr[1]
+            self.currentfuel_10 = self.currentfuelstr[2]
+            self.currentfuel_0 = self.currentfuelstr[4]
+            self.currentfuel_00 =  self.currentfuelstr[5]
+            self.currentfuel_display = self.currentfuel_100 + self.currentfuel_10 + "." + self.currentfuel_0 + self.currentfuel_00
 
     def getCurrentFuel(self):
         return self.currentfuel_display
