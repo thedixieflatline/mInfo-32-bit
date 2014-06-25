@@ -9,16 +9,17 @@ First alert developed is lap times for players car as they cross the line.
 
 App developed by David Trenear
 Additional Testing by Jason Madigan and Tyson Cierpial
-Big thanks to Rombik who wrote the original sim info  module.
+Big thanks to Rombik who wrote the original sim info module.
 
 Please submit bugs or requests to the Assetto Corsa forum
 http://www.assettocorsa.net/forum/index.php
 
-TODO add volume control
 TODO Fuel add ability to alert when fuel reaches set amount
 TODO Need to do a better recording on the audio to sweeten it, make timing and volume more consistent. It sounds bad because I recorded on a headphone mic as a test so next version will be a nice microphone.
+TODO add volume control
+TODO Tire temp warnings
 TODO Splits ahead or behind last split
-TODO add more features, temp warnings, tires
+
 TODO Review code and refactor when the game is released and python API and or shared memory is ver 1.0"""
 
 import sys
@@ -1211,8 +1212,8 @@ class DisplayClass:
         self.lasttimelabel = None
         self.currenttimelabel = None
         self.currentfuellabel = None
-        self.spinner = None
-        self.spinnerEvent = self.spinnerEventFunction
+        self.fuelalertSpinner = None
+        self.fuelalertSpinnerEvent = self.fuelalertSpinnerEventFunction
         self.checkboxContainerLaptime = None
         self.checkboxLabelLaptime = None
         self.checkboxEventLaptime = self.checkboxEventFunctionLaptime
@@ -1225,11 +1226,14 @@ class DisplayClass:
         self.checkboxContainerBestLap = None
         self.checkboxLabelBestLap = None
         self.checkboxEventBestLap = self.checkboxEventFunctionBestLap
+        self.checkboxContainerFuelAlert = None
+        self.checkboxLabelFuelAlert = None
+        self.checkboxEventFuelAlert = self.checkboxEventFunctionFuelAlert
 
         self.AppActivated = self.AppActivatedFunction
         self.AppDismissed = self.AppDismissedFunction
 
-    def spinnerEventFunction(self,x):
+    def fuelalertSpinnerEventFunction(self,x):
         ac.console("hit")
 
     def checkboxEventFunctionBestLap(self,x,y):
@@ -1243,6 +1247,9 @@ class DisplayClass:
             mInfoDisplay.bestlap = True
             ac.setText(mInfoDisplay.checkboxLabelBestLap, "Best Lap")
             ac.setFontColor(mInfoDisplay.checkboxLabelBestLap, 0.0, 1.0, 0.1, 1)
+
+    def checkboxEventFunctionFuelAlert(self,x,y):
+        ac.console("fuel")
 
     def checkboxEventFunctionFuel(self,x,y):
         if(mInfoDisplay.fuelswitch):
@@ -1288,7 +1295,6 @@ class DisplayClass:
             ac.setText(mInfoDisplay.checkboxLabelBestLap, "Best Lap")
             ac.setFontColor(mInfoDisplay.checkboxLabelBestLap, 0.0, 1.0, 0.1, 1)
 
-
     def AppActivatedFunction(self,val):
         #must have a pass completion or crash!!!
         timesystem.updateLapTime(infosystem.graphics.completedLaps,infosystem.graphics.iBestTime,infosystem.graphics.iLastTime, infosystem.graphics.iCurrentTime)
@@ -1306,7 +1312,6 @@ class DisplayClass:
         configuration.saveConfig()
         #pygame.quit()
 
-
 #---------------------------------------------------------
 # declare class instance objects and secondary init
 
@@ -1320,7 +1325,6 @@ soundsystem = SoundClass()
 mInfoDisplay = DisplayClass()
 
 #---------------------------------------------------------
-
 
 def acMain(ac_version):
     """main init function which runs on game startup."""
@@ -1345,7 +1349,7 @@ def acMain(ac_version):
 
     if(mInfoDisplay.fuelswitch is True):
         mInfoDisplay.currentfuellabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.currentfuellabel, 11, 220)
+        ac.setPosition(mInfoDisplay.currentfuellabel, 11, 230)
         ac.setFontColor(mInfoDisplay.currentfuellabel, 1.0, 1.0, 1.0, 1)
         ac.setFontAlignment(mInfoDisplay.currentfuellabel,'left')
 
@@ -1360,24 +1364,35 @@ def acMain(ac_version):
         ac.setFontAlignment(mInfoDisplay.checkboxLabelFuel,'right')
 
         mInfoDisplay.checkboxContainerFuelConvert = ac.addCheckBox(mInfoDisplay.appWindow, "")
-        ac.setPosition(mInfoDisplay.checkboxContainerFuelConvert, 230, 190)
+        ac.setPosition(mInfoDisplay.checkboxContainerFuelConvert, 230, 198)
         ac.setSize(mInfoDisplay.checkboxContainerFuelConvert,15,15)
         ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerFuelConvert,mInfoDisplay.checkboxEventFuelConvert)
 
         mInfoDisplay.checkboxLabelFuelConvert = ac.addLabel(mInfoDisplay.appWindow, mInfoDisplay.fuelconvert)
-        ac.setPosition(mInfoDisplay.checkboxLabelFuelConvert, 24, 186)
-        ac.setFontColor(mInfoDisplay.checkboxLabelFuelConvert, 1.0, 0.0, 0.0, 1)
+        ac.setPosition(mInfoDisplay.checkboxLabelFuelConvert, 24, 194)
+        ac.setFontColor(mInfoDisplay.checkboxLabelFuelConvert, 0.0, 1.0, 0.1, 1)
         ac.setFontAlignment(mInfoDisplay.checkboxLabelFuelConvert,'right')
 
-        # mInfoDisplay.spinner = ac.addSpinner(mInfoDisplay.appWindow, "soundpack")
-        # ac.setPosition(mInfoDisplay.spinner,116,170)
-        # ac.setSize(mInfoDisplay.spinner,70,24)
-        # ac.setRange(mInfoDisplay.spinner,1,1)
-        # ac.setValue(mInfoDisplay.spinner,1)
-        # ac.addOnValueChangeListener(mInfoDisplay.spinner,mInfoDisplay.spinnerEvent)
+        mInfoDisplay.checkboxContainerFuelAlert = ac.addCheckBox(mInfoDisplay.appWindow, "")
+        ac.setPosition(mInfoDisplay.checkboxContainerFuelAlert, 86, 198)
+        ac.setSize(mInfoDisplay.checkboxContainerFuelAlert,15,15)
+        ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerFuelAlert,mInfoDisplay.checkboxEventFuelAlert)
+
+        mInfoDisplay.checkboxLabelFuelAlert = ac.addLabel(mInfoDisplay.appWindow, "Fuel Alert")
+        ac.setPosition(mInfoDisplay.checkboxLabelFuelAlert, 106, 194)
+        ac.setFontColor(mInfoDisplay.checkboxLabelFuelAlert, 0.0, 1.0, 0.1, 1)
+        ac.setFontAlignment(mInfoDisplay.checkboxLabelFuelAlert,'left')
+
+        mInfoDisplay.fuelalertSpinner = ac.addSpinner(mInfoDisplay.appWindow, "")
+        ac.setPosition(mInfoDisplay.fuelalertSpinner,10,194)
+        ac.setSize(mInfoDisplay.fuelalertSpinner,70,24)
+        ac.setRange(mInfoDisplay.fuelalertSpinner,1,120)
+        ac.setValue(mInfoDisplay.fuelalertSpinner,10)
+        ac.addOnValueChangeListener(mInfoDisplay.fuelalertSpinner,mInfoDisplay.fuelalertSpinnerEvent)
+
     else:
         mInfoDisplay.currentfuellabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.currentfuellabel, 11, 220)
+        ac.setPosition(mInfoDisplay.currentfuellabel, 11, 230)
         ac.setFontColor(mInfoDisplay.currentfuellabel, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.currentfuellabel,'left')
 
@@ -1393,21 +1408,31 @@ def acMain(ac_version):
         ac.setText(mInfoDisplay.currentfuellabel, "Fuel Remaining : ----- Liters")
 
         mInfoDisplay.checkboxContainerFuelConvert = ac.addCheckBox(mInfoDisplay.appWindow, "")
-        ac.setPosition(mInfoDisplay.checkboxContainerFuelConvert, 230, 190)
+        ac.setPosition(mInfoDisplay.checkboxContainerFuelConvert, 230, 198)
         ac.setSize(mInfoDisplay.checkboxContainerFuelConvert,15,15)
         ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerFuelConvert,mInfoDisplay.checkboxEventFuelConvert)
 
         mInfoDisplay.checkboxLabelFuelConvert = ac.addLabel(mInfoDisplay.appWindow, mInfoDisplay.fuelconvert)
-        ac.setPosition(mInfoDisplay.checkboxLabelFuelConvert, 24, 186)
+        ac.setPosition(mInfoDisplay.checkboxLabelFuelConvert, 24, 194)
         ac.setFontColor(mInfoDisplay.checkboxLabelFuelConvert, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.checkboxLabelFuelConvert,'right')
 
-        # mInfoDisplay.spinner = ac.addSpinner(mInfoDisplay.appWindow, "soundpack")
-        # ac.setPosition(mInfoDisplay.spinner,116,170)
-        # ac.setSize(mInfoDisplay.spinner,70,24)
-        # ac.setRange(mInfoDisplay.spinner,1,1)
-        # ac.setValue(mInfoDisplay.spinner,1)
-        # ac.addOnValueChangeListener(mInfoDisplay.spinner,mInfoDisplay.spinnerEvent)
+        mInfoDisplay.checkboxContainerFuelAlert = ac.addCheckBox(mInfoDisplay.appWindow, "")
+        ac.setPosition(mInfoDisplay.checkboxContainerFuelAlert, 86, 198)
+        ac.setSize(mInfoDisplay.checkboxContainerFuelAlert,15,15)
+        ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerFuelAlert,mInfoDisplay.checkboxEventFuelAlert)
+
+        mInfoDisplay.checkboxLabelFuelAlert = ac.addLabel(mInfoDisplay.appWindow, "Fuel Alert")
+        ac.setPosition(mInfoDisplay.checkboxLabelFuelAlert, 106, 194)
+        ac.setFontColor(mInfoDisplay.checkboxLabelFuelAlert, 1.0, 0.0, 0.0, 1)
+        ac.setFontAlignment(mInfoDisplay.checkboxLabelFuelAlert,'left')
+
+        mInfoDisplay.fuelalertSpinner = ac.addSpinner(mInfoDisplay.appWindow, "")
+        ac.setPosition(mInfoDisplay.fuelalertSpinner,10,194)
+        ac.setSize(mInfoDisplay.fuelalertSpinner,70,24)
+        ac.setRange(mInfoDisplay.fuelalertSpinner,1,120)
+        ac.setValue(mInfoDisplay.fuelalertSpinner,10)
+        ac.addOnValueChangeListener(mInfoDisplay.fuelalertSpinner,mInfoDisplay.fuelalertSpinnerEvent)
 
     if(mInfoDisplay.lapswitch is True):
         mInfoDisplay.currentlaplabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
@@ -1517,7 +1542,6 @@ def acUpdate(deltaT):
         ac.setFontColor(mInfoDisplay.besttimelabel, 1.0, 1.0, 1.0, 1)
         ac.setFontColor(mInfoDisplay.lasttimelabel, 1.0, 1.0, 1.0, 1)
         ac.setFontColor(mInfoDisplay.currenttimelabel, 1.0, 1.0, 1.0, 1)
-        #ac.setFontColor(mInfoDisplay.spinner, 1.0, 1.0, 1.0, 1)
         ac.setText(mInfoDisplay.currentlaplabel, "current lap : {0}".format(timesystem.getCurrentLap()))
         ac.setText(mInfoDisplay.besttimelabel, "best time : {0}".format(timesystem.getBestLapTime()))
         ac.setText(mInfoDisplay.lasttimelabel, "last time : {0}".format(timesystem.getLastLapTime()))
@@ -1529,7 +1553,6 @@ def acUpdate(deltaT):
         ac.setFontColor(mInfoDisplay.lasttimelabel, 1.0, 0.0, 0.0, 1)
         ac.setFontColor(mInfoDisplay.currenttimelabel, 1.0, 0.0, 0.0, 1)
         ac.setFontColor(mInfoDisplay.checkboxLabelFuelConvert, 1.0, 0.0, 0.0, 1)
-        #ac.setFontColor(mInfoDisplay.spinner, 1.0, 0.0, 0.0, 1)
         ac.setText(mInfoDisplay.currentlaplabel, "current lap : -")
         ac.setText(mInfoDisplay.besttimelabel, "best time : -:--:---")
         ac.setText(mInfoDisplay.lasttimelabel, "last time : -:--:---")
@@ -1568,7 +1591,6 @@ def onFormRender(deltaT):
     ac.setFontColor(mInfoDisplay.currenttimelabel, 1.0, 1.0, 1.0, 1)
     ac.setFontColor(mInfoDisplay.checkboxLabelFuelConvert, 0.0, 1.0, 0.1, 1)
     ac.setFontColor(mInfoDisplay.currentfuellabel, 1.0, 1.0, 1.0, 1)
-    #ac.setFontColor(mInfoDisplay.spinner, 1.0, 1.0, 1.0, 1)
     ac.setText(mInfoDisplay.currentlaplabel, "current lap : {0}".format(timesystem.getCurrentLap()))
     ac.setText(mInfoDisplay.besttimelabel, "best time : {0}".format(timesystem.getBestLapTime()))
     ac.setText(mInfoDisplay.lasttimelabel, "last time : {0}".format(timesystem.getLastLapTime()))
