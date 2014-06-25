@@ -1,4 +1,4 @@
-"""mInfo ver 0.84  June 2014
+"""mInfo ver 0.85  June 2014
 GitHub Page: https://github.com/thedixieflatline/assettocorsa
 
 To activate copy mInfo folder to C:\Program Files (x86)\Steam\steamapps\common\assettocorsa\apps\python
@@ -15,8 +15,7 @@ Please submit bugs or requests to the Assetto Corsa forum
 http://www.assettocorsa.net/forum/index.php
 
 TODO add volume control
-TODO Laptime add alert when new best lap achieved
-TODO Fuel add ability to alert at lap finish or when fuel reaches set amount
+TODO Fuel add ability to alert when fuel reaches set amount
 TODO Need to do a better recording on the audio to sweeten it, make timing and volume more consistent. It sounds bad because I recorded on a headphone mic as a test so next version will be a nice microphone.
 TODO Splits ahead or behind last split
 TODO add more features, temp warnings, tires
@@ -148,6 +147,8 @@ class SoundClass:
         self.filepathsound_fuel_liters = None
         self.sound_fuel_gallons = None
         self.filepathsound_fuel_gallons = None
+        self.sound_bestlap = None
+        self.filepathsound_bestlap = None
         self.sound_zero = None
         self.filepathsound_zero = None
         self.sound_one = None
@@ -207,8 +208,6 @@ class SoundClass:
         self.sound_hundred = None
         self.filepathsound_hundred = None
 
-
-
     def setCurrentSoundPack(self):
         self.currentsoundpack_name = configuration.soundpack
         self.currentsoundpack_folder = self.currentsoundpack_folder_root + configuration.soundpack
@@ -225,6 +224,7 @@ class SoundClass:
         self.filepathsound_fuel = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_fuel.wav')
         self.filepathsound_fuel_liters = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_fuel_liters.wav')
         self.filepathsound_fuel_gallons = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_fuel_gallons.wav')
+        self.filepathsound_bestlap = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_bestlap.wav')
         self.filepathsound_zero = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_zero.wav')
         self.filepathsound_one = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_one.wav')
         self.filepathsound_two = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_two.wav')
@@ -282,6 +282,8 @@ class SoundClass:
         self.sound_fuel_liters.set_volume(1.0)
         self.sound_fuel_gallons = self.mixer.Sound(self.filepathsound_fuel_gallons)
         self.sound_fuel_gallons.set_volume(1.0)
+        self.sound_bestlap = self.mixer.Sound(self.filepathsound_bestlap)
+        self.sound_bestlap.set_volume(1.0)
         self.sound_zero = self.mixer.Sound(self.filepathsound_zero)
         self.sound_zero.set_volume(1.0)
         self.sound_one = self.mixer.Sound(self.filepathsound_one)
@@ -616,7 +618,7 @@ class SoundClass:
         self.sound_hundred_twenty_array = np.concatenate((self.sound_hundred,self.sound_silence,self.sound_twenty))
         self.sound_hundred_twenty = pygame.sndarray.make_sound(self.sound_hundred_twenty_array)
         self.sound_hundred_twenty.set_volume(1.0)
-        self.playlist_laptime = [self.sound_point,self.sound_point, self.sound_point, self.sound_point, self.sound_point, self.sound_point, self.sound_point]
+        self.playlist_laptime = [self.sound_point,self.sound_point, self.sound_point, self.sound_point, self.sound_point, self.sound_point, self.sound_point, self.sound_point]
         self.playlist_fuel = [self.sound_point,self.sound_point, self.sound_point, self.sound_point, self.sound_point, self.sound_point, self.sound_point]
         self.soundlist = {
             's': self.sound_silence,
@@ -626,6 +628,7 @@ class SoundClass:
             'f': self.sound_fuel,
             'l': self.sound_fuel_liters,
             'g': self.sound_fuel_gallons,
+            'b': self.sound_bestlap,
             '0': self.sound_zero,
             '1': self.sound_one,
             '2': self.sound_two,
@@ -750,30 +753,35 @@ class SoundClass:
             }
 
     def playSoundLaptime(self):
-        timesystem.getLastLapTime()
+        if(configuration.bestlap == "enabled" ):
+            if(timesystem.bestlapmilliseconds == timesystem.lastlapmilliseconds):
+                self.playlist_laptime[0] = self.sound_bestlap
+            else:
+                self.playlist_laptime[0] = self.sound_silence
         if(timesystem.lastlapminutes==0):
-            self.playlist_laptime[0] = self.sound_silence
             self.playlist_laptime[1] = self.sound_silence
+            self.playlist_laptime[2] = self.sound_silence
         else:
             if(timesystem.lastlapminutes == 1):
-                self.playlist_laptime[0] = self.soundlist.get(str(timesystem.lastlapminutes))
-                self.playlist_laptime[1] = self.soundlist.get("m")
+                self.playlist_laptime[1] = self.soundlist.get(str(timesystem.lastlapminutes))
+                self.playlist_laptime[2] = self.soundlist.get("m")
             else:
-                self.playlist_laptime[0] = self.soundlist.get(str(timesystem.lastlapminutes))
-                self.playlist_laptime[1] = self.soundlist.get("ms")
-        self.playlist_laptime[2] = self.soundlist.get(str(timesystem.lastlapsecondsint))
-        self.playlist_laptime[3] = self.soundlist.get("p")
-        self.playlist_laptime[4] = self.soundlist.get(timesystem.lastlapmilliseconds1)
-        self.playlist_laptime[5] = self.soundlist.get(timesystem.lastlapmilliseconds2)
-        self.playlist_laptime[6] = self.soundlist.get(timesystem.lastlapmilliseconds3)
-        # self.playlist_laptime[0] = self.sound_one
-        # self.playlist_laptime[1] = self.sound_minute
-        # self.playlist_laptime[2] = self.sound_twenty_one
-        # self.playlist_laptime[3] = self.sound_point
-        # self.playlist_laptime[4] = self.sound_three
+                self.playlist_laptime[1] = self.soundlist.get(str(timesystem.lastlapminutes))
+                self.playlist_laptime[2] = self.soundlist.get("ms")
+        self.playlist_laptime[3] = self.soundlist.get(str(timesystem.lastlapsecondsint))
+        self.playlist_laptime[4] = self.soundlist.get("p")
+        self.playlist_laptime[5] = self.soundlist.get(timesystem.lastlapmilliseconds1)
+        self.playlist_laptime[6] = self.soundlist.get(timesystem.lastlapmilliseconds2)
+        self.playlist_laptime[7] = self.soundlist.get(timesystem.lastlapmilliseconds3)
+        # self.playlist_laptime[0] = self.sound_bestlap
+        # self.playlist_laptime[1] = self.sound_one
+        # self.playlist_laptime[2] = self.sound_minute
+        # self.playlist_laptime[3] = self.sound_twenty_one
+        # self.playlist_laptime[4] = self.sound_point
         # self.playlist_laptime[5] = self.sound_three
-        # self.playlist_laptime[6] = self.sound_two
-        self.joinsounds_laptime = np.concatenate((self.playlist_laptime[0],self.playlist_laptime[1], self.playlist_laptime[2],self.playlist_laptime[3], self.playlist_laptime[4],self.playlist_laptime[5], self.playlist_laptime[6]), axis=0)
+        # self.playlist_laptime[6] = self.sound_three
+        # self.playlist_laptime[7] = self.sound_two
+        self.joinsounds_laptime = np.concatenate((self.playlist_laptime[0],self.playlist_laptime[1], self.playlist_laptime[2],self.playlist_laptime[3], self.playlist_laptime[4],self.playlist_laptime[5], self.playlist_laptime[6],self.playlist_laptime[7]), axis=0)
         self.playsounds_laptime = pygame.sndarray.make_sound(self.joinsounds_laptime)
         self.chan.play(self.playsounds_laptime)
         self.hasplayedLastFuel = 1
@@ -850,7 +858,7 @@ class SoundClass:
 
     def playSound(self):
         """ join sounds to form laptime sound in container self.joinsounds_laptime format and copy to playback container self.playsounds then play thru channel in mixer."""
-        self.joinsounds_laptime = np.concatenate((self.playlist_laptime[0],self.playlist_laptime[1], self.playlist_laptime[2],self.playlist_laptime[3], self.playlist_laptime[4],self.playlist_laptime[5],self.playlist_laptime[6]), axis=0)
+        self.joinsounds_laptime = np.concatenate((self.playlist_laptime[0],self.playlist_laptime[1], self.playlist_laptime[2],self.playlist_laptime[3], self.playlist_laptime[4],self.playlist_laptime[5],self.playlist_laptime[6], self.playlist_laptime[7]), axis=0)
         self.playsounds_laptime = pygame.sndarray.make_sound(self.joinsounds_laptime)
         self.chan.play(self.playsounds_laptime)
         #ac.console("playSound")
@@ -1333,7 +1341,7 @@ def acMain(ac_version):
     ac.addRenderCallback(mInfoDisplay.appWindow, onFormRender)
     ac.addOnAppActivatedListener(mInfoDisplay.appWindow, mInfoDisplay.AppActivated)
     ac.addOnAppDismissedListener(mInfoDisplay.appWindow, mInfoDisplay.AppDismissed)
-    ac.setSize(mInfoDisplay.appWindow, 250, 250)
+    ac.setSize(mInfoDisplay.appWindow, 250, 400)
 
     if(mInfoDisplay.fuelswitch is True):
         mInfoDisplay.currentfuellabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
@@ -1342,22 +1350,22 @@ def acMain(ac_version):
         ac.setFontAlignment(mInfoDisplay.currentfuellabel,'left')
 
         mInfoDisplay.checkboxContainerFuel = ac.addCheckBox(mInfoDisplay.appWindow, "")
-        ac.setPosition(mInfoDisplay.checkboxContainerFuel, 230, 174)
+        ac.setPosition(mInfoDisplay.checkboxContainerFuel, 230, 164)
         ac.setSize(mInfoDisplay.checkboxContainerFuel,15,15)
         ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerFuel,mInfoDisplay.checkboxEventFuel)
 
         mInfoDisplay.checkboxLabelFuel = ac.addLabel(mInfoDisplay.appWindow, "Enabled")
-        ac.setPosition(mInfoDisplay.checkboxLabelFuel, 26, 171)
+        ac.setPosition(mInfoDisplay.checkboxLabelFuel, 26, 161)
         ac.setFontColor(mInfoDisplay.checkboxLabelFuel, 0.0, 1.0, 0.1, 1)
         ac.setFontAlignment(mInfoDisplay.checkboxLabelFuel,'right')
 
         mInfoDisplay.checkboxContainerFuelConvert = ac.addCheckBox(mInfoDisplay.appWindow, "")
-        ac.setPosition(mInfoDisplay.checkboxContainerFuelConvert, 230, 200)
+        ac.setPosition(mInfoDisplay.checkboxContainerFuelConvert, 230, 190)
         ac.setSize(mInfoDisplay.checkboxContainerFuelConvert,15,15)
         ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerFuelConvert,mInfoDisplay.checkboxEventFuelConvert)
 
         mInfoDisplay.checkboxLabelFuelConvert = ac.addLabel(mInfoDisplay.appWindow, mInfoDisplay.fuelconvert)
-        ac.setPosition(mInfoDisplay.checkboxLabelFuelConvert, 24, 196)
+        ac.setPosition(mInfoDisplay.checkboxLabelFuelConvert, 24, 186)
         ac.setFontColor(mInfoDisplay.checkboxLabelFuelConvert, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.checkboxLabelFuelConvert,'right')
 
@@ -1374,23 +1382,23 @@ def acMain(ac_version):
         ac.setFontAlignment(mInfoDisplay.currentfuellabel,'left')
 
         mInfoDisplay.checkboxContainerFuel = ac.addCheckBox(mInfoDisplay.appWindow, "")
-        ac.setPosition(mInfoDisplay.checkboxContainerFuel, 230,174)
+        ac.setPosition(mInfoDisplay.checkboxContainerFuel, 230,164)
         ac.setSize(mInfoDisplay.checkboxContainerFuel,15,15)
         ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerFuel,mInfoDisplay.checkboxEventFuel)
 
         mInfoDisplay.checkboxLabelFuel = ac.addLabel(mInfoDisplay.appWindow, "Disabled")
-        ac.setPosition(mInfoDisplay.checkboxLabelFuel, 26, 171)
+        ac.setPosition(mInfoDisplay.checkboxLabelFuel, 26, 161)
         ac.setFontColor(mInfoDisplay.checkboxLabelFuel, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.checkboxLabelFuel,'right')
         ac.setText(mInfoDisplay.currentfuellabel, "Fuel Remaining : ----- Liters")
 
         mInfoDisplay.checkboxContainerFuelConvert = ac.addCheckBox(mInfoDisplay.appWindow, "")
-        ac.setPosition(mInfoDisplay.checkboxContainerFuelConvert, 230, 200)
+        ac.setPosition(mInfoDisplay.checkboxContainerFuelConvert, 230, 190)
         ac.setSize(mInfoDisplay.checkboxContainerFuelConvert,15,15)
         ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerFuelConvert,mInfoDisplay.checkboxEventFuelConvert)
 
         mInfoDisplay.checkboxLabelFuelConvert = ac.addLabel(mInfoDisplay.appWindow, mInfoDisplay.fuelconvert)
-        ac.setPosition(mInfoDisplay.checkboxLabelFuelConvert, 24, 196)
+        ac.setPosition(mInfoDisplay.checkboxLabelFuelConvert, 24, 186)
         ac.setFontColor(mInfoDisplay.checkboxLabelFuelConvert, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.checkboxLabelFuelConvert,'right')
 
@@ -1403,22 +1411,22 @@ def acMain(ac_version):
 
     if(mInfoDisplay.lapswitch is True):
         mInfoDisplay.currentlaplabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.currentlaplabel, 20, 65)
+        ac.setPosition(mInfoDisplay.currentlaplabel, 16, 65)
         ac.setFontColor(mInfoDisplay.currentlaplabel, 1.0, 1.0, 1.0, 1)
         ac.setFontAlignment(mInfoDisplay.currentlaplabel,'left')
 
         mInfoDisplay.besttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.besttimelabel, 30, 85)
+        ac.setPosition(mInfoDisplay.besttimelabel, 26, 85)
         ac.setFontColor(mInfoDisplay.besttimelabel, 1.0, 1.0, 1.0, 1)
         ac.setFontAlignment(mInfoDisplay.besttimelabel,'left')
 
         mInfoDisplay.lasttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.lasttimelabel, 35, 105)
+        ac.setPosition(mInfoDisplay.lasttimelabel, 31, 105)
         ac.setFontColor(mInfoDisplay.lasttimelabel, 1.0, 1.0, 1.0, 1)
         ac.setFontAlignment(mInfoDisplay.lasttimelabel,'left')
 
         mInfoDisplay.currenttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.currenttimelabel, 11, 125)
+        ac.setPosition(mInfoDisplay.currenttimelabel, 7, 125)
         ac.setFontColor(mInfoDisplay.currenttimelabel, 1.0, 1.0, 1.0, 1)
         ac.setFontAlignment(mInfoDisplay.currenttimelabel,'left')
 
@@ -1433,32 +1441,32 @@ def acMain(ac_version):
         ac.setFontAlignment(mInfoDisplay.checkboxLabelLaptime,'right')
 
         mInfoDisplay.checkboxContainerBestLap = ac.addCheckBox(mInfoDisplay.appWindow, "")
-        ac.setPosition(mInfoDisplay.checkboxContainerBestLap, 230, 58)
+        ac.setPosition(mInfoDisplay.checkboxContainerBestLap, 230, 88)
         ac.setSize(mInfoDisplay.checkboxContainerBestLap,15,15)
         ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerBestLap,mInfoDisplay.checkboxEventBestLap)
 
         mInfoDisplay.checkboxLabelBestLap = ac.addLabel(mInfoDisplay.appWindow, "Best Lap")
-        ac.setPosition(mInfoDisplay.checkboxLabelBestLap, 26, 55)
+        ac.setPosition(mInfoDisplay.checkboxLabelBestLap, 26, 85)
         ac.setFontColor(mInfoDisplay.checkboxLabelBestLap, 0.0, 1.0, 0.1, 1)
         ac.setFontAlignment(mInfoDisplay.checkboxLabelBestLap,'right')
     else:
         mInfoDisplay.currentlaplabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.currentlaplabel, 20, 65)
+        ac.setPosition(mInfoDisplay.currentlaplabel, 16, 65)
         ac.setFontColor(mInfoDisplay.currentlaplabel, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.currentlaplabel,'left')
 
         mInfoDisplay.besttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.besttimelabel, 30, 85)
+        ac.setPosition(mInfoDisplay.besttimelabel, 26, 85)
         ac.setFontColor(mInfoDisplay.besttimelabel, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.besttimelabel,'left')
 
         mInfoDisplay.lasttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.lasttimelabel, 35, 105)
+        ac.setPosition(mInfoDisplay.lasttimelabel, 31, 105)
         ac.setFontColor(mInfoDisplay.lasttimelabel, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.lasttimelabel,'left')
 
         mInfoDisplay.currenttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.currenttimelabel, 11, 125)
+        ac.setPosition(mInfoDisplay.currenttimelabel, 7, 125)
         ac.setFontColor(mInfoDisplay.currenttimelabel, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.currenttimelabel,'left')
 
@@ -1473,12 +1481,12 @@ def acMain(ac_version):
         ac.setFontAlignment(mInfoDisplay.checkboxLabelLaptime,'right')
 
         mInfoDisplay.checkboxContainerBestLap = ac.addCheckBox(mInfoDisplay.appWindow, "")
-        ac.setPosition(mInfoDisplay.checkboxContainerBestLap, 230, 58)
+        ac.setPosition(mInfoDisplay.checkboxContainerBestLap, 230, 88)
         ac.setSize(mInfoDisplay.checkboxContainerBestLap,15,15)
         ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerBestLap,mInfoDisplay.checkboxEventBestLap)
 
-        mInfoDisplay.checkboxLabelBestLap = ac.addLabel(mInfoDisplay.appWindow, "Disabled")
-        ac.setPosition(mInfoDisplay.checkboxLabelBestLap, 26, 55)
+        mInfoDisplay.checkboxLabelBestLap = ac.addLabel(mInfoDisplay.appWindow, "Best Lap")
+        ac.setPosition(mInfoDisplay.checkboxLabelBestLap, 26, 85)
         ac.setFontColor(mInfoDisplay.checkboxLabelBestLap, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.checkboxLabelBestLap,'right')
 
