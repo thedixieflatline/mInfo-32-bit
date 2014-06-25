@@ -56,6 +56,7 @@ class ConfigClass:
         self.soundpack = ""
         self.fuelswitch = ""
         self.fuelconvert = ""
+        self.bestlap = ""
 
     def loadConfig(self):
         self.config = configparser.ConfigParser()
@@ -66,6 +67,7 @@ class ConfigClass:
         self.config['app']['fuelswitch'] = self.fuelswitch
         self.config['app']['fuelconvert'] = self.fuelconvert
         self.config['app']['soundfolder'] = self.soundpack
+        self.config['app']['bestlap'] = self.bestlap
         self.config.write(open(self.configpath,"w"))
 
     def setLapSwitchEnabled(self):
@@ -86,6 +88,15 @@ class ConfigClass:
     def getFuelSwitchStatus(self):
         return self.fuelswitch
 
+    def setBestLapEnabled(self):
+        self.bestlap = "enabled"
+
+    def setBestLapDisabled(self):
+        self.bestlap = "disabled"
+
+    def getBestLapStatus(self):
+        return self.bestlap
+
     def setFuelConvertLiters(self):
         self.fuelconvert = "Liters"
 
@@ -100,6 +111,8 @@ class ConfigClass:
         self.fuelswitch = self.config['app']['fuelswitch']
         self.fuelconvert = self.config['app']['fuelconvert']
         self.soundpack = self.config['app']['soundfolder']
+        self.bestlap = self.config['app']['bestlap']
+
 class SoundClass:
     """Define sound paths and sound object containers define pygame mixer and channel define variables for sound manipulation and playback."""
     def __init__(self):
@@ -1183,6 +1196,7 @@ class DisplayClass:
         self.lapswitch = None
         self.fuelswitch = None
         self.fuelconvert = configuration.fuelconvert
+        self.bestlap = None
         self.appWindow = None
         self.currentlaplabel = None
         self.besttimelabel = None
@@ -1200,11 +1214,27 @@ class DisplayClass:
         self.checkboxContainerFuelConvert = None
         self.checkboxLabelFuelConvert = None
         self.checkboxEventFuelConvert = self.checkboxEventFunctionFuelConvert
+        self.checkboxContainerBestLap = None
+        self.checkboxLabelBestLap = None
+        self.checkboxEventBestLap = self.checkboxEventFunctionBestLap
+
         self.AppActivated = self.AppActivatedFunction
         self.AppDismissed = self.AppDismissedFunction
 
     def spinnerEventFunction(self,x):
         ac.console("hit")
+
+    def checkboxEventFunctionBestLap(self,x,y):
+        if(mInfoDisplay.bestlap):
+            configuration.setBestLapDisabled()
+            mInfoDisplay.bestlap = False
+            ac.setText(mInfoDisplay.checkboxLabelBestLap, "Disabled")
+            ac.setFontColor(mInfoDisplay.checkboxLabelBestLap, 1.0, 0.0, 0.0, 1)
+        else:
+            configuration.setBestLapEnabled()
+            mInfoDisplay.bestlap = True
+            ac.setText(mInfoDisplay.checkboxLabelBestLap, "Best Lap")
+            ac.setFontColor(mInfoDisplay.checkboxLabelBestLap, 0.0, 1.0, 0.1, 1)
 
     def checkboxEventFunctionFuel(self,x,y):
         if(mInfoDisplay.fuelswitch):
@@ -1236,11 +1266,19 @@ class DisplayClass:
             configuration.setLapSwitchDisabled()
             ac.setText(mInfoDisplay.checkboxLabelLaptime, "Disabled")
             ac.setFontColor(mInfoDisplay.checkboxLabelLaptime, 1.0, 0.0, 0.0, 1)
+            configuration.setBestLapDisabled()
+            mInfoDisplay.bestlap = False
+            ac.setText(mInfoDisplay.checkboxLabelBestLap, "Disabled")
+            ac.setFontColor(mInfoDisplay.checkboxLabelBestLap, 1.0, 0.0, 0.0, 1)
         else:
             mInfoDisplay.lapswitch = True
             configuration.setLapSwitchEnabled()
             ac.setText(mInfoDisplay.checkboxLabelLaptime, "Enabled")
             ac.setFontColor(mInfoDisplay.checkboxLabelLaptime, 0.0, 1.0, 0.1, 1)
+            configuration.setBestLapEnabled()
+            mInfoDisplay.bestlap = True
+            ac.setText(mInfoDisplay.checkboxLabelBestLap, "Best Lap")
+            ac.setFontColor(mInfoDisplay.checkboxLabelBestLap, 0.0, 1.0, 0.1, 1)
 
 
     def AppActivatedFunction(self,val):
@@ -1286,6 +1324,11 @@ def acMain(ac_version):
         mInfoDisplay.fuelswitch = True
     elif(configuration.getFuelSwitchStatus()=="disabled"):
         mInfoDisplay.fuelswitch = False
+    if(configuration.getBestLapStatus() =="enabled"):
+        mInfoDisplay.bestlap = True
+    elif(configuration.getBestLapStatus()=="disabled"):
+        mInfoDisplay.bestlap = False
+
     mInfoDisplay.appWindow = ac.newApp("mInfo")
     ac.addRenderCallback(mInfoDisplay.appWindow, onFormRender)
     ac.addOnAppActivatedListener(mInfoDisplay.appWindow, mInfoDisplay.AppActivated)
@@ -1388,6 +1431,16 @@ def acMain(ac_version):
         ac.setPosition(mInfoDisplay.checkboxLabelLaptime, 26, 35)
         ac.setFontColor(mInfoDisplay.checkboxLabelLaptime, 0.0, 1.0, 0.1, 1)
         ac.setFontAlignment(mInfoDisplay.checkboxLabelLaptime,'right')
+
+        mInfoDisplay.checkboxContainerBestLap = ac.addCheckBox(mInfoDisplay.appWindow, "")
+        ac.setPosition(mInfoDisplay.checkboxContainerBestLap, 230, 58)
+        ac.setSize(mInfoDisplay.checkboxContainerBestLap,15,15)
+        ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerBestLap,mInfoDisplay.checkboxEventBestLap)
+
+        mInfoDisplay.checkboxLabelBestLap = ac.addLabel(mInfoDisplay.appWindow, "Best Lap")
+        ac.setPosition(mInfoDisplay.checkboxLabelBestLap, 26, 55)
+        ac.setFontColor(mInfoDisplay.checkboxLabelBestLap, 0.0, 1.0, 0.1, 1)
+        ac.setFontAlignment(mInfoDisplay.checkboxLabelBestLap,'right')
     else:
         mInfoDisplay.currentlaplabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
         ac.setPosition(mInfoDisplay.currentlaplabel, 20, 65)
@@ -1414,10 +1467,20 @@ def acMain(ac_version):
         ac.setSize(mInfoDisplay.checkboxContainerLaptime,15,15)
         ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerLaptime,mInfoDisplay.checkboxEventLaptime)
 
-        mInfoDisplay.checkboxLabelLaptime = ac.addLabel(mInfoDisplay.appWindow, "Disabled")
+        mInfoDisplay.checkboxLabelLaptime = ac.addLabel(mInfoDisplay.appWindow, "Best Lap")
         ac.setPosition(mInfoDisplay.checkboxLabelLaptime, 26, 35)
         ac.setFontColor(mInfoDisplay.checkboxLabelLaptime, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.checkboxLabelLaptime,'right')
+
+        mInfoDisplay.checkboxContainerBestLap = ac.addCheckBox(mInfoDisplay.appWindow, "")
+        ac.setPosition(mInfoDisplay.checkboxContainerBestLap, 230, 58)
+        ac.setSize(mInfoDisplay.checkboxContainerBestLap,15,15)
+        ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerBestLap,mInfoDisplay.checkboxEventBestLap)
+
+        mInfoDisplay.checkboxLabelBestLap = ac.addLabel(mInfoDisplay.appWindow, "Disabled")
+        ac.setPosition(mInfoDisplay.checkboxLabelBestLap, 26, 55)
+        ac.setFontColor(mInfoDisplay.checkboxLabelBestLap, 1.0, 0.0, 0.0, 1)
+        ac.setFontAlignment(mInfoDisplay.checkboxLabelBestLap,'right')
 
         ac.setText(mInfoDisplay.currentlaplabel, "current lap : -")
         ac.setText(mInfoDisplay.besttimelabel, "best time : -:--:---")
