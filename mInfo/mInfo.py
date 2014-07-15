@@ -1,4 +1,4 @@
-"""mInfo ver 0.85  June 2014
+"""mInfo ver 0.86  June 2014
 GitHub Page: https://github.com/thedixieflatline/assettocorsa
 
 To activate copy mInfo folder to C:\Program Files (x86)\Steam\steamapps\common\assettocorsa\apps\python
@@ -14,12 +14,8 @@ Big thanks to Rombik who wrote the original sim info module.
 Please submit bugs or requests to the Assetto Corsa forum
 http://www.assettocorsa.net/forum/index.php
 
-TODO Fuel add ability to alert when fuel reaches set amount
-TODO Need to do a better recording on the audio to sweeten it, make timing and volume more consistent. It sounds bad because I recorded on a headphone mic as a test so next version will be a nice microphone.
-TODO add volume control
 TODO Tire temp warnings
 TODO Splits ahead or behind last split
-
 TODO Review code and refactor when the game is released and python API and or shared memory is ver 1.0"""
 
 import sys
@@ -47,6 +43,22 @@ def CheckPythonPath():
     for d in sys.path:
         ac.console("{0}".format(d))
 
+def CheckTypeOf(thing):
+    # CheckTypeOf(configuration.fuelwarninglevel) property or variable
+    # CheckTypeOf(configuration.getFuelWarningLevel()) function return value
+    if type(thing) is str:
+        ac.console("string")
+    if type(thing) is int:
+        ac.console("integer")
+    if type(thing) is float:
+        ac.console("float")
+    if type(thing) is object:
+        ac.console("object")
+    if type(thing) is staticmethod:
+        ac.console("static method")
+    if type(thing) is classmethod:
+        ac.console("class method")
+
 class ConfigClass:
     """Config file loader (mInfo.ini) and data process"""
     def __init__(self):
@@ -56,7 +68,11 @@ class ConfigClass:
         self.soundpack = ""
         self.fuelswitch = ""
         self.fuelconvert = ""
+        self.fuellapalert = ""
+        self.fuelalertlevel1 = 0
+        self.fuelalertlevel2 = 0
         self.bestlap = ""
+        self.volume = 0
 
     def loadConfig(self):
         self.config = configparser.ConfigParser()
@@ -68,6 +84,10 @@ class ConfigClass:
         self.config['app']['fuelconvert'] = self.fuelconvert
         self.config['app']['soundfolder'] = self.soundpack
         self.config['app']['bestlap'] = self.bestlap
+        self.config['app']['fuellapalert'] = self.fuellapalert
+        self.config['app']['fuelalertlevel1'] = self.fuelalertlevel1
+        self.config['app']['fuelalertlevel2'] = self.fuelalertlevel2
+        self.config['app']['volume'] = self.volume
         self.config.write(open(self.configpath,"w"))
 
     def setLapSwitchEnabled(self):
@@ -106,12 +126,49 @@ class ConfigClass:
     def getFuelConvertStatus(self):
         return self.fuelconvert
 
+    def setFuelLapAlertEnabled(self):
+        self.fuellapalert = "enabled"
+
+    def setFuelLapAlertDisabled(self):
+        self.fuellapalert = "disabled"
+
+    def getFuelLapAlertStatus(self):
+        return self.fuellapalert
+
+    def setFuelAlertLevel1(self,level):
+        """convert back to string"""
+        self.fuelalertlevel1 = str(level)
+
+    def getFuelAlertLevel1(self):
+        """spinner needs the float"""
+        return float(self.fuelalertlevel1)
+
+    def setFuelAlertLevel2(self,level):
+        """convert back to string"""
+        self.fuelalertlevel2 = str(level)
+
+    def getFuelAlertLevel2(self):
+        """spinner needs the float"""
+        return float(self.fuelalertlevel2)
+
+    def setVolume(self,level):
+        """convert back to string"""
+        self.volume = str(level)
+
+    def getVolume(self):
+        """spinner needs the float"""
+        return float(self.volume)
+
     def setInitialStatus(self):
         self.lapswitch = self.config['app']['lapswitch']
         self.fuelswitch = self.config['app']['fuelswitch']
         self.fuelconvert = self.config['app']['fuelconvert']
         self.soundpack = self.config['app']['soundfolder']
         self.bestlap = self.config['app']['bestlap']
+        self.fuellapalert = self.config['app']['fuellapalert']
+        self.fuelalertlevel1 = self.config['app']['fuelalertlevel1']
+        self.fuelalertlevel2 = self.config['app']['fuelalertlevel2']
+        self.volume = self.config['app']['volume']
 
 class SoundClass:
     """Define sound paths and sound object containers define pygame mixer and channel define variables for sound manipulation and playback."""
@@ -215,6 +272,10 @@ class SoundClass:
 
     def loadSounds(self):
         """ init mixer freq set channels and volume, load sounds into contained from disk and set volume."""
+        self.mixer.init(frequency=44100, size=-16, channels=1, buffer=4096)
+        self.mixer.set_num_channels(2)
+        self.chan = pygame.mixer.Channel(0)
+        self.chan.set_volume(1.0)
         self.currentsoundpack_name = configuration.soundpack
         self.currentsoundpack_folder = self.currentsoundpack_folder_root + configuration.soundpack
         self.filepathsound_silence = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_silence.wav')
@@ -255,10 +316,6 @@ class SoundClass:
         self.filepathsound_eighty = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_eighty.wav')
         self.filepathsound_ninety = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_ninety.wav')
         self.filepathsound_hundred = os.path.join(self.maindir, self.currentsoundpack_folder, 'sound_hundred.wav')
-        self.mixer.init(frequency=44100, size=-16, channels=1, buffer=4096)
-        self.mixer.set_num_channels(2)
-        self.chan = pygame.mixer.Channel(0)
-        self.chan.set_volume(1.0)
         self.joinsounds_laptime = self.mixer.Sound(self.filepathsound_point)
         self.joinsounds_laptime.set_volume(1.0)
         self.playsounds_laptime = self.mixer.Sound(self.filepathsound_point)
@@ -559,198 +616,95 @@ class SoundClass:
         self.sound_ninety_nine.set_volume(1.0)
         self.sound_hundred = self.mixer.Sound(self.filepathsound_hundred)
         self.sound_hundred.set_volume(1.0)
-        self.sound_hundred_one_array = np.concatenate((self.sound_hundred,self.sound_silence,self.sound_one))
+        self.sound_hundred_one_array = np.concatenate((self.sound_hundred,self.sound_and,self.sound_one))
         self.sound_hundred_one = pygame.sndarray.make_sound(self.sound_hundred_one_array)
         self.sound_hundred_one.set_volume(1.0)
-        self.sound_hundred_two_array = np.concatenate((self.sound_hundred,self.sound_silence,self.sound_two))
+        self.sound_hundred_two_array = np.concatenate((self.sound_hundred,self.sound_and,self.sound_two))
         self.sound_hundred_two = pygame.sndarray.make_sound(self.sound_hundred_two_array)
         self.sound_hundred_two.set_volume(1.0)
-        self.sound_hundred_three_array = np.concatenate((self.sound_hundred,self.sound_silence,self.sound_three))
+        self.sound_hundred_three_array = np.concatenate((self.sound_hundred,self.sound_and,self.sound_three))
         self.sound_hundred_three = pygame.sndarray.make_sound(self.sound_hundred_three_array)
         self.sound_hundred_three.set_volume(1.0)
-        self.sound_hundred_four_array = np.concatenate((self.sound_hundred,self.sound_silence,self.sound_four))
+        self.sound_hundred_four_array = np.concatenate((self.sound_hundred,self.sound_and,self.sound_four))
         self.sound_hundred_four = pygame.sndarray.make_sound(self.sound_hundred_four_array)
         self.sound_hundred_four.set_volume(1.0)
-        self.sound_hundred_five_array = np.concatenate((self.sound_hundred,self.sound_silence,self.sound_five))
+        self.sound_hundred_five_array = np.concatenate((self.sound_hundred,self.sound_and,self.sound_five))
         self.sound_hundred_five = pygame.sndarray.make_sound(self.sound_hundred_five_array)
         self.sound_hundred_five.set_volume(1.0)
-        self.sound_hundred_six_array = np.concatenate((self.sound_hundred,self.sound_silence,self.sound_six))
+        self.sound_hundred_six_array = np.concatenate((self.sound_hundred,self.sound_and,self.sound_six))
         self.sound_hundred_six = pygame.sndarray.make_sound(self.sound_hundred_six_array)
         self.sound_hundred_six.set_volume(1.0)
-        self.sound_hundred_seven_array = np.concatenate((self.sound_hundred,self.sound_silence,self.sound_seven))
+        self.sound_hundred_seven_array = np.concatenate((self.sound_hundred,self.sound_and,self.sound_seven))
         self.sound_hundred_seven = pygame.sndarray.make_sound(self.sound_hundred_seven_array)
         self.sound_hundred_seven.set_volume(1.0)
-        self.sound_hundred_eight_array = np.concatenate((self.sound_hundred,self.sound_silence,self.sound_eight))
+        self.sound_hundred_eight_array = np.concatenate((self.sound_hundred,self.sound_and,self.sound_eight))
         self.sound_hundred_eight = pygame.sndarray.make_sound(self.sound_hundred_eight_array)
         self.sound_hundred_eight.set_volume(1.0)
-        self.sound_hundred_nine_array = np.concatenate((self.sound_hundred,self.sound_silence,self.sound_nine))
+        self.sound_hundred_nine_array = np.concatenate((self.sound_hundred,self.sound_and,self.sound_nine))
         self.sound_hundred_nine = pygame.sndarray.make_sound(self.sound_hundred_nine_array)
         self.sound_hundred_nine.set_volume(1.0)
-        self.sound_hundred_ten_array = np.concatenate((self.sound_hundred,self.sound_silence,self.sound_ten))
+        self.sound_hundred_ten_array = np.concatenate((self.sound_hundred,self.sound_and,self.sound_ten))
         self.sound_hundred_ten = pygame.sndarray.make_sound(self.sound_hundred_ten_array)
         self.sound_hundred_ten.set_volume(1.0)
-        self.sound_hundred_eleven_array = np.concatenate((self.sound_hundred,self.sound_silence,self.sound_eleven))
+        self.sound_hundred_eleven_array = np.concatenate((self.sound_hundred,self.sound_and,self.sound_eleven))
         self.sound_hundred_eleven = pygame.sndarray.make_sound(self.sound_hundred_eleven_array)
         self.sound_hundred_eleven.set_volume(1.0)
-        self.sound_hundred_twelve_array = np.concatenate((self.sound_hundred,self.sound_silence,self.sound_twelve))
+        self.sound_hundred_twelve_array = np.concatenate((self.sound_hundred,self.sound_and,self.sound_twelve))
         self.sound_hundred_twelve = pygame.sndarray.make_sound(self.sound_hundred_twelve_array)
         self.sound_hundred_twelve.set_volume(1.0)
-        self.sound_hundred_thirteen_array = np.concatenate((self.sound_hundred,self.sound_silence,self.sound_thirteen))
+        self.sound_hundred_thirteen_array = np.concatenate((self.sound_hundred,self.sound_and,self.sound_thirteen))
         self.sound_hundred_thirteen = pygame.sndarray.make_sound(self.sound_hundred_thirteen_array)
         self.sound_hundred_thirteen.set_volume(1.0)
-        self.sound_hundred_fourteen_array = np.concatenate((self.sound_hundred,self.sound_silence,self.sound_fourteen))
+        self.sound_hundred_fourteen_array = np.concatenate((self.sound_hundred,self.sound_and,self.sound_fourteen))
         self.sound_hundred_fourteen = pygame.sndarray.make_sound(self.sound_hundred_fourteen_array)
         self.sound_hundred_fourteen.set_volume(1.0)
-        self.sound_hundred_fifteen_array = np.concatenate((self.sound_hundred,self.sound_silence,self.sound_fifteen))
+        self.sound_hundred_fifteen_array = np.concatenate((self.sound_hundred,self.sound_and,self.sound_fifteen))
         self.sound_hundred_fifteen = pygame.sndarray.make_sound(self.sound_hundred_fifteen_array)
         self.sound_hundred_fifteen.set_volume(1.0)
-        self.sound_hundred_sixteen_array = np.concatenate((self.sound_hundred,self.sound_silence,self.sound_sixteen))
+        self.sound_hundred_sixteen_array = np.concatenate((self.sound_hundred,self.sound_and,self.sound_sixteen))
         self.sound_hundred_sixteen = pygame.sndarray.make_sound(self.sound_hundred_sixteen_array)
         self.sound_hundred_sixteen.set_volume(1.0)
-        self.sound_hundred_seventeen_array = np.concatenate((self.sound_hundred,self.sound_silence,self.sound_seventeen))
+        self.sound_hundred_seventeen_array = np.concatenate((self.sound_hundred,self.sound_and,self.sound_seventeen))
         self.sound_hundred_seventeen = pygame.sndarray.make_sound(self.sound_hundred_seventeen_array)
         self.sound_hundred_seventeen.set_volume(1.0)
-        self.sound_hundred_eighteen_array = np.concatenate((self.sound_hundred,self.sound_silence,self.sound_eighteen))
+        self.sound_hundred_eighteen_array = np.concatenate((self.sound_hundred,self.sound_and,self.sound_eighteen))
         self.sound_hundred_eighteen = pygame.sndarray.make_sound(self.sound_hundred_eighteen_array)
         self.sound_hundred_eighteen.set_volume(1.0)
-        self.sound_hundred_nineteen_array = np.concatenate((self.sound_hundred,self.sound_silence,self.sound_nineteen))
+        self.sound_hundred_nineteen_array = np.concatenate((self.sound_hundred,self.sound_and,self.sound_nineteen))
         self.sound_hundred_nineteen = pygame.sndarray.make_sound(self.sound_hundred_nineteen_array)
         self.sound_hundred_nineteen.set_volume(1.0)
-        self.sound_hundred_twenty_array = np.concatenate((self.sound_hundred,self.sound_silence,self.sound_twenty))
+        self.sound_hundred_twenty_array = np.concatenate((self.sound_hundred,self.sound_and,self.sound_twenty))
         self.sound_hundred_twenty = pygame.sndarray.make_sound(self.sound_hundred_twenty_array)
         self.sound_hundred_twenty.set_volume(1.0)
         self.playlist_laptime = [self.sound_point,self.sound_point, self.sound_point, self.sound_point, self.sound_point, self.sound_point, self.sound_point, self.sound_point]
         self.playlist_fuel = [self.sound_point,self.sound_point, self.sound_point, self.sound_point, self.sound_point, self.sound_point, self.sound_point]
         self.soundlist = {
-            's': self.sound_silence,
-            'p': self.sound_point,
-            'm': self.sound_minute,
-            'ms': self.sound_minutes,
-            'f': self.sound_fuel,
-            'l': self.sound_fuel_liters,
-            'g': self.sound_fuel_gallons,
-            'b': self.sound_bestlap,
-            '0': self.sound_zero,
-            '1': self.sound_one,
-            '2': self.sound_two,
-            '3': self.sound_three,
-            '4': self.sound_four,
-            '5': self.sound_five,
-            '6': self.sound_six,
-            '7': self.sound_seven,
-            '8': self.sound_eight,
-            '9': self.sound_nine,
-            '10': self.sound_ten,
-            '11': self.sound_eleven,
-            '12': self.sound_twelve,
-            '13': self.sound_thirteen,
-            '14': self.sound_fourteen,
-            '15': self.sound_fifteen,
-            '16': self.sound_sixteen,
-            '17': self.sound_seventeen,
-            '18': self.sound_eighteen,
-            '19': self.sound_nineteen,
-            '20': self.sound_twenty,
-            '21': self.sound_twenty_one,
-            '22': self.sound_twenty_two,
-            '23': self.sound_twenty_three,
-            '24': self.sound_twenty_four,
-            '25': self.sound_twenty_five,
-            '26': self.sound_twenty_six,
-            '27': self.sound_twenty_seven,
-            '28': self.sound_twenty_eight,
-            '29': self.sound_twenty_nine,
-            '30': self.sound_thirty,
-            '31': self.sound_thirty_one,
-            '32': self.sound_thirty_two,
-            '33': self.sound_thirty_three,
-            '34': self.sound_thirty_four,
-            '35': self.sound_thirty_five,
-            '36': self.sound_thirty_six,
-            '37': self.sound_thirty_seven,
-            '38': self.sound_thirty_eight,
-            '39': self.sound_thirty_nine,
-            '40': self.sound_forty,
-            '41': self.sound_forty_one,
-            '42': self.sound_forty_two,
-            '43': self.sound_forty_three,
-            '44': self.sound_forty_four,
-            '45': self.sound_forty_five,
-            '46': self.sound_forty_six,
-            '47': self.sound_forty_seven,
-            '48': self.sound_forty_eight,
-            '49': self.sound_forty_nine,
-            '50': self.sound_fifty,
-            '51': self.sound_fifty_one,
-            '52': self.sound_fifty_two,
-            '53': self.sound_fifty_three,
-            '54': self.sound_fifty_four,
-            '55': self.sound_fifty_five,
-            '56': self.sound_fifty_six,
-            '57': self.sound_fifty_seven,
-            '58': self.sound_fifty_eight,
-            '59': self.sound_fifty_nine,
-            '60': self.sound_sixty,
-            '61': self.sound_sixty_one,
-            '62': self.sound_sixty_two,
-            '63': self.sound_sixty_three,
-            '64': self.sound_sixty_four,
-            '65': self.sound_sixty_five,
-            '66': self.sound_sixty_six,
-            '67': self.sound_sixty_seven,
-            '68': self.sound_sixty_eight,
-            '69': self.sound_sixty_nine,
-            '70': self.sound_seventy,
-            '71': self.sound_seventy_one,
-            '72': self.sound_seventy_two,
-            '73': self.sound_seventy_three,
-            '74': self.sound_seventy_four,
-            '75': self.sound_seventy_five,
-            '76': self.sound_seventy_six,
-            '77': self.sound_seventy_seven,
-            '78': self.sound_seventy_eight,
-            '79': self.sound_seventy_nine,
-            '80': self.sound_eighty,
-            '81': self.sound_eighty_one,
-            '82': self.sound_eighty_two,
-            '83': self.sound_eighty_three,
-            '84': self.sound_eighty_four,
-            '85': self.sound_eighty_five,
-            '86': self.sound_eighty_six,
-            '87': self.sound_eighty_seven,
-            '88': self.sound_eighty_eight,
-            '89': self.sound_eighty_nine,
-            '90': self.sound_ninety,
-            '91': self.sound_ninety_one,
-            '92': self.sound_ninety_two,
-            '93': self.sound_ninety_three,
-            '94': self.sound_ninety_four,
-            '95': self.sound_ninety_five,
-            '96': self.sound_ninety_six,
-            '97': self.sound_ninety_seven,
-            '98': self.sound_ninety_eight,
-            '99': self.sound_ninety_nine,
-            '100': self.sound_hundred,
-            '101': self.sound_hundred_one,
-            '102': self.sound_hundred_two,
-            '103': self.sound_hundred_three,
-            '104': self.sound_hundred_four,
-            '105': self.sound_hundred_five,
-            '106': self.sound_hundred_six,
-            '107': self.sound_hundred_seven,
-            '108': self.sound_hundred_eight,
-            '109': self.sound_hundred_nine,
-            '110': self.sound_hundred_ten,
-            '111': self.sound_hundred_eleven,
-            '112': self.sound_hundred_twelve,
-            '113': self.sound_hundred_thirteen,
-            '114': self.sound_hundred_fourteen,
-            '115': self.sound_hundred_fifteen,
-            '116': self.sound_hundred_sixteen,
-            '117': self.sound_hundred_seventeen,
-            '118': self.sound_hundred_eighteen,
-            '119': self.sound_hundred_nineteen,
-            '120': self.sound_hundred_twenty,
+            's': self.sound_silence, 'p': self.sound_point, 'm': self.sound_minute, 'ms': self.sound_minutes, 'f': self.sound_fuel,
+            'l': self.sound_fuel_liters, 'g': self.sound_fuel_gallons, 'b': self.sound_bestlap,
+            '0': self.sound_zero, '1': self.sound_one, '2': self.sound_two, '3': self.sound_three, '4': self.sound_four, '5': self.sound_five,
+            '6': self.sound_six, '7': self.sound_seven, '8': self.sound_eight, '9': self.sound_nine, '10': self.sound_ten,
+            '11': self.sound_eleven, '12': self.sound_twelve, '13': self.sound_thirteen, '14': self.sound_fourteen, '15': self.sound_fifteen,
+            '16': self.sound_sixteen, '17': self.sound_seventeen, '18': self.sound_eighteen, '19': self.sound_nineteen, '20': self.sound_twenty,
+            '21': self.sound_twenty_one, '22': self.sound_twenty_two, '23': self.sound_twenty_three, '24': self.sound_twenty_four, '25': self.sound_twenty_five,
+            '26': self.sound_twenty_six, '27': self.sound_twenty_seven, '28': self.sound_twenty_eight, '29': self.sound_twenty_nine, '30': self.sound_thirty,
+            '31': self.sound_thirty_one, '32': self.sound_thirty_two, '33': self.sound_thirty_three, '34': self.sound_thirty_four, '35': self.sound_thirty_five,
+            '36': self.sound_thirty_six, '37': self.sound_thirty_seven, '38': self.sound_thirty_eight, '39': self.sound_thirty_nine, '40': self.sound_forty,
+            '41': self.sound_forty_one, '42': self.sound_forty_two, '43': self.sound_forty_three, '44': self.sound_forty_four, '45': self.sound_forty_five,
+            '46': self.sound_forty_six, '47': self.sound_forty_seven, '48': self.sound_forty_eight, '49': self.sound_forty_nine, '50': self.sound_fifty,
+            '51': self.sound_fifty_one, '52': self.sound_fifty_two, '53': self.sound_fifty_three, '54': self.sound_fifty_four, '55': self.sound_fifty_five,
+            '56': self.sound_fifty_six, '57': self.sound_fifty_seven, '58': self.sound_fifty_eight, '59': self.sound_fifty_nine, '60': self.sound_sixty,
+            '61': self.sound_sixty_one, '62': self.sound_sixty_two, '63': self.sound_sixty_three, '64': self.sound_sixty_four, '65': self.sound_sixty_five,
+            '66': self.sound_sixty_six, '67': self.sound_sixty_seven, '68': self.sound_sixty_eight, '69': self.sound_sixty_nine, '70': self.sound_seventy,
+            '71': self.sound_seventy_one, '72': self.sound_seventy_two, '73': self.sound_seventy_three, '74': self.sound_seventy_four, '75': self.sound_seventy_five,
+            '76': self.sound_seventy_six, '77': self.sound_seventy_seven, '78': self.sound_seventy_eight, '79': self.sound_seventy_nine, '80': self.sound_eighty,
+            '81': self.sound_eighty_one, '82': self.sound_eighty_two, '83': self.sound_eighty_three, '84': self.sound_eighty_four, '85': self.sound_eighty_five,
+            '86': self.sound_eighty_six, '87': self.sound_eighty_seven, '88': self.sound_eighty_eight, '89': self.sound_eighty_nine, '90': self.sound_ninety,
+            '91': self.sound_ninety_one, '92': self.sound_ninety_two, '93': self.sound_ninety_three, '94': self.sound_ninety_four, '95': self.sound_ninety_five,
+            '96': self.sound_ninety_six, '97': self.sound_ninety_seven, '98': self.sound_ninety_eight, '99': self.sound_ninety_nine, '100': self.sound_hundred,
+            '101': self.sound_hundred_one, '102': self.sound_hundred_two, '103': self.sound_hundred_three, '104': self.sound_hundred_four, '105': self.sound_hundred_five,
+            '106': self.sound_hundred_six, '107': self.sound_hundred_seven, '108': self.sound_hundred_eight, '109': self.sound_hundred_nine, '110': self.sound_hundred_ten,
+            '111': self.sound_hundred_eleven, '112': self.sound_hundred_twelve, '113': self.sound_hundred_thirteen, '114': self.sound_hundred_fourteen, '115': self.sound_hundred_fifteen,
+            '116': self.sound_hundred_sixteen, '117': self.sound_hundred_seventeen, '118': self.sound_hundred_eighteen, '119': self.sound_hundred_nineteen, '120': self.sound_hundred_twenty,
             }
 
     def playSoundLaptime(self):
@@ -759,6 +713,9 @@ class SoundClass:
                 self.playlist_laptime[0] = self.sound_bestlap
             else:
                 self.playlist_laptime[0] = self.sound_silence
+        else:
+            self.playlist_laptime[0] = self.sound_silence
+
         if(timesystem.lastlapminutes==0):
             self.playlist_laptime[1] = self.sound_silence
             self.playlist_laptime[2] = self.sound_silence
@@ -856,13 +813,36 @@ class SoundClass:
                 self.joinsounds_fuel = np.concatenate((self.playlist_fuel[0],self.playlist_fuel[1], self.playlist_fuel[2],self.playlist_fuel[3], self.playlist_fuel[4],self.playlist_fuel[5], self.playlist_fuel[6]), axis=0)
                 self.playsounds_fuel = pygame.sndarray.make_sound(self.joinsounds_fuel)
                 self.chan.queue(self.playsounds_fuel)
-
     def playSound(self):
         """ join sounds to form laptime sound in container self.joinsounds_laptime format and copy to playback container self.playsounds then play thru channel in mixer."""
         self.joinsounds_laptime = np.concatenate((self.playlist_laptime[0],self.playlist_laptime[1], self.playlist_laptime[2],self.playlist_laptime[3], self.playlist_laptime[4],self.playlist_laptime[5],self.playlist_laptime[6], self.playlist_laptime[7]), axis=0)
         self.playsounds_laptime = pygame.sndarray.make_sound(self.joinsounds_laptime)
         self.chan.play(self.playsounds_laptime)
         #ac.console("playSound")
+
+    def setVolume(self,level):
+        if(level == 0):
+            self.chan.set_volume(0.0)
+        elif(level == 10):
+            self.chan.set_volume(0.1)
+        elif(level == 20):
+            self.chan.set_volume(0.2)
+        elif(level == 30):
+            self.chan.set_volume(0.3)
+        elif(level == 40):
+            self.chan.set_volume(0.4)
+        elif(level == 50):
+            self.chan.set_volume(0.5)
+        elif(level == 60):
+            self.chan.set_volume(0.6)
+        elif(level == 70):
+            self.chan.set_volume(0.7)
+        elif(level == 80):
+            self.chan.set_volume(0.8)
+        elif(level == 90):
+            self.chan.set_volume(0.9)
+        elif(level == 100):
+            self.chan.set_volume(1.0)
 
 class TimerClass:
     """ Controls time recording storage combination output of laptimes input to getTime() is milliseconds from siminfo class obj instance timesystem. """
@@ -1014,13 +994,20 @@ class FuelClass:
 
     def updateFuel(self,fuel):
         self.currentfuel = fuel
-        self.currentfuelgallons = fuel*0.264172
+        self.currentfuelgallons = self.currentfuel*0.264172
         if(configuration.fuelconvert == "Liters"):
             self.currentfuelstr = format(self.currentfuel, '.3f')
-            if(self.currentfuel<10.00):
+            if(self.currentfuel < 9.999):
+                self.currentfuel_100 = "0"
                 self.currentfuel_10 = self.currentfuelstr[0]
                 self.currentfuel_0 = self.currentfuelstr[2]
                 self.currentfuel_00 = self.currentfuelstr[3]
+                self.currentfuel_display = self.currentfuel_10 + "." + self.currentfuel_0 + self.currentfuel_00
+            elif(self.currentfuel == 10.00):
+                self.currentfuel_100 = "0"
+                self.currentfuel_10 = "10"
+                self.currentfuel_0 = "0"
+                self.currentfuel_00 = "0"
                 self.currentfuel_display = self.currentfuel_10 + "." + self.currentfuel_0 + self.currentfuel_00
             elif(self.currentfuel > 10.00 and self.currentfuel < 100.00):
                 self.currentfuel_100 = self.currentfuelstr[0]
@@ -1028,7 +1015,7 @@ class FuelClass:
                 self.currentfuel_0 = self.currentfuelstr[3]
                 self.currentfuel_00 =  self.currentfuelstr[4]
                 self.currentfuel_display = self.currentfuel_100 + self.currentfuel_10 + "." + self.currentfuel_0 + self.currentfuel_00
-            elif(self.currentfuel>100.00):
+            elif(self.currentfuel > 100.00):
                 self.currentfuel_100 = self.currentfuelstr[0] + self.currentfuelstr[1]
                 self.currentfuel_10 = self.currentfuelstr[2]
                 self.currentfuel_0 = self.currentfuelstr[4]
@@ -1036,7 +1023,7 @@ class FuelClass:
                 self.currentfuel_display = self.currentfuel_100 + self.currentfuel_10 + "." + self.currentfuel_0 + self.currentfuel_00
         elif(configuration.fuelconvert == "Gallons"):
             self.currentfuelstr = format(self.currentfuelgallons, '.3f')
-            if( self.currentfuelgallons<10.00):
+            if( self.currentfuelgallons < 10.00):
                 self.currentfuel_10 = self.currentfuelstr[0]
                 self.currentfuel_0 = self.currentfuelstr[2]
                 self.currentfuel_00 = self.currentfuelstr[3]
@@ -1047,24 +1034,31 @@ class FuelClass:
                 self.currentfuel_0 = self.currentfuelstr[3]
                 self.currentfuel_00 =  self.currentfuelstr[4]
                 self.currentfuel_display = self.currentfuel_100 + self.currentfuel_10 + "." + self.currentfuel_0 + self.currentfuel_00
-            elif(self.currentfuelgallons>100.00):
+            elif(self.currentfuelgallons > 100.00):
                 self.currentfuel_100 = self.currentfuelstr[0] + self.currentfuelstr[1]
                 self.currentfuel_10 = self.currentfuelstr[2]
                 self.currentfuel_0 = self.currentfuelstr[4]
                 self.currentfuel_00 =  self.currentfuelstr[5]
                 self.currentfuel_display = self.currentfuel_100 + self.currentfuel_10 + "." + self.currentfuel_0 + self.currentfuel_00
 
-    def getCurrentFuel(self):
+    def getCurrentFuelForDisplayClass(self):
         if(configuration.fuelconvert == "Liters"):
             return self.currentfuel_display
         elif(configuration.fuelconvert == "Gallons"):
             return self.currentfuel_display
 
+    def getCurrentFuel(self):
+        if(configuration.fuelconvert == "Liters"):
+            #return format(self.currentfuel, '.2f')r
+            return float(self.currentfuel)
+        elif(configuration.fuelconvert == "Gallons"):
+            #return format(self.currentfuelgallons, '.2f')
+            return float(self.currentfuelgallons)
 #------------------------------------------------------------------------------------------------------------------------------------------
 # SIM INFO by @Rombik
 # Big thanks to @Rombik who wrote this sim info  module. Saved me maybe a week of thrashing to get it going and testing
 # I adapted to run internally and not as a module. Also temporarily switched off what I do not need from shared memory link at the moment
-# This following set of variables and class setup the reading of shared memore with the game which enables us to get correct vales
+# This following set of variables and class setup the reading of shared memory with the game which enables us to get correct vales
 # that are currently not working in the python API, namely the last lap times
 # This stuff might go once we gat a final release api etc
 
@@ -1203,17 +1197,31 @@ class DisplayClass:
     """display elements labels buttons and callback functions """
     def __init__(self):
         self.lapswitch = None
-        self.fuelswitch = None
-        self.fuelconvert = configuration.fuelconvert
         self.bestlap = None
+        self.fuelswitch = None
+        self.fuelconvert = None
+        self.fuellapalert = None
+        self.fuellapalerttrigger = None
+        self.fuellapalerttriggerSet = None
+        self.fuelalertlevel1 = None
+        self.fuelalertlevel2 = None
+        self.volume =  None
         self.appWindow = None
         self.currentlaplabel = None
         self.besttimelabel = None
         self.lasttimelabel = None
         self.currenttimelabel = None
         self.currentfuellabel = None
-        self.fuelalertSpinner = None
-        self.fuelalertSpinnerEvent = self.fuelalertSpinnerEventFunction
+        self.currentfuelalertlabel = None
+        self.fuelalertSpinner1 = None
+        self.fuelalertSpinner2 = None
+        self.fuelalertSpinner1Event = self.fuelalertSpinner1EventFunction
+        self.fuelalertSpinner2Event = self.fuelalertSpinner2EventFunction
+        self.fuelalertSpinner1Value = None
+        self.fuelalertSpinner2Value = None
+        self.volumeSpinner = None
+        self.volumeSpinnerEvent = self.volumeSpinnerEventFunction
+        self.volumeSpinnerValue = 0
         self.checkboxContainerLaptime = None
         self.checkboxLabelLaptime = None
         self.checkboxEventLaptime = self.checkboxEventFunctionLaptime
@@ -1226,74 +1234,132 @@ class DisplayClass:
         self.checkboxContainerBestLap = None
         self.checkboxLabelBestLap = None
         self.checkboxEventBestLap = self.checkboxEventFunctionBestLap
-        self.checkboxContainerFuelAlert = None
-        self.checkboxLabelFuelAlert = None
-        self.checkboxEventFuelAlert = self.checkboxEventFunctionFuelAlert
-
+        self.checkboxContainerFuelLapAlert = None
+        self.checkboxLabelFuelLapAlert = None
+        self.checkboxEventFuelLapAlert = self.checkboxEventFunctionFuelLapAlert
         self.AppActivated = self.AppActivatedFunction
         self.AppDismissed = self.AppDismissedFunction
 
-    def fuelalertSpinnerEventFunction(self,x):
-        ac.console("hit")
+    def setInitialStatus(self):
+        self.fuelalertlevel1 = configuration.getFuelAlertLevel1()
+        self.fuelalertlevel2 = configuration.getFuelAlertLevel2()
+        self.fuelalertSpinner1Value = self.fuelalertlevel1
+        self.fuelalertSpinner2Value = self.fuelalertlevel2
+        self.fuellapalerttrigger = 0
+        soundsystem.hasplayedLastFuel = 0
+        self.volume = configuration.getVolume()
+        self.volumeSpinnerValue = self.volume
+        if(configuration.getLapSwitchStatus()=="enabled"):
+            self.lapswitch = True
+        elif(configuration.getLapSwitchStatus()=="disabled"):
+            self.lapswitch = False
+        if(configuration.getFuelSwitchStatus() =="enabled"):
+             self.fuelswitch = True
+        elif(configuration.getFuelSwitchStatus()=="disabled"):
+             self.fuelswitch = False
+        if(configuration.getBestLapStatus() == "enabled"):
+             self.bestlap = True
+        elif(configuration.getBestLapStatus()== "disabled"):
+             self.bestlap = False
+        if(configuration.getFuelConvertStatus() == "Liters"):
+             self.fuelconvert = "Liters"
+        elif(configuration.getFuelConvertStatus()== "Gallons"):
+             self.fuelconvert = "Gallons"
+        if(configuration.getFuelLapAlertStatus() == "enabled"):
+             self.fuellapalert = True
+        elif(configuration.getFuelLapAlertStatus() == "disabled"):
+             self.fuellapalert = False
 
     def checkboxEventFunctionBestLap(self,x,y):
-        if(mInfoDisplay.bestlap):
+        if(self.bestlap):
             configuration.setBestLapDisabled()
-            mInfoDisplay.bestlap = False
-            ac.setText(mInfoDisplay.checkboxLabelBestLap, "Disabled")
-            ac.setFontColor(mInfoDisplay.checkboxLabelBestLap, 1.0, 0.0, 0.0, 1)
+            self.bestlap = False
+            ac.setText(self.checkboxLabelBestLap, "Disabled")
+            ac.setFontColor(self.checkboxLabelBestLap, 1.0, 0.0, 0.0, 1)
         else:
             configuration.setBestLapEnabled()
-            mInfoDisplay.bestlap = True
-            ac.setText(mInfoDisplay.checkboxLabelBestLap, "Best Lap")
-            ac.setFontColor(mInfoDisplay.checkboxLabelBestLap, 0.0, 1.0, 0.1, 1)
+            self.bestlap = True
+            ac.setText(self.checkboxLabelBestLap, "Best Lap")
+            ac.setFontColor(self.checkboxLabelBestLap, 0.0, 1.0, 0.1, 1)
 
-    def checkboxEventFunctionFuelAlert(self,x,y):
-        ac.console("fuel")
+    def fuelalertSpinner1EventFunction(self,x):
+        configuration.setFuelAlertLevel1(ac.getValue(self.fuelalertSpinner1))
+        self.fuelalertlevel1 = ac.getValue(self.fuelalertSpinner1)
+        self.fuelalertSpinner1Value = ac.getValue(self.fuelalertSpinner1)
+        self.fuellapalerttrigger = 0
+        #mInfoDisplay.fuelconvert
+
+    def fuelalertSpinner2EventFunction(self,x):
+        configuration.setFuelAlertLevel2(ac.getValue(self.fuelalertSpinner2))
+        self.fuelalertlevel2 = ac.getValue(self.fuelalertSpinner2)
+        self.fuelalertSpinner2Value = ac.getValue(self.fuelalertSpinner2)
+        self.fuellapalerttrigger = 0
+
+    def getCurrentFuel(self,):
+        return float("{0}.{1}000".format(int(self.fuelalertSpinner1Value),int(self.fuelalertSpinner2Value)))
+
+    def volumeSpinnerEventFunction(self,x):
+        configuration.setVolume(ac.getValue(self.volumeSpinner))
+        self.volume = ac.getValue(self.volumeSpinner)
+        self.volumeSpinnerValue = ac.getValue(self.volumeSpinner)
+        soundsystem.setVolume(self.volume)
+
+    def checkboxEventFunctionFuelLapAlert(self,x,y):
+        if(self.fuellapalert):
+            configuration.setFuelLapAlertDisabled()
+            self.fuellapalert = False
+            ac.setText(self.checkboxLabelFuelLapAlert, "Disabled")
+            ac.setFontColor(self.checkboxLabelFuelLapAlert, 1.0, 0.0, 0.0, 1)
+        else:
+            configuration.setFuelLapAlertEnabled()
+            self.fuellapalert = True
+            soundsystem.hasplayedLastFuel = 0
+            ac.setText(self.checkboxLabelFuelLapAlert, "Enabled")
+            ac.setFontColor(self.checkboxLabelFuelLapAlert, 0.0, 1.0, 0.1, 1)
 
     def checkboxEventFunctionFuel(self,x,y):
-        if(mInfoDisplay.fuelswitch):
+        if(self.fuelswitch):
             configuration.setFuelSwitchDisabled()
-            mInfoDisplay.fuelswitch = False
-            ac.setText(mInfoDisplay.checkboxLabelFuel, "Disabled")
-            ac.setFontColor(mInfoDisplay.checkboxLabelFuel, 1.0, 0.0, 0.0, 1)
+            self.fuelswitch = False
+            ac.setText(self.checkboxLabelFuel, "Disabled")
+            ac.setFontColor(self.checkboxLabelFuel, 1.0, 0.0, 0.0, 1)
         else:
             configuration.setFuelSwitchEnabled()
-            mInfoDisplay.fuelswitch = True
-            ac.setText(mInfoDisplay.checkboxLabelFuel, "Enabled")
-            ac.setFontColor(mInfoDisplay.checkboxLabelFuel, 0.0, 1.0, 0.1, 1)
+            self.fuelswitch = True
+            ac.setText(self.checkboxLabelFuel, "Enabled")
+            ac.setFontColor(self.checkboxLabelFuel, 0.0, 1.0, 0.1, 1)
 
     def checkboxEventFunctionFuelConvert(self,x,y):
-        if(mInfoDisplay.fuelconvert == "Liters"):
-            mInfoDisplay.fuelconvert = "Gallons"
+        if(self.fuelconvert == "Liters"):
+            self.fuelconvert = "Gallons"
             configuration.setFuelConvertGallons()
-            ac.setText(mInfoDisplay.checkboxLabelFuelConvert, "Gallons")
-            ac.setFontColor(mInfoDisplay.checkboxLabelFuelConvert, 0.0, 1.0, 0.1, 1)
+            ac.setText(self.checkboxLabelFuelConvert, "Gallons")
+            ac.setFontColor(self.checkboxLabelFuelConvert, 0.0, 1.0, 0.1, 1)
         else:
-            mInfoDisplay.fuelconvert = "Liters"
+            self.fuelconvert = "Liters"
             configuration.setFuelConvertLiters()
-            ac.setText(mInfoDisplay.checkboxLabelFuelConvert, "Liters")
-            ac.setFontColor(mInfoDisplay.checkboxLabelFuelConvert, 0.0, 1.0, 0.1, 1)
+            ac.setText(self.checkboxLabelFuelConvert, "Liters")
+            ac.setFontColor(self.checkboxLabelFuelConvert, 0.0, 1.0, 0.1, 1)
 
     def checkboxEventFunctionLaptime(self,x,y):
-        if(mInfoDisplay.lapswitch):
-            mInfoDisplay.lapswitch = False
+        if(self.lapswitch):
+            self.lapswitch = False
             configuration.setLapSwitchDisabled()
-            ac.setText(mInfoDisplay.checkboxLabelLaptime, "Disabled")
-            ac.setFontColor(mInfoDisplay.checkboxLabelLaptime, 1.0, 0.0, 0.0, 1)
+            ac.setText(self.checkboxLabelLaptime, "Disabled")
+            ac.setFontColor(self.checkboxLabelLaptime, 1.0, 0.0, 0.0, 1)
             configuration.setBestLapDisabled()
-            mInfoDisplay.bestlap = False
-            ac.setText(mInfoDisplay.checkboxLabelBestLap, "Disabled")
-            ac.setFontColor(mInfoDisplay.checkboxLabelBestLap, 1.0, 0.0, 0.0, 1)
+            self.bestlap = False
+            ac.setText(self.checkboxLabelBestLap, "Disabled")
+            ac.setFontColor(self.checkboxLabelBestLap, 1.0, 0.0, 0.0, 1)
         else:
-            mInfoDisplay.lapswitch = True
+            self.lapswitch = True
             configuration.setLapSwitchEnabled()
-            ac.setText(mInfoDisplay.checkboxLabelLaptime, "Enabled")
-            ac.setFontColor(mInfoDisplay.checkboxLabelLaptime, 0.0, 1.0, 0.1, 1)
+            ac.setText(self.checkboxLabelLaptime, "Enabled")
+            ac.setFontColor(self.checkboxLabelLaptime, 0.0, 1.0, 0.1, 1)
             configuration.setBestLapEnabled()
-            mInfoDisplay.bestlap = True
-            ac.setText(mInfoDisplay.checkboxLabelBestLap, "Best Lap")
-            ac.setFontColor(mInfoDisplay.checkboxLabelBestLap, 0.0, 1.0, 0.1, 1)
+            self.bestlap = True
+            ac.setText(self.checkboxLabelBestLap, "Best Lap")
+            ac.setFontColor(self.checkboxLabelBestLap, 0.0, 1.0, 0.1, 1)
 
     def AppActivatedFunction(self,val):
         #must have a pass completion or crash!!!
@@ -1301,6 +1367,7 @@ class DisplayClass:
         fuelsystem.updateFuel(infosystem.physics.fuel)
         configuration.setLapSwitchEnabled()
         configuration.setFuelSwitchEnabled()
+        self.fuellapalerttrigger = 0
         soundsystem.hasplayedLastFuel = 0
         #pygame.init()
         #soundsystem.loadSounds()
@@ -1313,7 +1380,7 @@ class DisplayClass:
         #pygame.quit()
 
 #---------------------------------------------------------
-# declare class instance objects and secondary init
+# declare class instance objects and secondary init -----order is very important here ------
 
 configuration = ConfigClass()
 configuration.loadConfig()
@@ -1323,195 +1390,230 @@ timesystem = TimerClass()
 fuelsystem = FuelClass()
 soundsystem = SoundClass()
 mInfoDisplay = DisplayClass()
-
+mInfoDisplay.setInitialStatus()
 #---------------------------------------------------------
 
 def acMain(ac_version):
     """main init function which runs on game startup."""
-    if(configuration.getLapSwitchStatus()=="enabled"):
-        mInfoDisplay.lapswitch = True
-    elif(configuration.getLapSwitchStatus()=="disabled"):
-        mInfoDisplay.lapswitch = False
-    if(configuration.getFuelSwitchStatus() =="enabled"):
-        mInfoDisplay.fuelswitch = True
-    elif(configuration.getFuelSwitchStatus()=="disabled"):
-        mInfoDisplay.fuelswitch = False
-    if(configuration.getBestLapStatus() =="enabled"):
-        mInfoDisplay.bestlap = True
-    elif(configuration.getBestLapStatus()=="disabled"):
-        mInfoDisplay.bestlap = False
-
     mInfoDisplay.appWindow = ac.newApp("mInfo")
     ac.addRenderCallback(mInfoDisplay.appWindow, onFormRender)
     ac.addOnAppActivatedListener(mInfoDisplay.appWindow, mInfoDisplay.AppActivated)
     ac.addOnAppDismissedListener(mInfoDisplay.appWindow, mInfoDisplay.AppDismissed)
-    ac.setSize(mInfoDisplay.appWindow, 250, 400)
-
+    ac.setSize(mInfoDisplay.appWindow, 250, 340)
     if(mInfoDisplay.fuelswitch is True):
         mInfoDisplay.currentfuellabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.currentfuellabel, 11, 230)
+        ac.setPosition(mInfoDisplay.currentfuellabel, 20, 236)
         ac.setFontColor(mInfoDisplay.currentfuellabel, 1.0, 1.0, 1.0, 1)
         ac.setFontAlignment(mInfoDisplay.currentfuellabel,'left')
 
+        mInfoDisplay.currentfuelalertlabel = ac.addLabel(mInfoDisplay.appWindow, "Fuel Alert Level : {0}.{1} {2}".format(int(mInfoDisplay.fuelalertSpinner1Value),int(mInfoDisplay.fuelalertSpinner2Value),mInfoDisplay.fuelconvert))
+        ac.setPosition(mInfoDisplay.currentfuelalertlabel, 24, 316)
+        ac.setFontColor(mInfoDisplay.currentfuelalertlabel, 1.0, 1.0, 0.0, 1)
+        ac.setFontAlignment(mInfoDisplay.currentfuelalertlabel,'center')
+
         mInfoDisplay.checkboxContainerFuel = ac.addCheckBox(mInfoDisplay.appWindow, "")
-        ac.setPosition(mInfoDisplay.checkboxContainerFuel, 230, 164)
+        ac.setPosition(mInfoDisplay.checkboxContainerFuel, 230, 214)
         ac.setSize(mInfoDisplay.checkboxContainerFuel,15,15)
         ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerFuel,mInfoDisplay.checkboxEventFuel)
 
         mInfoDisplay.checkboxLabelFuel = ac.addLabel(mInfoDisplay.appWindow, "Enabled")
-        ac.setPosition(mInfoDisplay.checkboxLabelFuel, 26, 161)
+        ac.setPosition(mInfoDisplay.checkboxLabelFuel, 26, 211)
         ac.setFontColor(mInfoDisplay.checkboxLabelFuel, 0.0, 1.0, 0.1, 1)
         ac.setFontAlignment(mInfoDisplay.checkboxLabelFuel,'right')
 
         mInfoDisplay.checkboxContainerFuelConvert = ac.addCheckBox(mInfoDisplay.appWindow, "")
-        ac.setPosition(mInfoDisplay.checkboxContainerFuelConvert, 230, 198)
+        ac.setPosition(mInfoDisplay.checkboxContainerFuelConvert, 230, 240)
         ac.setSize(mInfoDisplay.checkboxContainerFuelConvert,15,15)
         ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerFuelConvert,mInfoDisplay.checkboxEventFuelConvert)
 
         mInfoDisplay.checkboxLabelFuelConvert = ac.addLabel(mInfoDisplay.appWindow, mInfoDisplay.fuelconvert)
-        ac.setPosition(mInfoDisplay.checkboxLabelFuelConvert, 24, 194)
+        ac.setPosition(mInfoDisplay.checkboxLabelFuelConvert, 24, 236)
         ac.setFontColor(mInfoDisplay.checkboxLabelFuelConvert, 0.0, 1.0, 0.1, 1)
         ac.setFontAlignment(mInfoDisplay.checkboxLabelFuelConvert,'right')
 
         mInfoDisplay.checkboxContainerFuelAlert = ac.addCheckBox(mInfoDisplay.appWindow, "")
-        ac.setPosition(mInfoDisplay.checkboxContainerFuelAlert, 86, 198)
+        ac.setPosition(mInfoDisplay.checkboxContainerFuelAlert, 230, 264)
         ac.setSize(mInfoDisplay.checkboxContainerFuelAlert,15,15)
-        ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerFuelAlert,mInfoDisplay.checkboxEventFuelAlert)
+        ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerFuelAlert,mInfoDisplay.checkboxEventFuelLapAlert)
 
-        mInfoDisplay.checkboxLabelFuelAlert = ac.addLabel(mInfoDisplay.appWindow, "Fuel Alert")
-        ac.setPosition(mInfoDisplay.checkboxLabelFuelAlert, 106, 194)
-        ac.setFontColor(mInfoDisplay.checkboxLabelFuelAlert, 0.0, 1.0, 0.1, 1)
-        ac.setFontAlignment(mInfoDisplay.checkboxLabelFuelAlert,'left')
+        if(configuration.getFuelLapAlertStatus() == "enabled"):
+            mInfoDisplay.checkboxLabelFuelLapAlert = ac.addLabel(mInfoDisplay.appWindow, "Lap Enabled")
+            ac.setPosition(mInfoDisplay.checkboxLabelFuelLapAlert, 24, 260)
+            ac.setFontColor(mInfoDisplay.checkboxLabelFuelLapAlert, 0.0, 1.0, 0.1, 1)
+            ac.setFontAlignment(mInfoDisplay.checkboxLabelFuelLapAlert,'right')
+        elif(configuration.getFuelLapAlertStatus() == "disabled"):
+            mInfoDisplay.checkboxLabelFuelLapAlert = ac.addLabel(mInfoDisplay.appWindow, "Lap Disabled")
+            ac.setPosition(mInfoDisplay.checkboxLabelFuelLapAlert, 24, 260)
+            ac.setFontColor(mInfoDisplay.checkboxLabelFuelLapAlert, 0.0, 1.0, 0.1, 1)
+            ac.setFontAlignment(mInfoDisplay.checkboxLabelFuelLapAlert,'right')
 
-        mInfoDisplay.fuelalertSpinner = ac.addSpinner(mInfoDisplay.appWindow, "")
-        ac.setPosition(mInfoDisplay.fuelalertSpinner,10,194)
-        ac.setSize(mInfoDisplay.fuelalertSpinner,70,24)
-        ac.setRange(mInfoDisplay.fuelalertSpinner,1,120)
-        ac.setValue(mInfoDisplay.fuelalertSpinner,10)
-        ac.addOnValueChangeListener(mInfoDisplay.fuelalertSpinner,mInfoDisplay.fuelalertSpinnerEvent)
+        mInfoDisplay.fuelalertSpinner1 = ac.addSpinner(mInfoDisplay.appWindow, "")
+        ac.setPosition(mInfoDisplay.fuelalertSpinner1,37,288)
+        ac.setSize(mInfoDisplay.fuelalertSpinner1,74,24)
+        ac.setStep(mInfoDisplay.fuelalertSpinner1,1)
+        ac.setRange(mInfoDisplay.fuelalertSpinner1,1,120)
+        ac.setValue(mInfoDisplay.fuelalertSpinner1,mInfoDisplay.fuelalertSpinner1Value)
+        ac.addOnValueChangeListener(mInfoDisplay.fuelalertSpinner1,mInfoDisplay.fuelalertSpinner1Event)
+
+        mInfoDisplay.fuelalertSpinner2 = ac.addSpinner(mInfoDisplay.appWindow, "")
+        ac.setPosition(mInfoDisplay.fuelalertSpinner2,140,288)
+        ac.setSize(mInfoDisplay.fuelalertSpinner2,74,24)
+        ac.setStep(mInfoDisplay.fuelalertSpinner2, 10)
+        ac.setRange(mInfoDisplay.fuelalertSpinner2,0,90)
+        ac.setValue(mInfoDisplay.fuelalertSpinner2,mInfoDisplay.fuelalertSpinner2Value)
+        ac.addOnValueChangeListener(mInfoDisplay.fuelalertSpinner2,mInfoDisplay.fuelalertSpinner2Event)
+
+        mInfoDisplay.volumeSpinner = ac.addSpinner(mInfoDisplay.appWindow, "")
+        ac.setPosition(mInfoDisplay.volumeSpinner,32,62)
+        ac.setSize(mInfoDisplay.volumeSpinner,80,24)
+        ac.setStep(mInfoDisplay.volumeSpinner, 10)
+        ac.setRange(mInfoDisplay.volumeSpinner,0,100)
+        ac.setValue(mInfoDisplay.volumeSpinner,mInfoDisplay.volumeSpinnerValue)
+        ac.addOnValueChangeListener(mInfoDisplay.volumeSpinner,mInfoDisplay.volumeSpinnerEvent)
 
     else:
         mInfoDisplay.currentfuellabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.currentfuellabel, 11, 230)
+        ac.setPosition(mInfoDisplay.currentfuellabel, 20, 236)
         ac.setFontColor(mInfoDisplay.currentfuellabel, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.currentfuellabel,'left')
 
+        mInfoDisplay.currentfuelalertlabel = ac.addLabel(mInfoDisplay.appWindow, "Fuel Alert Level : -------")
+        ac.setPosition(mInfoDisplay.currentfuelalertlabel, 24, 316)
+        ac.setFontColor(mInfoDisplay.currentfuelalertlabel, 1.0, 0.0, 0.0, 1)
+        ac.setFontAlignment(mInfoDisplay.currentfuelalertlabel,'center')
+
         mInfoDisplay.checkboxContainerFuel = ac.addCheckBox(mInfoDisplay.appWindow, "")
-        ac.setPosition(mInfoDisplay.checkboxContainerFuel, 230,164)
+        ac.setPosition(mInfoDisplay.checkboxContainerFuel, 230,214)
         ac.setSize(mInfoDisplay.checkboxContainerFuel,15,15)
         ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerFuel,mInfoDisplay.checkboxEventFuel)
 
         mInfoDisplay.checkboxLabelFuel = ac.addLabel(mInfoDisplay.appWindow, "Disabled")
-        ac.setPosition(mInfoDisplay.checkboxLabelFuel, 26, 161)
+        ac.setPosition(mInfoDisplay.checkboxLabelFuel, 26, 211)
         ac.setFontColor(mInfoDisplay.checkboxLabelFuel, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.checkboxLabelFuel,'right')
-        ac.setText(mInfoDisplay.currentfuellabel, "Fuel Remaining : ----- Liters")
 
         mInfoDisplay.checkboxContainerFuelConvert = ac.addCheckBox(mInfoDisplay.appWindow, "")
-        ac.setPosition(mInfoDisplay.checkboxContainerFuelConvert, 230, 198)
+        ac.setPosition(mInfoDisplay.checkboxContainerFuelConvert, 230, 240)
         ac.setSize(mInfoDisplay.checkboxContainerFuelConvert,15,15)
         ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerFuelConvert,mInfoDisplay.checkboxEventFuelConvert)
 
         mInfoDisplay.checkboxLabelFuelConvert = ac.addLabel(mInfoDisplay.appWindow, mInfoDisplay.fuelconvert)
-        ac.setPosition(mInfoDisplay.checkboxLabelFuelConvert, 24, 194)
+        ac.setPosition(mInfoDisplay.checkboxLabelFuelConvert, 24, 236)
         ac.setFontColor(mInfoDisplay.checkboxLabelFuelConvert, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.checkboxLabelFuelConvert,'right')
 
         mInfoDisplay.checkboxContainerFuelAlert = ac.addCheckBox(mInfoDisplay.appWindow, "")
-        ac.setPosition(mInfoDisplay.checkboxContainerFuelAlert, 86, 198)
+        ac.setPosition(mInfoDisplay.checkboxContainerFuelAlert, 230, 264)
         ac.setSize(mInfoDisplay.checkboxContainerFuelAlert,15,15)
-        ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerFuelAlert,mInfoDisplay.checkboxEventFuelAlert)
+        ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerFuelAlert,mInfoDisplay.checkboxEventFuelLapAlert)
 
-        mInfoDisplay.checkboxLabelFuelAlert = ac.addLabel(mInfoDisplay.appWindow, "Fuel Alert")
-        ac.setPosition(mInfoDisplay.checkboxLabelFuelAlert, 106, 194)
-        ac.setFontColor(mInfoDisplay.checkboxLabelFuelAlert, 1.0, 0.0, 0.0, 1)
-        ac.setFontAlignment(mInfoDisplay.checkboxLabelFuelAlert,'left')
+        mInfoDisplay.checkboxLabelFuelLapAlert = ac.addLabel(mInfoDisplay.appWindow, "")
+        ac.setPosition(mInfoDisplay.checkboxLabelFuelLapAlert, 24, 262)
+        ac.setFontColor(mInfoDisplay.checkboxLabelFuelLapAlert, 1.0, 0.0, 0.0, 1)
+        ac.setFontAlignment(mInfoDisplay.checkboxLabelFuelLapAlert,'right')
 
-        mInfoDisplay.fuelalertSpinner = ac.addSpinner(mInfoDisplay.appWindow, "")
-        ac.setPosition(mInfoDisplay.fuelalertSpinner,10,194)
-        ac.setSize(mInfoDisplay.fuelalertSpinner,70,24)
-        ac.setRange(mInfoDisplay.fuelalertSpinner,1,120)
-        ac.setValue(mInfoDisplay.fuelalertSpinner,10)
-        ac.addOnValueChangeListener(mInfoDisplay.fuelalertSpinner,mInfoDisplay.fuelalertSpinnerEvent)
+        mInfoDisplay.fuelalertSpinner1 = ac.addSpinner(mInfoDisplay.appWindow, "")
+        ac.setPosition(mInfoDisplay.fuelalertSpinner1,37,288)
+        ac.setSize(mInfoDisplay.fuelalertSpinner1,74,24)
+        ac.setStep(mInfoDisplay.fuelalertSpinner1, 1)
+        ac.setRange(mInfoDisplay.fuelalertSpinner1,1,120)
+        ac.setValue(mInfoDisplay.fuelalertSpinner1,mInfoDisplay.fuelalertSpinner1Value)
+        ac.addOnValueChangeListener(mInfoDisplay.fuelalertSpinner1,mInfoDisplay.fuelalertSpinner1Event)
+
+        mInfoDisplay.fuelalertSpinner2 = ac.addSpinner(mInfoDisplay.appWindow, "")
+        ac.setPosition(mInfoDisplay.fuelalertSpinner2,140,288)
+        ac.setSize(mInfoDisplay.fuelalertSpinner2,74,24)
+        ac.setStep(mInfoDisplay.fuelalertSpinner2, 10)
+        ac.setRange(mInfoDisplay.fuelalertSpinner2,0,90)
+        ac.setValue(mInfoDisplay.fuelalertSpinner2,mInfoDisplay.fuelalertSpinner2Value)
+        ac.addOnValueChangeListener(mInfoDisplay.fuelalertSpinner2,mInfoDisplay.fuelalertSpinner2Event)
+
+        mInfoDisplay.volumeSpinner = ac.addSpinner(mInfoDisplay.appWindow, "")
+        ac.setPosition(mInfoDisplay.volumeSpinner,32,62)
+        ac.setSize(mInfoDisplay.volumeSpinner,80,24)
+        ac.setStep(mInfoDisplay.volumeSpinner, 10)
+        ac.setRange(mInfoDisplay.volumeSpinner,0,100)
+        ac.setValue(mInfoDisplay.volumeSpinner,mInfoDisplay.volumeSpinnerValue)
+        ac.addOnValueChangeListener(mInfoDisplay.volumeSpinner,mInfoDisplay.volumeSpinnerEvent)
 
     if(mInfoDisplay.lapswitch is True):
         mInfoDisplay.currentlaplabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.currentlaplabel, 16, 65)
+        ac.setPosition(mInfoDisplay.currentlaplabel, 16, 125)
         ac.setFontColor(mInfoDisplay.currentlaplabel, 1.0, 1.0, 1.0, 1)
         ac.setFontAlignment(mInfoDisplay.currentlaplabel,'left')
 
         mInfoDisplay.besttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.besttimelabel, 26, 85)
+        ac.setPosition(mInfoDisplay.besttimelabel, 26, 145)
         ac.setFontColor(mInfoDisplay.besttimelabel, 1.0, 1.0, 1.0, 1)
         ac.setFontAlignment(mInfoDisplay.besttimelabel,'left')
 
         mInfoDisplay.lasttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.lasttimelabel, 31, 105)
+        ac.setPosition(mInfoDisplay.lasttimelabel, 31, 165)
         ac.setFontColor(mInfoDisplay.lasttimelabel, 1.0, 1.0, 1.0, 1)
         ac.setFontAlignment(mInfoDisplay.lasttimelabel,'left')
 
         mInfoDisplay.currenttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.currenttimelabel, 7, 125)
+        ac.setPosition(mInfoDisplay.currenttimelabel, 7, 185)
         ac.setFontColor(mInfoDisplay.currenttimelabel, 1.0, 1.0, 1.0, 1)
         ac.setFontAlignment(mInfoDisplay.currenttimelabel,'left')
 
         mInfoDisplay.checkboxContainerLaptime = ac.addCheckBox(mInfoDisplay.appWindow, "")
-        ac.setPosition(mInfoDisplay.checkboxContainerLaptime, 230, 38)
+        ac.setPosition(mInfoDisplay.checkboxContainerLaptime, 230, 98)
         ac.setSize(mInfoDisplay.checkboxContainerLaptime,15,15)
         ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerLaptime,mInfoDisplay.checkboxEventLaptime)
 
         mInfoDisplay.checkboxLabelLaptime = ac.addLabel(mInfoDisplay.appWindow, "Enabled")
-        ac.setPosition(mInfoDisplay.checkboxLabelLaptime, 26, 35)
+        ac.setPosition(mInfoDisplay.checkboxLabelLaptime, 26, 95)
         ac.setFontColor(mInfoDisplay.checkboxLabelLaptime, 0.0, 1.0, 0.1, 1)
         ac.setFontAlignment(mInfoDisplay.checkboxLabelLaptime,'right')
 
         mInfoDisplay.checkboxContainerBestLap = ac.addCheckBox(mInfoDisplay.appWindow, "")
-        ac.setPosition(mInfoDisplay.checkboxContainerBestLap, 230, 88)
+        ac.setPosition(mInfoDisplay.checkboxContainerBestLap, 230, 148)
         ac.setSize(mInfoDisplay.checkboxContainerBestLap,15,15)
         ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerBestLap,mInfoDisplay.checkboxEventBestLap)
 
         mInfoDisplay.checkboxLabelBestLap = ac.addLabel(mInfoDisplay.appWindow, "Best Lap")
-        ac.setPosition(mInfoDisplay.checkboxLabelBestLap, 26, 85)
+        ac.setPosition(mInfoDisplay.checkboxLabelBestLap, 26, 145)
         ac.setFontColor(mInfoDisplay.checkboxLabelBestLap, 0.0, 1.0, 0.1, 1)
         ac.setFontAlignment(mInfoDisplay.checkboxLabelBestLap,'right')
     else:
         mInfoDisplay.currentlaplabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.currentlaplabel, 16, 65)
+        ac.setPosition(mInfoDisplay.currentlaplabel, 16, 125)
         ac.setFontColor(mInfoDisplay.currentlaplabel, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.currentlaplabel,'left')
 
         mInfoDisplay.besttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.besttimelabel, 26, 85)
+        ac.setPosition(mInfoDisplay.besttimelabel, 26, 145)
         ac.setFontColor(mInfoDisplay.besttimelabel, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.besttimelabel,'left')
 
         mInfoDisplay.lasttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.lasttimelabel, 31, 105)
+        ac.setPosition(mInfoDisplay.lasttimelabel, 31, 165)
         ac.setFontColor(mInfoDisplay.lasttimelabel, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.lasttimelabel,'left')
 
         mInfoDisplay.currenttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.currenttimelabel, 7, 125)
+        ac.setPosition(mInfoDisplay.currenttimelabel, 7, 185)
         ac.setFontColor(mInfoDisplay.currenttimelabel, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.currenttimelabel,'left')
 
         mInfoDisplay.checkboxContainerLaptime = ac.addCheckBox(mInfoDisplay.appWindow, "")
-        ac.setPosition(mInfoDisplay.checkboxContainerLaptime, 230, 38)
+        ac.setPosition(mInfoDisplay.checkboxContainerLaptime, 230, 98)
         ac.setSize(mInfoDisplay.checkboxContainerLaptime,15,15)
         ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerLaptime,mInfoDisplay.checkboxEventLaptime)
 
         mInfoDisplay.checkboxLabelLaptime = ac.addLabel(mInfoDisplay.appWindow, "Best Lap")
-        ac.setPosition(mInfoDisplay.checkboxLabelLaptime, 26, 35)
+        ac.setPosition(mInfoDisplay.checkboxLabelLaptime, 26, 95)
         ac.setFontColor(mInfoDisplay.checkboxLabelLaptime, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.checkboxLabelLaptime,'right')
 
         mInfoDisplay.checkboxContainerBestLap = ac.addCheckBox(mInfoDisplay.appWindow, "")
-        ac.setPosition(mInfoDisplay.checkboxContainerBestLap, 230, 88)
+        ac.setPosition(mInfoDisplay.checkboxContainerBestLap, 230, 148)
         ac.setSize(mInfoDisplay.checkboxContainerBestLap,15,15)
         ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerBestLap,mInfoDisplay.checkboxEventBestLap)
 
         mInfoDisplay.checkboxLabelBestLap = ac.addLabel(mInfoDisplay.appWindow, "Best Lap")
-        ac.setPosition(mInfoDisplay.checkboxLabelBestLap, 26, 85)
+        ac.setPosition(mInfoDisplay.checkboxLabelBestLap, 26, 145)
         ac.setFontColor(mInfoDisplay.checkboxLabelBestLap, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.checkboxLabelBestLap,'right')
 
@@ -1534,7 +1636,6 @@ def acUpdate(deltaT):
             timesystem.completedlaps = timesystem.currentlap
             soundsystem.hasplayedLastLaptime = 1
             if(soundsystem.hasplayedLastLaptime==1):
-                #ac.console("play sound")
                 soundsystem.playSoundLaptime()
                 soundsystem.hasplayedLastLaptime = 0
         timesystem.updateLapTime(infosystem.graphics.completedLaps,infosystem.graphics.iBestTime,infosystem.graphics.iLastTime, infosystem.graphics.iCurrentTime)
@@ -1546,6 +1647,12 @@ def acUpdate(deltaT):
         ac.setText(mInfoDisplay.besttimelabel, "best time : {0}".format(timesystem.getBestLapTime()))
         ac.setText(mInfoDisplay.lasttimelabel, "last time : {0}".format(timesystem.getLastLapTime()))
         ac.setText(mInfoDisplay.currenttimelabel, "current time : {0}".format(timesystem.getCurrentLapTime()))
+        if(mInfoDisplay.bestlap):
+            ac.setText(mInfoDisplay.checkboxLabelBestLap, "Best Lap")
+            ac.setFontColor(mInfoDisplay.checkboxLabelBestLap, 0.0, 1.0, 0.1, 1)
+        else:
+            ac.setText(mInfoDisplay.checkboxLabelBestLap, "Disabled")
+            ac.setFontColor(mInfoDisplay.checkboxLabelBestLap, 1.0, 0.0, 0.0, 1)
     else:
         timesystem.updateLapTime(infosystem.graphics.completedLaps,infosystem.graphics.iBestTime,infosystem.graphics.iLastTime, infosystem.graphics.iCurrentTime)
         ac.setFontColor(mInfoDisplay.currentlaplabel, 1.0, 0.0, 0.0, 1)
@@ -1557,31 +1664,58 @@ def acUpdate(deltaT):
         ac.setText(mInfoDisplay.besttimelabel, "best time : -:--:---")
         ac.setText(mInfoDisplay.lasttimelabel, "last time : -:--:---")
         ac.setText(mInfoDisplay.currenttimelabel, "current time : -:--:---")
+        if(mInfoDisplay.bestlap):
+            ac.setText(mInfoDisplay.checkboxLabelBestLap, "Best Lap")
+            ac.setFontColor(mInfoDisplay.checkboxLabelBestLap, 0.0, 1.0, 0.1, 1)
+        else:
+            ac.setText(mInfoDisplay.checkboxLabelBestLap, "Disabled")
+            ac.setFontColor(mInfoDisplay.checkboxLabelBestLap, 1.0, 0.0, 0.0, 1)
+
     if(mInfoDisplay.fuelswitch is True):
-        fuelsystem.updateFuel(infosystem.physics.fuel)
-        ac.setFontColor(mInfoDisplay.checkboxLabelFuel, 0.0, 1.0, 0.1, 1)
-        ac.setFontColor(mInfoDisplay.currentfuellabel, 1.0, 1.0, 1.0, 1)
-        ac.setFontColor(mInfoDisplay.checkboxLabelFuelConvert, 0.0, 1.0, 0.1, 1)
-        ac.setText(mInfoDisplay.currentfuellabel, "Fuel Remaining : {0} {1}".format(fuelsystem.getCurrentFuel(),mInfoDisplay.fuelconvert))
-        if(mInfoDisplay.lapswitch is False):
-            if(timesystem.currentlap==0):
-                timesystem.completedlaps = timesystem.currentlap
-            if(timesystem.completedlaps < timesystem.currentlap):
-                timesystem.completedlaps = timesystem.currentlap
-                soundsystem.hasplayedLastFuel = 1
+        if(mInfoDisplay.fuellapalert):
+            ac.setFontColor(mInfoDisplay.checkboxLabelFuelLapAlert, 0.0, 1.0, 0.1, 1)
+            ac.setText(mInfoDisplay.checkboxLabelFuelLapAlert, "Lap Enabled")
+            if(mInfoDisplay.lapswitch is False):
+                if(timesystem.currentlap==0):
+                    timesystem.completedlaps = timesystem.currentlap
+                if(timesystem.completedlaps < timesystem.currentlap):
+                    timesystem.completedlaps = timesystem.currentlap
+                    soundsystem.hasplayedLastFuel = 1
+                    if(soundsystem.hasplayedLastFuel == 1):
+                        soundsystem.playSoundFuel()
+                        soundsystem.hasplayedLastFuel = 0
+            else:
                 if(soundsystem.hasplayedLastFuel == 1):
                     soundsystem.playSoundFuel()
                     soundsystem.hasplayedLastFuel = 0
         else:
-            if(soundsystem.hasplayedLastFuel == 1):
+            ac.setFontColor(mInfoDisplay.checkboxLabelFuelLapAlert, 1.0, 0.0, 0.0, 1)
+            ac.setText(mInfoDisplay.checkboxLabelFuelLapAlert, "Lap Disabled")
+
+        if(round(fuelsystem.getCurrentFuel(),2) == mInfoDisplay.getCurrentFuel()):
+            if(mInfoDisplay.fuellapalerttrigger == 0):
+                mInfoDisplay.fuellapalerttrigger += 1
                 soundsystem.playSoundFuel()
-                soundsystem.hasplayedLastFuel = 0
+        else:
+            mInfoDisplay.fuellapalerttrigger = 0
+
+        fuelsystem.updateFuel(infosystem.physics.fuel)
+        ac.setFontColor(mInfoDisplay.checkboxLabelFuel, 0.0, 1.0, 0.1, 1)
+        ac.setFontColor(mInfoDisplay.currentfuellabel, 1.0, 1.0, 1.0, 1)
+        ac.setFontColor(mInfoDisplay.checkboxLabelFuelConvert, 0.0, 1.0, 0.1, 1)
+        ac.setFontColor(mInfoDisplay.currentfuelalertlabel, 1.0, 1.0, 0.0, 1)
+        ac.setText(mInfoDisplay.currentfuellabel, "Fuel Remaining : {0}".format(fuelsystem.getCurrentFuelForDisplayClass()))
+        ac.setText(mInfoDisplay.currentfuelalertlabel, "Fuel Alert Level : {0}.{1} {2}".format(int(mInfoDisplay.fuelalertSpinner1Value),int(mInfoDisplay.fuelalertSpinner2Value),mInfoDisplay.fuelconvert))
     else:
         fuelsystem.updateFuel(infosystem.physics.fuel)
         ac.setFontColor(mInfoDisplay.checkboxLabelFuel, 1.0, 0.0, 0.0, 1)
         ac.setFontColor(mInfoDisplay.currentfuellabel, 1.0, 0.0, 0.0, 1)
+        ac.setText(mInfoDisplay.currentfuellabel, "Fuel Remaining : ----- ")
         ac.setFontColor(mInfoDisplay.checkboxLabelFuelConvert, 1.0, 0.0, 0.0, 1)
-        ac.setText(mInfoDisplay.currentfuellabel, "Fuel Remaining : ----- {0}".format(mInfoDisplay.fuelconvert))
+        ac.setFontColor(mInfoDisplay.checkboxLabelFuelLapAlert, 1.0, 0.0, 0.0, 1)
+        ac.setFontColor(mInfoDisplay.currentfuelalertlabel, 1.0, 0.0, 0.0, 1)
+        ac.setText(mInfoDisplay.currentfuelalertlabel, "Fuel Alert Level : ----- ")
+
 
 def onFormRender(deltaT):
     """only update app when app form is visible then update only the following note call back method for this function defined in acMain above."""
@@ -1595,7 +1729,8 @@ def onFormRender(deltaT):
     ac.setText(mInfoDisplay.besttimelabel, "best time : {0}".format(timesystem.getBestLapTime()))
     ac.setText(mInfoDisplay.lasttimelabel, "last time : {0}".format(timesystem.getLastLapTime()))
     ac.setText(mInfoDisplay.currenttimelabel, "current time : {0}".format(timesystem.getCurrentLapTime()))
-    ac.setText(mInfoDisplay.currentfuellabel, "Fuel Remaining : {0} {1}".format(fuelsystem.getCurrentFuel(),mInfoDisplay.fuelconvert))
+    ac.setText(mInfoDisplay.currentfuellabel, "Fuel Remaining : {0}".format(fuelsystem.getCurrentFuelForDisplayClass()))
+    ac.setText(mInfoDisplay.currentfuelalertlabel, "Fuel Alert Level : {0}.{1} {2}".format(mInfoDisplay.fuelalertSpinner1Value,mInfoDisplay.fuelalertSpinner2Value,mInfoDisplay.fuelconvert))
 
 def acShutdown():
     """on shut down quit pygame so no crash or lockup."""
