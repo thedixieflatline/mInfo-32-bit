@@ -14,8 +14,12 @@ Big thanks to Rombik who wrote the original sim info module.
 Please submit bugs or requests to the Assetto Corsa forum
 http://www.assettocorsa.net/forum/index.php
 
+TODO Extend fuel alert capacity to 200+
+TODO Some extra sounds to record for upcoming tires and splits and re-record some sounds and adjust all current timings of the current default set
 TODO Tire temp warnings
 TODO Splits ahead or behind last split
+TODO Tire wear warnings
+TODO Multiple fuel alerts with fuel level settings
 TODO Review code and refactor when the game is released and python API and or shared memory is ver 1.0"""
 
 import sys
@@ -746,7 +750,7 @@ class SoundClass:
 
     def playSoundFuel(self):
         if(configuration.fuelconvert == "Liters"):
-            if(fuelsystem.currentfuel<10.00):
+            if(fuelsystem.currentfuel<=10.00):
                 self.playlist_fuel[0] = self.sound_fuel
                 self.playlist_fuel[1] = self.sound_silence
                 self.playlist_fuel[2] = self.soundlist.get(fuelsystem.currentfuel_10)
@@ -768,7 +772,7 @@ class SoundClass:
                 self.joinsounds_fuel = np.concatenate((self.playlist_fuel[0],self.playlist_fuel[1], self.playlist_fuel[2],self.playlist_fuel[3], self.playlist_fuel[4],self.playlist_fuel[5], self.playlist_fuel[6]), axis=0)
                 self.playsounds_fuel = pygame.sndarray.make_sound(self.joinsounds_fuel)
                 self.chan.queue(self.playsounds_fuel)
-            elif(fuelsystem.currentfuel>100.00):
+            elif(fuelsystem.currentfuel>=100.00):
                 self.playlist_fuel[0] = self.sound_silence
                 self.playlist_fuel[1] = self.sound_fuel
                 self.playlist_fuel[2] = self.soundlist.get(fuelsystem.currentfuel_100+fuelsystem.currentfuel_10)
@@ -780,7 +784,7 @@ class SoundClass:
                 self.playsounds_fuel = pygame.sndarray.make_sound(self.joinsounds_fuel)
                 self.chan.queue(self.playsounds_fuel)
         elif(configuration.fuelconvert == "Gallons"):
-            if(fuelsystem.currentfuelgallons<10.00):
+            if(fuelsystem.currentfuelgallons<=10.00):
                 self.playlist_fuel[0] = self.sound_fuel
                 self.playlist_fuel[1] = self.sound_silence
                 self.playlist_fuel[2] = self.soundlist.get(fuelsystem.currentfuel_10)
@@ -802,7 +806,7 @@ class SoundClass:
                 self.joinsounds_fuel = np.concatenate((self.playlist_fuel[0],self.playlist_fuel[1], self.playlist_fuel[2],self.playlist_fuel[3], self.playlist_fuel[4],self.playlist_fuel[5], self.playlist_fuel[6]), axis=0)
                 self.playsounds_fuel = pygame.sndarray.make_sound(self.joinsounds_fuel)
                 self.chan.queue(self.playsounds_fuel)
-            elif(fuelsystem.currentfuelgallons>100.00):
+            elif(fuelsystem.currentfuelgallons>=100.00):
                 self.playlist_fuel[0] = self.sound_silence
                 self.playlist_fuel[1] = self.sound_fuel
                 self.playlist_fuel[2] = self.soundlist.get(fuelsystem.currentfuel_100+fuelsystem.currentfuel_10)
@@ -1023,7 +1027,7 @@ class FuelClass:
                 self.currentfuel_display = self.currentfuel_100 + self.currentfuel_10 + "." + self.currentfuel_0 + self.currentfuel_00
         elif(configuration.fuelconvert == "Gallons"):
             self.currentfuelstr = format(self.currentfuelgallons, '.3f')
-            if( self.currentfuelgallons < 10.00):
+            if( self.currentfuelgallons <= 10.00):
                 self.currentfuel_10 = self.currentfuelstr[0]
                 self.currentfuel_0 = self.currentfuelstr[2]
                 self.currentfuel_00 = self.currentfuelstr[3]
