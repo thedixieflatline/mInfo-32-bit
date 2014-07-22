@@ -22,16 +22,22 @@ TODO Tire wear warnings
 TODO Multiple fuel alerts with fuel level settings
 TODO Review code and refactor when the game is released and python API and or shared memory is ver 1.0"""
 
+"""Add Built In Modules"""
 import sys
 import os
 import os.path
+import configparser
+
+"""Add AC Modules"""
 import ac
 import acsys
-import configparser
-"""Add Modules to Python path"""
+
+"""Add External Modules to Python path"""
 sys.path.insert(0, "apps/python/mInfo/pygame")
 sys.path.insert(0, "apps/python/mInfo/numpy")
 sys.path.insert(0, "apps/python/mInfo/ctypes")
+
+"""Add External Modules"""
 import numpy as np
 import pygame
 import pygame.mixer
@@ -48,8 +54,12 @@ def CheckPythonPath():
         ac.console("{0}".format(d))
 
 def CheckTypeOf(thing):
-    # CheckTypeOf(configuration.fuelwarninglevel) property or variable
-    # CheckTypeOf(configuration.getFuelWarningLevel()) function return value
+    # CheckTypeOf(configuration.fuelwarninglevel) class instance property or stand alone variable
+    # CheckTypeOf(configuration.getFuelWarningLevel()) checvk function or method return value
+    if type(thing) is None:
+        ac.console("none")
+    if type(thing) is bool:
+        ac.console("boolean")
     if type(thing) is str:
         ac.console("string")
     if type(thing) is int:
@@ -77,6 +87,15 @@ class ConfigClass:
         self.fuelalertlevel2 = 0
         self.bestlap = ""
         self.volume = 0
+        self.tireswitch = ""
+        self.tirealertLF = ""
+        self.tirealertLFlevel = 0.0
+        self.tirealertRF = ""
+        self.tirealertRFlevel = 0.0
+        self.tirealertLR = ""
+        self.tirealertLRlevel = 0.0
+        self.tirealertRR = ""
+        self.tirealertRRlevel = 0.0
 
     def loadConfig(self):
         self.config = configparser.ConfigParser()
@@ -92,7 +111,18 @@ class ConfigClass:
         self.config['app']['fuelalertlevel1'] = self.fuelalertlevel1
         self.config['app']['fuelalertlevel2'] = self.fuelalertlevel2
         self.config['app']['volume'] = self.volume
-        self.config.write(open(self.configpath,"w"))
+        self.config['app']['tirealert'] = self.tireswitch
+        self.config['app']['tirealertLF'] = self.tirealertLF
+        self.config['app']['tirealertLFlevel'] = self.tirealertLFlevel
+        self.config['app']['tirealertRF'] = self.tirealertRF
+        self.config['app']['tirealertRFlevel'] = self.tirealertRFlevel
+        self.config['app']['tirealertLR'] = self.tirealertLR
+        self.config['app']['tirealertLRlevel'] = self.tirealertLRlevel
+        self.config['app']['tirealertRR'] = self.tirealertRR
+        self.config['app']['tirealertRRlevel'] = self.tirealertRRlevel
+        with open(self.configpath, 'w') as configfile:
+            self.config.write(configfile)
+
 
     def setLapSwitchEnabled(self):
         self.lapswitch = "enabled"
@@ -163,6 +193,75 @@ class ConfigClass:
         """spinner needs the float"""
         return float(self.volume)
 
+    def getTireSwitch(self):
+        return self.tireswitch
+
+    def setTireSwitchDisabled(self):
+        self.tireswitch = "disabled"
+
+    def setTireSwitchEnabled(self):
+        self.tireswitch = "enabled"
+
+    def getTireLFstatus(self):
+        return self.tirealertLF
+
+    def setTireLFstatusEnabled(self):
+        self.tirealertLF = "enabled"
+
+    def setTireLFstatusDisabled(self):
+        self.tirealertLF = "disabled"
+
+    def getTireLFvalue(self):
+        return float(self.tirealertLFlevel)
+
+    def setTireLFvalue(self,value):
+        self.tirealertLFlevel = str(value)
+
+    def getTireRFstatus(self):
+        return self.tirealertRF
+
+    def setTireRFstatusEnabled(self):
+        self.tirealertRF = "enabled"
+
+    def setTireRFstatusDisabled(self):
+        self.tirealertRF = "disabled"
+
+    def getTireRFvalue(self):
+        return float(self.tirealertRFlevel)
+
+    def setTireRFvalue(self,value):
+        self.tirealertRFlevel = str(value)
+
+    def getTireLRstatus(self):
+        return self.tirealertLR
+
+    def setTireLRstatusEnabled(self):
+        self.tirealertLR = "enabled"
+
+    def setTireLRstatusDisabled(self):
+        self.tirealertLR = "disabled"
+
+    def getTireLRvalue(self):
+        return float(self.tirealertLRlevel)
+
+    def setTireLRvalue(self,value):
+        self.tirealertLRlevel = str(value)
+
+    def getTireRRstatus(self):
+        return self.tirealertRR
+
+    def setTireRRstatusEnabled(self):
+        self.tirealertRR = "enabled"
+
+    def setTireRRstatusDisabled(self):
+        self.tirealertRR = "disabled"
+
+    def getTireRRvalue(self):
+        return float(self.tirealertRRlevel)
+
+    def setTireRRvalue(self,value):
+        self.tirealertRRlevel = str(value)
+
     def setInitialStatus(self):
         self.lapswitch = self.config['app']['lapswitch']
         self.fuelswitch = self.config['app']['fuelswitch']
@@ -173,6 +272,15 @@ class ConfigClass:
         self.fuelalertlevel1 = self.config['app']['fuelalertlevel1']
         self.fuelalertlevel2 = self.config['app']['fuelalertlevel2']
         self.volume = self.config['app']['volume']
+        self.tireswitch = self.config['app']['tirealert']
+        self.tirealertLF = self.config['app']['tirealertLF']
+        self.tirealertLFlevel = self.config['app']['tirealertLFlevel']
+        self.tirealertRF = self.config['app']['tirealertRF']
+        self.tirealertRFlevel = self.config['app']['tirealertRFlevel']
+        self.tirealertLR = self.config['app']['tirealertLR']
+        self.tirealertLRlevel = self.config['app']['tirealertLRlevel']
+        self.tirealertRR = self.config['app']['tirealertRR']
+        self.tirealertRRlevel = self.config['app']['tirealertRRlevel']
 
 class SoundClass:
     """Define sound paths and sound object containers define pygame mixer and channel define variables for sound manipulation and playback."""
@@ -1200,8 +1308,23 @@ class SimInfo:
 class DisplayClass:
     """display elements labels buttons and callback functions """
     def __init__(self):
+        self.appWindow = None
+        self.volume =  None
+        self.volumeSpinner = None
+        self.volumeSpinnerEvent = self.volumeSpinnerEventFunction
+        self.volumeSpinnerValue = 0
         self.lapswitch = None
         self.bestlap = None
+        self.currentlaplabel = None
+        self.besttimelabel = None
+        self.lasttimelabel = None
+        self.currenttimelabel = None
+        self.checkboxContainerLaptime = None
+        self.checkboxLabelLaptime = None
+        self.checkboxEventLaptime = self.checkboxEventFunctionLaptime
+        self.checkboxContainerBestLap = None
+        self.checkboxLabelBestLap = None
+        self.checkboxEventBestLap = self.checkboxEventFunctionBestLap
         self.fuelswitch = None
         self.fuelconvert = None
         self.fuellapalert = None
@@ -1209,12 +1332,6 @@ class DisplayClass:
         self.fuellapalerttriggerSet = None
         self.fuelalertlevel1 = None
         self.fuelalertlevel2 = None
-        self.volume =  None
-        self.appWindow = None
-        self.currentlaplabel = None
-        self.besttimelabel = None
-        self.lasttimelabel = None
-        self.currenttimelabel = None
         self.currentfuellabel = None
         self.currentfuelalertlabel = None
         self.fuelalertSpinner1 = None
@@ -1223,24 +1340,51 @@ class DisplayClass:
         self.fuelalertSpinner2Event = self.fuelalertSpinner2EventFunction
         self.fuelalertSpinner1Value = None
         self.fuelalertSpinner2Value = None
-        self.volumeSpinner = None
-        self.volumeSpinnerEvent = self.volumeSpinnerEventFunction
-        self.volumeSpinnerValue = 0
-        self.checkboxContainerLaptime = None
-        self.checkboxLabelLaptime = None
-        self.checkboxEventLaptime = self.checkboxEventFunctionLaptime
         self.checkboxContainerFuel = None
         self.checkboxLabelFuel = None
         self.checkboxEventFuel = self.checkboxEventFunctionFuel
         self.checkboxContainerFuelConvert = None
         self.checkboxLabelFuelConvert = None
         self.checkboxEventFuelConvert = self.checkboxEventFunctionFuelConvert
-        self.checkboxContainerBestLap = None
-        self.checkboxLabelBestLap = None
-        self.checkboxEventBestLap = self.checkboxEventFunctionBestLap
         self.checkboxContainerFuelLapAlert = None
         self.checkboxLabelFuelLapAlert = None
         self.checkboxEventFuelLapAlert = self.checkboxEventFunctionFuelLapAlert
+        self.tireswitch = None
+        self.tireconvert = None
+        self.tiretempLabelFL = None
+        self.tiretempLabelFR = None
+        self.tiretempLabelRL = None
+        self.tiretempLabelRR = None
+        self.checkboxContainerTire = None
+        self.checkboxLabelTire = None
+        self.checkboxEventTire = self.checkboxEventFunctionTire
+        self.checkboxContainerTireConvert = None
+        self.checkboxLabelTireConvert = None
+        self.checkboxEventTireConvert = self.checkboxEventFunctionTireConvert
+        self.checkboxContainerTireFL = None
+        self.checkboxLabelTireFL = None
+        self.tirealertSpinnerFL = None
+        self.checkboxEventTireFL = self.checkboxEventFunctionTireFL
+        self.tireFLSpinnerEvent = self.tireFLSpinnerEventFunction
+
+        self.checkboxContainerTireFR = None
+        self.checkboxLabelTireFR = None
+        self.tirealertSpinnerFR = None
+        self.checkboxEventTireFR = self.checkboxEventFunctionTireFR
+        self.tireFRSpinnerEvent = self.tireFRSpinnerEventFunction
+
+        self.checkboxContainerTireRL = None
+        self.checkboxLabelTireRL = None
+        self.tirealertSpinnerRL = None
+        self.checkboxEventTireRL = self.checkboxEventFunctionTireRL
+        self.tireRLSpinnerEvent = self.tireRLSpinnerEventFunction
+
+        self.checkboxContainerTireRR = None
+        self.checkboxLabelTireRR = None
+        self.tirealertSpinnerRR = None
+        self.checkboxEventTireRR = self.checkboxEventFunctionTireRR
+        self.tireRRSpinnerEvent = self.tireRRSpinnerEventFunction
+
         self.AppActivated = self.AppActivatedFunction
         self.AppDismissed = self.AppDismissedFunction
 
@@ -1273,6 +1417,16 @@ class DisplayClass:
              self.fuellapalert = True
         elif(configuration.getFuelLapAlertStatus() == "disabled"):
              self.fuellapalert = False
+        if(configuration.getTireSwitch() == "enabled"):
+             self.tireswitch = True
+        elif(configuration.getTireSwitch() == "disabled"):
+             self.tireswitch = False
+
+    def volumeSpinnerEventFunction(self,x):
+        configuration.setVolume(ac.getValue(self.volumeSpinner))
+        self.volume = ac.getValue(self.volumeSpinner)
+        self.volumeSpinnerValue = ac.getValue(self.volumeSpinner)
+        soundsystem.setVolume(self.volume)
 
     def checkboxEventFunctionBestLap(self,x,y):
         if(self.bestlap):
@@ -1281,6 +1435,26 @@ class DisplayClass:
             ac.setText(self.checkboxLabelBestLap, "Disabled")
             ac.setFontColor(self.checkboxLabelBestLap, 1.0, 0.0, 0.0, 1)
         else:
+            configuration.setBestLapEnabled()
+            self.bestlap = True
+            ac.setText(self.checkboxLabelBestLap, "Best Lap")
+            ac.setFontColor(self.checkboxLabelBestLap, 0.0, 1.0, 0.1, 1)
+
+    def checkboxEventFunctionLaptime(self,x,y):
+        if(self.lapswitch):
+            self.lapswitch = False
+            configuration.setLapSwitchDisabled()
+            ac.setText(self.checkboxLabelLaptime, "Disabled")
+            ac.setFontColor(self.checkboxLabelLaptime, 1.0, 0.0, 0.0, 1)
+            configuration.setBestLapDisabled()
+            self.bestlap = False
+            ac.setText(self.checkboxLabelBestLap, "Disabled")
+            ac.setFontColor(self.checkboxLabelBestLap, 1.0, 0.0, 0.0, 1)
+        else:
+            self.lapswitch = True
+            configuration.setLapSwitchEnabled()
+            ac.setText(self.checkboxLabelLaptime, "Enabled")
+            ac.setFontColor(self.checkboxLabelLaptime, 0.0, 1.0, 0.1, 1)
             configuration.setBestLapEnabled()
             self.bestlap = True
             ac.setText(self.checkboxLabelBestLap, "Best Lap")
@@ -1301,12 +1475,6 @@ class DisplayClass:
 
     def getCurrentFuel(self,):
         return float("{0}.{1}000".format(int(self.fuelalertSpinner1Value),int(self.fuelalertSpinner2Value)))
-
-    def volumeSpinnerEventFunction(self,x):
-        configuration.setVolume(ac.getValue(self.volumeSpinner))
-        self.volume = ac.getValue(self.volumeSpinner)
-        self.volumeSpinnerValue = ac.getValue(self.volumeSpinner)
-        soundsystem.setVolume(self.volume)
 
     def checkboxEventFunctionFuelLapAlert(self,x,y):
         if(self.fuellapalert):
@@ -1345,25 +1513,63 @@ class DisplayClass:
             ac.setText(self.checkboxLabelFuelConvert, "Liters")
             ac.setFontColor(self.checkboxLabelFuelConvert, 0.0, 1.0, 0.1, 1)
 
-    def checkboxEventFunctionLaptime(self,x,y):
-        if(self.lapswitch):
-            self.lapswitch = False
-            configuration.setLapSwitchDisabled()
-            ac.setText(self.checkboxLabelLaptime, "Disabled")
-            ac.setFontColor(self.checkboxLabelLaptime, 1.0, 0.0, 0.0, 1)
-            configuration.setBestLapDisabled()
-            self.bestlap = False
-            ac.setText(self.checkboxLabelBestLap, "Disabled")
-            ac.setFontColor(self.checkboxLabelBestLap, 1.0, 0.0, 0.0, 1)
+    def checkboxEventFunctionTire(self,x,y):
+        if(self.tireswitch):
+            configuration.setTireSwitchDisabled()
+            self.tireswitch = False
+            ac.setText(self.checkboxLabelTire, "Disabled")
+            ac.setFontColor(self.checkboxLabelTire, 1.0, 0.0, 0.0, 1)
         else:
-            self.lapswitch = True
-            configuration.setLapSwitchEnabled()
-            ac.setText(self.checkboxLabelLaptime, "Enabled")
-            ac.setFontColor(self.checkboxLabelLaptime, 0.0, 1.0, 0.1, 1)
-            configuration.setBestLapEnabled()
-            self.bestlap = True
-            ac.setText(self.checkboxLabelBestLap, "Best Lap")
-            ac.setFontColor(self.checkboxLabelBestLap, 0.0, 1.0, 0.1, 1)
+            configuration.setTireSwitchEnabled()
+            self.tireswitch = True
+            ac.setText(self.checkboxLabelTire, "Enabled")
+            ac.setFontColor(self.checkboxLabelTire, 0.0, 1.0, 0.1, 1)
+
+
+    def checkboxEventFunctionTireConvert(self,x,y):
+        if(ac.getText(self.checkboxLabelTireConvert) == "Celsius"):
+            ac.setText(self.checkboxLabelTireConvert, "Fahrenheit")
+            ac.setFontColor(self.checkboxLabelTireConvert, 0.0, 5.0, 1.0, 1)
+        else:
+            ac.setText(self.checkboxLabelTireConvert, "Celsius")
+            ac.setFontColor(self.checkboxLabelTireConvert, 0.0, 1.0, 0.5, 1)
+
+        # Convert from Celsius to Fahrenheit
+        # To convert Celsius to Fahrenheit, multiply the degree by 1.8 and add 32.
+
+        # ac.console(str(configuration.getTireLFstatus()))
+        # ac.console(str(configuration.getTireLFvalue()))
+        # ac.console(str(configuration.getTireRFstatus()))
+        # ac.console(str(configuration.getTireRFvalue()))
+        # ac.console(str(configuration.getTireLRstatus()))
+        # ac.console(str(configuration.getTireLRvalue()))
+        # ac.console(str(configuration.getTireRRstatus()))
+        # ac.console(str(configuration.getTireRRvalue()))
+
+    def checkboxEventFunctionTireFL(self,x,y):
+        ac.console("FL")
+
+    def tireFLSpinnerEventFunction(self,x):
+        ac.console("FL")
+
+    def checkboxEventFunctionTireFR(self,x,y):
+        ac.console("FR")
+
+    def tireFRSpinnerEventFunction(self,x):
+        ac.console("FR")
+
+    def checkboxEventFunctionTireRL(self,x,y):
+        ac.console("RL")
+
+    def tireRLSpinnerEventFunction(self,x):
+        ac.console("RL")
+
+    def checkboxEventFunctionTireRR(self,x,y):
+        ac.console("RR")
+
+    def tireRRSpinnerEventFunction(self,x):
+        ac.console("RR")
+
 
     def AppActivatedFunction(self,val):
         #must have a pass completion or crash!!!
@@ -1395,6 +1601,7 @@ fuelsystem = FuelClass()
 soundsystem = SoundClass()
 mInfoDisplay = DisplayClass()
 mInfoDisplay.setInitialStatus()
+
 #---------------------------------------------------------
 
 def acMain(ac_version):
@@ -1403,7 +1610,7 @@ def acMain(ac_version):
     ac.addRenderCallback(mInfoDisplay.appWindow, onFormRender)
     ac.addOnAppActivatedListener(mInfoDisplay.appWindow, mInfoDisplay.AppActivated)
     ac.addOnAppDismissedListener(mInfoDisplay.appWindow, mInfoDisplay.AppDismissed)
-    ac.setSize(mInfoDisplay.appWindow, 250, 340)
+    ac.setSize(mInfoDisplay.appWindow, 250, 490)
     if(mInfoDisplay.fuelswitch is True):
         mInfoDisplay.currentfuellabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
         ac.setPosition(mInfoDisplay.currentfuellabel, 20, 236)
@@ -1411,7 +1618,7 @@ def acMain(ac_version):
         ac.setFontAlignment(mInfoDisplay.currentfuellabel,'left')
 
         mInfoDisplay.currentfuelalertlabel = ac.addLabel(mInfoDisplay.appWindow, "Fuel Alert Level : {0}.{1} {2}".format(int(mInfoDisplay.fuelalertSpinner1Value),int(mInfoDisplay.fuelalertSpinner2Value),mInfoDisplay.fuelconvert))
-        ac.setPosition(mInfoDisplay.currentfuelalertlabel, 24, 316)
+        ac.setPosition(mInfoDisplay.currentfuelalertlabel, 24, 318)
         ac.setFontColor(mInfoDisplay.currentfuelalertlabel, 1.0, 1.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.currentfuelalertlabel,'center')
 
@@ -1482,7 +1689,7 @@ def acMain(ac_version):
         ac.setFontAlignment(mInfoDisplay.currentfuellabel,'left')
 
         mInfoDisplay.currentfuelalertlabel = ac.addLabel(mInfoDisplay.appWindow, "Fuel Alert Level : -------")
-        ac.setPosition(mInfoDisplay.currentfuelalertlabel, 24, 316)
+        ac.setPosition(mInfoDisplay.currentfuelalertlabel, 24, 318)
         ac.setFontColor(mInfoDisplay.currentfuelalertlabel, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.currentfuelalertlabel,'center')
 
@@ -1625,6 +1832,129 @@ def acMain(ac_version):
         ac.setText(mInfoDisplay.besttimelabel, "best time : -:--:---")
         ac.setText(mInfoDisplay.lasttimelabel, "last time : -:--:---")
         ac.setText(mInfoDisplay.currenttimelabel, "current time : -:--:---")
+
+    if(mInfoDisplay.tireswitch is True):
+        mInfoDisplay.checkboxContainerTire = ac.addCheckBox(mInfoDisplay.appWindow, "")
+        ac.setPosition(mInfoDisplay.checkboxContainerTire, 230, 342)
+        ac.setSize(mInfoDisplay.checkboxContainerTire,15,15)
+        ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerTire,mInfoDisplay.checkboxEventTire)
+
+        mInfoDisplay.checkboxLabelTire = ac.addLabel(mInfoDisplay.appWindow, "Enabled")
+        ac.setPosition(mInfoDisplay.checkboxLabelTire, 26, 338)
+        ac.setFontColor(mInfoDisplay.checkboxLabelTire, 0.0, 1.0, 0.1, 1)
+        ac.setFontAlignment(mInfoDisplay.checkboxLabelTire,'right')
+
+        mInfoDisplay.checkboxContainerTireConvert = ac.addCheckBox(mInfoDisplay.appWindow, "")
+        ac.setPosition(mInfoDisplay.checkboxContainerTireConvert, 230, 368)
+        ac.setSize(mInfoDisplay.checkboxContainerTireConvert,15,15)
+        ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerTireConvert,mInfoDisplay.checkboxEventTireConvert)
+
+        mInfoDisplay.checkboxLabelTireConvert = ac.addLabel(mInfoDisplay.appWindow, "Celsius")
+        ac.setPosition(mInfoDisplay.checkboxLabelTireConvert, 26, 364)
+        ac.setFontColor(mInfoDisplay.checkboxLabelTireConvert, 0.0, 1.0, 0.5, 1)
+        ac.setFontAlignment(mInfoDisplay.checkboxLabelTireConvert,'right')
+
+        mInfoDisplay.tiretempLabelFL = ac.addLabel(mInfoDisplay.appWindow, "TempFL")
+        ac.setPosition(mInfoDisplay.tiretempLabelFL, -16, 388)
+        ac.setFontColor(mInfoDisplay.tiretempLabelFL, 1.0, 1.0, 1.0, 1)
+        ac.setFontAlignment(mInfoDisplay.tiretempLabelFL,'center')
+
+        mInfoDisplay.tiretempLabelFR = ac.addLabel(mInfoDisplay.appWindow, "TempFR")
+        ac.setPosition(mInfoDisplay.tiretempLabelFR, 66, 388)
+        ac.setFontColor(mInfoDisplay.tiretempLabelFR, 1.0, 1.0, 1.0, 1)
+        ac.setFontAlignment(mInfoDisplay.tiretempLabelFR,'center')
+
+        mInfoDisplay.tiretempLabelRL = ac.addLabel(mInfoDisplay.appWindow, "TempRL")
+        ac.setPosition(mInfoDisplay.tiretempLabelRL, -16, 438)
+        ac.setFontColor(mInfoDisplay.tiretempLabelRL, 1.0, 1.0, 1.0, 1)
+        ac.setFontAlignment(mInfoDisplay.tiretempLabelRL,'center')
+
+        mInfoDisplay.tiretempLabelRR = ac.addLabel(mInfoDisplay.appWindow, "TempRR")
+        ac.setPosition(mInfoDisplay.tiretempLabelRR, 66, 438)
+        ac.setFontColor(mInfoDisplay.tiretempLabelRR, 1.0, 1.0, 1.0, 1)
+        ac.setFontAlignment(mInfoDisplay.tiretempLabelRR,'center')
+
+        mInfoDisplay.checkboxContainerTireFL = ac.addCheckBox(mInfoDisplay.appWindow, "")
+        ac.setPosition(mInfoDisplay.checkboxContainerTireFL, 25, 412)
+        ac.setSize(mInfoDisplay.checkboxContainerTireFL,15,15)
+        ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerTireFL,mInfoDisplay.checkboxEventTireFL)
+
+        mInfoDisplay.checkboxLabelTireFL = ac.addLabel(mInfoDisplay.appWindow, "FL")
+        ac.setPosition(mInfoDisplay.checkboxLabelTireFL, 4, 408)
+        ac.setFontColor(mInfoDisplay.checkboxLabelTireFL, 0.0, 1.0, 0.1, 1)
+        ac.setFontAlignment(mInfoDisplay.checkboxLabelTireFL,'left')
+
+        mInfoDisplay.tirealertSpinnerFL = ac.addSpinner(mInfoDisplay.appWindow, "")
+        ac.setPosition(mInfoDisplay.tirealertSpinnerFL,46,408)
+        ac.setSize(mInfoDisplay.tirealertSpinnerFL,74,24)
+        ac.setStep(mInfoDisplay.tirealertSpinnerFL,10)
+        ac.setRange(mInfoDisplay.tirealertSpinnerFL,1,300)
+        #ac.setValue(mInfoDisplay.tirealertSpinnerFL,mInfoDisplay.tirealertSpinnerFLValue)
+        ac.addOnValueChangeListener(mInfoDisplay.tirealertSpinnerFL,mInfoDisplay.tireFLSpinnerEvent)
+
+        mInfoDisplay.checkboxContainerTireFR = ac.addCheckBox(mInfoDisplay.appWindow, "")
+        ac.setPosition(mInfoDisplay.checkboxContainerTireFR, 210, 412)
+        ac.setSize(mInfoDisplay.checkboxContainerTireFR,15,15)
+        ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerTireFR,mInfoDisplay.checkboxEventTireFR)
+
+        mInfoDisplay.checkboxLabelTireFR = ac.addLabel(mInfoDisplay.appWindow, "FR")
+        ac.setPosition(mInfoDisplay.checkboxLabelTireFR, 228, 408)
+        ac.setFontColor(mInfoDisplay.checkboxLabelTireFR, 0.0, 1.0, 0.1, 1)
+        ac.setFontAlignment(mInfoDisplay.checkboxLabelTireFR,'left')
+
+        mInfoDisplay.tirealertSpinnerFR = ac.addSpinner(mInfoDisplay.appWindow, "")
+        ac.setPosition(mInfoDisplay.tirealertSpinnerFR,130,408)
+        ac.setSize(mInfoDisplay.tirealertSpinnerFR,74,24)
+        ac.setStep(mInfoDisplay.tirealertSpinnerFR,10)
+        ac.setRange(mInfoDisplay.tirealertSpinnerFR,1,300)
+        #ac.setValue(mInfoDisplay.tirealertSpinnerFL,mInfoDisplay.tirealertSpinnerFLValue)
+        ac.addOnValueChangeListener(mInfoDisplay.tirealertSpinnerFR,mInfoDisplay.tireFRSpinnerEvent)
+
+        mInfoDisplay.checkboxContainerTireRL = ac.addCheckBox(mInfoDisplay.appWindow, "")
+        ac.setPosition(mInfoDisplay.checkboxContainerTireRL, 25, 462)
+        ac.setSize(mInfoDisplay.checkboxContainerTireRL,15,15)
+        ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerTireRL,mInfoDisplay.checkboxEventTireRL)
+
+        mInfoDisplay.checkboxLabelTireRL = ac.addLabel(mInfoDisplay.appWindow, "RL")
+        ac.setPosition(mInfoDisplay.checkboxLabelTireRL, 4, 458)
+        ac.setFontColor(mInfoDisplay.checkboxLabelTireRL, 0.0, 1.0, 0.1, 1)
+        ac.setFontAlignment(mInfoDisplay.checkboxLabelTireRL,'left')
+
+        mInfoDisplay.tirealertSpinnerRL = ac.addSpinner(mInfoDisplay.appWindow, "")
+        ac.setPosition(mInfoDisplay.tirealertSpinnerRL,46,458)
+        ac.setSize(mInfoDisplay.tirealertSpinnerRL,74,24)
+        ac.setStep(mInfoDisplay.tirealertSpinnerRL,10)
+        ac.setRange(mInfoDisplay.tirealertSpinnerRL,1,300)
+        #ac.setValue(mInfoDisplay.tirealertSpinnerFL,mInfoDisplay.tirealertSpinnerFLValue)
+        ac.addOnValueChangeListener(mInfoDisplay.tirealertSpinnerRL,mInfoDisplay.tireRLSpinnerEvent)
+
+        mInfoDisplay.checkboxContainerTireRR = ac.addCheckBox(mInfoDisplay.appWindow, "")
+        ac.setPosition(mInfoDisplay.checkboxContainerTireRR, 210, 462)
+        ac.setSize(mInfoDisplay.checkboxContainerTireRR,15,15)
+        ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerTireRR,mInfoDisplay.checkboxEventTireRR)
+
+        mInfoDisplay.checkboxLabelTireRR = ac.addLabel(mInfoDisplay.appWindow, "RR")
+        ac.setPosition(mInfoDisplay.checkboxLabelTireRR, 228, 458)
+        ac.setFontColor(mInfoDisplay.checkboxLabelTireRR, 0.0, 1.0, 0.1, 1)
+        ac.setFontAlignment(mInfoDisplay.checkboxLabelTireRR,'left')
+
+        mInfoDisplay.tirealertSpinnerRR = ac.addSpinner(mInfoDisplay.appWindow, "")
+        ac.setPosition(mInfoDisplay.tirealertSpinnerRR,130,458)
+        ac.setSize(mInfoDisplay.tirealertSpinnerRR,74,24)
+        ac.setStep(mInfoDisplay.tirealertSpinnerRR,10)
+        ac.setRange(mInfoDisplay.tirealertSpinnerRR,1,300)
+        #ac.setValue(mInfoDisplay.tirealertSpinnerFL,mInfoDisplay.tirealertSpinnerFLValue)
+        ac.addOnValueChangeListener(mInfoDisplay.tirealertSpinnerRR,mInfoDisplay.tireRRSpinnerEvent)
+    else:
+        mInfoDisplay.checkboxContainerTire = ac.addCheckBox(mInfoDisplay.appWindow, "")
+        ac.setPosition(mInfoDisplay.checkboxContainerTire, 230, 342)
+        ac.setSize(mInfoDisplay.checkboxContainerTire,15,15)
+        ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerTire,mInfoDisplay.checkboxEventTire)
+
+        mInfoDisplay.checkboxLabelTire = ac.addLabel(mInfoDisplay.appWindow, "Disabled")
+        ac.setPosition(mInfoDisplay.checkboxLabelTire, 26, 338)
+        ac.setFontColor(mInfoDisplay.checkboxLabelTire, 1.0, 0.0, 0.0, 1)
+        ac.setFontAlignment(mInfoDisplay.checkboxLabelTire,'right')
     ac.setBackgroundTexture(mInfoDisplay.appWindow, "apps/python/mInfo/images/mInfoBackground.png")
     pygame.init()
     soundsystem.loadSounds()
@@ -1719,6 +2049,26 @@ def acUpdate(deltaT):
         ac.setFontColor(mInfoDisplay.checkboxLabelFuelLapAlert, 1.0, 0.0, 0.0, 1)
         ac.setFontColor(mInfoDisplay.currentfuelalertlabel, 1.0, 0.0, 0.0, 1)
         ac.setText(mInfoDisplay.currentfuelalertlabel, "Fuel Alert Level : ----- ")
+
+    if(mInfoDisplay.tireswitch is True):
+        #ac.console(str(infosystem.graphics.normalizedCarPosition))
+        # ac.console(str(configuration.getTireLFstatus()))
+        # ac.console(str(configuration.getTireLFvalue()))
+        # ac.console(str(configuration.getTireRFstatus()))
+        # ac.console(str(configuration.getTireRFvalue()))
+        # ac.console(str(configuration.getTireLRstatus()))
+        # ac.console(str(configuration.getTireLRvalue()))
+        # ac.console(str(configuration.getTireRRstatus()))
+        # ac.console(str(configuration.getTireRRvalue()))
+
+        ac.setText(mInfoDisplay.tiretempLabelFL, "FL-{0}".format(round(infosystem.physics.tyreCoreTemperature[0]*1.8+32)))
+        ac.setText(mInfoDisplay.tiretempLabelFR, "FR-{0}".format(round(infosystem.physics.tyreCoreTemperature[1]*1.8+32)))
+        ac.setText(mInfoDisplay.tiretempLabelRL, "RL-{0}".format(round(infosystem.physics.tyreCoreTemperature[2]*1.8+32)))
+        ac.setText(mInfoDisplay.tiretempLabelRR, "RR-{0}".format(round(infosystem.physics.tyreCoreTemperature[3]*1.8+32)))
+
+    else:
+        ac.setText(mInfoDisplay.checkboxLabelTire, "Disabled")
+        ac.setFontColor(mInfoDisplay.checkboxLabelTire, 1.0, 0.0, 0.0, 1)
 
 
 def onFormRender(deltaT):
