@@ -1,4 +1,4 @@
-"""mInfo ver 0.86  June 2014
+"""mInfo ver 0.87 August 2014
 GitHub Page: https://github.com/thedixieflatline/assettocorsa
 
 To activate copy mInfo folder to C:\Program Files (x86)\Steam\steamapps\common\assettocorsa\apps\python
@@ -16,7 +16,7 @@ http://www.assettocorsa.net/forum/index.php
 
 TODO Extend fuel alert capacity to 200+
 TODO Some extra sounds to record for upcoming tires and splits and re-record some sounds and adjust all current timings of the current default set
-TODO Tire temp warnings
+TODO Tire temp warnings audio
 TODO Splits ahead or behind last split
 TODO Tire wear warnings
 TODO Multiple fuel alerts with fuel level settings
@@ -27,16 +27,13 @@ import sys
 import os
 import os.path
 import configparser
-
 """Add AC Modules"""
 import ac
 import acsys
-
 """Add External Modules to Python path"""
 sys.path.insert(0, "apps/python/mInfo/pygame")
 sys.path.insert(0, "apps/python/mInfo/numpy")
 sys.path.insert(0, "apps/python/mInfo/ctypes")
-
 """Add External Modules"""
 import numpy as np
 import pygame
@@ -45,8 +42,7 @@ import pygame.sndarray
 import mmap
 import functools
 import ctypes
-from ctypes import c_int32, c_float, c_char, c_wchar, c_bool, c_int
-
+from ctypes import c_int32, c_float, c_wchar
 
 def CheckPythonPath():
     """Report Modules on Python path"""
@@ -122,7 +118,6 @@ class ConfigClass:
         self.config['app']['tirealertRRlevel'] = self.tirealertRRlevel
         with open(self.configpath, 'w') as configfile:
             self.config.write(configfile)
-
 
     def setLapSwitchEnabled(self):
         self.lapswitch = "enabled"
@@ -1231,10 +1226,10 @@ class SPageFileGraphic(ctypes.Structure):
         ('status', AC_STATUS),
         ('session', AC_SESSION_TYPE),
          # NOTE: if you want str instead bytes, access it without '_'
-        ('_currentTime', c_char * 15),
-        ('_lastTime', c_char * 15),
-        ('_bestTime', c_char * 15),
-        ('_split', c_char * 15),
+        ('currentTime', c_wchar * 15),
+        ('lastTime', c_wchar * 15),
+        ('bestTime', c_wchar * 15),
+        ('split', c_wchar * 15),
         ('completedLaps', c_int32),
         ('position', c_int32),
         ('iCurrentTime', c_int32),
@@ -1246,8 +1241,7 @@ class SPageFileGraphic(ctypes.Structure):
         ('currentSectorIndex', c_int32),
         ('lastSectorTime', c_int32),
         ('numberOfLaps', c_int32),
-        ('_tyreCompound', c_char * 33),
-
+        ('tyreCompound', c_wchar * 33),
         ('replayTimeMultiplier', c_float),
         ('normalizedCarPosition', c_float),
         ('carCoordinates', c_float * 3),
@@ -1256,18 +1250,17 @@ class SPageFileGraphic(ctypes.Structure):
 class SPageFileStatic(ctypes.Structure):
     _pack_ = 4
     _fields_ = [
-        ('_smVersion', c_char * 15),
-        ('_acVersion', c_char * 15),
+        ('smVersion', c_wchar * 15),
+        ('acVersion', c_wchar * 15),
         # session static info
         ('numberOfSessions', c_int32),
         ('numCars', c_int32),
-        ('_carModel', c_char * 33),
-        ('_track', c_char * 33),
-        ('_playerName', c_char * 33),
-        ('_playerSurname', c_char * 33),
-        ('_playerNick', c_char * 33),
+        ('carModel', c_wchar * 33),
+        ('track', c_wchar * 33),
+        ('playerName', c_wchar * 33),
+        ('playerSurname', c_wchar * 33),
+        ('playerNick', c_wchar * 33),
         ('sectorCount', c_int32),
-
         # car static info
         ('maxTorque', c_float),
         ('maxPower', c_float),
@@ -1277,30 +1270,19 @@ class SPageFileStatic(ctypes.Structure):
         ('tyreRadius', c_float * 4),
     ]
 
-#make _char_p properties return unicode strings
-for cls in (SPageFilePhysics, SPageFileGraphic, SPageFileStatic):
-    for name, typ in cls._fields_:
-        if name.startswith("_"):
-            def getter(self, name=None):
-                value = getattr(self, name)
-                # TODO: real encoding is very strange, it's not utf-8
-                return value.decode("utf-8")
-            setattr(cls, name.lstrip("_"),
-                    property(functools.partial(getter, name=name)))
-
 class SimInfo:
     def __init__(self):
         self._acpmf_physics = mmap.mmap(0, ctypes.sizeof(SPageFilePhysics), "acpmf_physics")
         self._acpmf_graphics = mmap.mmap(0, ctypes.sizeof(SPageFileGraphic), "acpmf_graphics")
-        #self._acpmf_static = mmap.mmap(0, ctypes.sizeof(SPageFileStatic), "acpmf_static")
+        self._acpmf_static = mmap.mmap(0, ctypes.sizeof(SPageFileStatic), "acpmf_static")
         self.physics = SPageFilePhysics.from_buffer(self._acpmf_physics)
         self.graphics = SPageFileGraphic.from_buffer(self._acpmf_graphics)
-        #self.static = SPageFileStatic.from_buffer(self._acpmf_static)
+        self.static = SPageFileStatic.from_buffer(self._acpmf_static)
 
     def close(self):
         self._acpmf_physics.close()
         self._acpmf_graphics.close()
-        #self._acpmf_static.close()
+        self._acpmf_static.close()
 
     def __del__(self):
         self.close()
@@ -1525,7 +1507,6 @@ class DisplayClass:
             ac.setText(self.checkboxLabelTire, "Enabled")
             ac.setFontColor(self.checkboxLabelTire, 0.0, 1.0, 0.1, 1)
 
-
     def checkboxEventFunctionTireConvert(self,x,y):
         if(ac.getText(self.checkboxLabelTireConvert) == "Celsius"):
             ac.setText(self.checkboxLabelTireConvert, "Fahrenheit")
@@ -1536,7 +1517,6 @@ class DisplayClass:
 
         # Convert from Celsius to Fahrenheit
         # To convert Celsius to Fahrenheit, multiply the degree by 1.8 and add 32.
-
         # ac.console(str(configuration.getTireLFstatus()))
         # ac.console(str(configuration.getTireLFvalue()))
         # ac.console(str(configuration.getTireRFstatus()))
@@ -1569,7 +1549,6 @@ class DisplayClass:
 
     def tireRRSpinnerEventFunction(self,x):
         ac.console("RR")
-
 
     def AppActivatedFunction(self,val):
         #must have a pass completion or crash!!!
@@ -1782,7 +1761,6 @@ def acMain(ac_version):
         ac.setPosition(mInfoDisplay.checkboxContainerBestLap, 230, 148)
         ac.setSize(mInfoDisplay.checkboxContainerBestLap,15,15)
         ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerBestLap,mInfoDisplay.checkboxEventBestLap)
-
         mInfoDisplay.checkboxLabelBestLap = ac.addLabel(mInfoDisplay.appWindow, "Best Lap")
         ac.setPosition(mInfoDisplay.checkboxLabelBestLap, 26, 145)
         ac.setFontColor(mInfoDisplay.checkboxLabelBestLap, 0.0, 1.0, 0.1, 1)
@@ -2060,12 +2038,10 @@ def acUpdate(deltaT):
         # ac.console(str(configuration.getTireLRvalue()))
         # ac.console(str(configuration.getTireRRstatus()))
         # ac.console(str(configuration.getTireRRvalue()))
-
-        ac.setText(mInfoDisplay.tiretempLabelFL, "FL-{0}".format(round(infosystem.physics.tyreCoreTemperature[0]*1.8+32)))
-        ac.setText(mInfoDisplay.tiretempLabelFR, "FR-{0}".format(round(infosystem.physics.tyreCoreTemperature[1]*1.8+32)))
-        ac.setText(mInfoDisplay.tiretempLabelRL, "RL-{0}".format(round(infosystem.physics.tyreCoreTemperature[2]*1.8+32)))
-        ac.setText(mInfoDisplay.tiretempLabelRR, "RR-{0}".format(round(infosystem.physics.tyreCoreTemperature[3]*1.8+32)))
-
+        ac.setText(mInfoDisplay.tiretempLabelFL, "FL-{0}".format(round(infosystem.physics.tyreCoreTemperature[0])))
+        ac.setText(mInfoDisplay.tiretempLabelFR, "FR-{0}".format(round(infosystem.physics.tyreCoreTemperature[1])))
+        ac.setText(mInfoDisplay.tiretempLabelRL, "RL-{0}".format(round(infosystem.physics.tyreCoreTemperature[2])))
+        ac.setText(mInfoDisplay.tiretempLabelRR, "RR-{0}".format(round(infosystem.physics.tyreCoreTemperature[3])))
     else:
         ac.setText(mInfoDisplay.checkboxLabelTire, "Disabled")
         ac.setFontColor(mInfoDisplay.checkboxLabelTire, 1.0, 0.0, 0.0, 1)
