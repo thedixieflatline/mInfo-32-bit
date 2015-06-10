@@ -1,4 +1,4 @@
-mInfo ver 0.87 August 2014
+mInfo ver 0.87.5 June 2015 
 GitHub Page: https://github.com/thedixieflatline/assettocorsa
 
 To activate copy mInfo folder to C:\Program Files (x86)\Steam\steamapps\common\assettocorsa\apps\python
@@ -20,4 +20,4 @@ TODO Tire temp warnings audio
 TODO Splits ahead or behind last split
 TODO Tire wear warnings
 TODO Multiple fuel alerts with fuel level settings
-TODO Review code and refactor when the game is released and python API and or shared memory is ver 1.0
+TODO Review code and refactor when the game is released and python API and or shared memory
