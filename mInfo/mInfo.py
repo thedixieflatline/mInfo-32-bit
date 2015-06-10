@@ -1217,6 +1217,7 @@ class SPageFilePhysics(ctypes.Structure):
         ('numberOfTyresOut', c_int32),
         ('pitLimiterOn', c_int32),
         ('abs', c_float),
+        ('kers', c_float),
     ]
 
 class SPageFileGraphic(ctypes.Structure):
@@ -1245,13 +1246,15 @@ class SPageFileGraphic(ctypes.Structure):
         ('replayTimeMultiplier', c_float),
         ('normalizedCarPosition', c_float),
         ('carCoordinates', c_float * 3),
+        ('penaltyTime', c_float),
+        ('flags', c_int32),
     ]
 
 class SPageFileStatic(ctypes.Structure):
     _pack_ = 4
     _fields_ = [
-        ('smVersion', c_wchar * 15),
-        ('acVersion', c_wchar * 15),
+        ('_smVersion', c_wchar * 15),
+        ('_acVersion', c_wchar * 15),
         # session static info
         ('numberOfSessions', c_int32),
         ('numCars', c_int32),
