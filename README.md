@@ -2,8 +2,8 @@ Assetto Corsa
 ============
 Assetto Corsa App Development
 
-mInfo ver 0.89 December 2021
-GitHub Page: https://github.com/thedixieflatline/assettocorsa
+mInfo ver 0.89 November 2021
+GitHub Page: https://github.com/thedixieflatline/mInfo-32-bit
 
 To activate copy mInfo folder to C:\Program Files (x86)\Steam\steamapps\common\assettocorsa\apps\python
 
