@@ -18,6 +18,7 @@ Please submit bugs or requests to the Assetto Corsa forum
 http://www.assettocorsa.net/forum/index.php
 
 TODO Extend fuel alert capacity to 200+
+TODO Custome App icon in AC
 TODO Fix current lap time to not start current lap untill crossing the line first time after after pits
 TODO Some extra sounds to record for upcoming tire temps and re-record or retime some sounds and adjust all current timings of the current default set
 TODO Tire temp warnings get working
