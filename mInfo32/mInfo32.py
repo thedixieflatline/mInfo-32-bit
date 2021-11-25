@@ -1,26 +1,29 @@
-"""mInfo ver 0.87.5 June 2015
-GitHub Page: https://github.com/thedixieflatline/assettocorsa
+"""
+mInfo 32 bit version 0.89 November 2021
+GitHub Page: https://github.com/thedixieflatline/mInfo-32-bit
+Please submit bugs or requests to Github repository.
 
-To activate copy mInfo folder to C:\Program Files (x86)\Steam\steamapps\common\assettocorsa\apps\python
+To activate copy mInfo32 folder to C:\Program Files (x86)\Steam\steamapps\common\assettocorsa\apps\python
+
+Only works in 32 bit mode Assetto Corsa
 
 Motorheadz present mInfo an app for the game Assetto Corsa.
-Allowing compiling sequence of sounds then playback of wave files of speech or sounds in the game as alerts or reports
+Allowing compiling sequence of sounds then playback of wav files of speech or sounds in the game as alerts or reports.
 First alert developed is lap times for players car as they cross the line.
 
-App developed by David Trenear
-Additional Testing by Jason Madigan and Tyson Cierpial
-Big thanks to Rombik who wrote the original sim info module.
+App developed by David Trenear.
+Additional Testing and thanks to Jason Madigan and Tyson Cierpial.
+Thanks to Rombik who wrote the original sim info module.
 
 Please submit bugs or requests to the Assetto Corsa forum
 http://www.assettocorsa.net/forum/index.php
 
 TODO Extend fuel alert capacity to 200+
-TODO Some extra sounds to record for upcoming tires and splits and re-record some sounds and adjust all current timings of the current default set
-TODO Tire temp warnings audio
-TODO Splits ahead or behind last split
-TODO Tire wear warnings
-TODO Multiple fuel alerts with fuel level settings
-TODO Review code and refactor when the game is released and python API and or shared memory"""
+TODO Fix current lap time to not start current lap untill crossing the line first time after after pits
+TODO Some extra sounds to record for upcoming tire temps and re-record or retime some sounds and adjust all current timings of the current default set
+TODO Tire temp warnings get working
+
+"""
 
 """Add Built In Modules"""
 import sys
@@ -31,9 +34,9 @@ import configparser
 import ac
 import acsys
 """Add External Modules to Python path"""
-sys.path.insert(0, "apps/python/mInfo/pygame")
-sys.path.insert(0, "apps/python/mInfo/numpy")
-sys.path.insert(0, "apps/python/mInfo/ctypes")
+sys.path.insert(0, "apps/python/mInfo32/pygame")
+sys.path.insert(0, "apps/python/mInfo32/numpy")
+sys.path.insert(0, "apps/python/mInfo32/ctypes")
 """Add External Modules"""
 import numpy as np
 import pygame
@@ -73,7 +76,7 @@ class ConfigClass:
     """Config file loader (mInfo.ini) and data process"""
     def __init__(self):
         self.config = None
-        self.configpath = 'apps/python/mInfo/mInfo.ini'
+        self.configpath = 'apps/python/mInfo32/mInfo.ini'
         self.lapswitch = ""
         self.soundpack = ""
         self.fuelswitch = ""
@@ -1588,21 +1591,21 @@ mInfoDisplay.setInitialStatus()
 
 def acMain(ac_version):
     """main init function which runs on game startup."""
-    mInfoDisplay.appWindow = ac.newApp("mInfo")
+    mInfoDisplay.appWindow = ac.newApp("mInfo32")
     ac.addRenderCallback(mInfoDisplay.appWindow, onFormRender)
     ac.addOnAppActivatedListener(mInfoDisplay.appWindow, mInfoDisplay.AppActivated)
     ac.addOnAppDismissedListener(mInfoDisplay.appWindow, mInfoDisplay.AppDismissed)
     ac.setSize(mInfoDisplay.appWindow, 250, 490)
     if(mInfoDisplay.fuelswitch is True):
-        mInfoDisplay.currentfuellabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.currentfuellabel, 20, 236)
+        mInfoDisplay.currentfuellabel = ac.addLabel(mInfoDisplay.appWindow, "currentfuel")
+        ac.setPosition(mInfoDisplay.currentfuellabel, 6, 236)
         ac.setFontColor(mInfoDisplay.currentfuellabel, 1.0, 1.0, 1.0, 1)
         ac.setFontAlignment(mInfoDisplay.currentfuellabel,'left')
 
         mInfoDisplay.currentfuelalertlabel = ac.addLabel(mInfoDisplay.appWindow, "Fuel Alert Level : {0}.{1} {2}".format(int(mInfoDisplay.fuelalertSpinner1Value),int(mInfoDisplay.fuelalertSpinner2Value),mInfoDisplay.fuelconvert))
-        ac.setPosition(mInfoDisplay.currentfuelalertlabel, 24, 318)
+        ac.setPosition(mInfoDisplay.currentfuelalertlabel, 6, 318)
         ac.setFontColor(mInfoDisplay.currentfuelalertlabel, 1.0, 1.0, 0.0, 1)
-        ac.setFontAlignment(mInfoDisplay.currentfuelalertlabel,'center')
+        ac.setFontAlignment(mInfoDisplay.currentfuelalertlabel,'left')
 
         mInfoDisplay.checkboxContainerFuel = ac.addCheckBox(mInfoDisplay.appWindow, "")
         ac.setPosition(mInfoDisplay.checkboxContainerFuel, 230, 214)
@@ -1610,7 +1613,7 @@ def acMain(ac_version):
         ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerFuel,mInfoDisplay.checkboxEventFuel)
 
         mInfoDisplay.checkboxLabelFuel = ac.addLabel(mInfoDisplay.appWindow, "Enabled")
-        ac.setPosition(mInfoDisplay.checkboxLabelFuel, 26, 211)
+        ac.setPosition(mInfoDisplay.checkboxLabelFuel, 224, 211)
         ac.setFontColor(mInfoDisplay.checkboxLabelFuel, 0.0, 1.0, 0.1, 1)
         ac.setFontAlignment(mInfoDisplay.checkboxLabelFuel,'right')
 
@@ -1620,7 +1623,7 @@ def acMain(ac_version):
         ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerFuelConvert,mInfoDisplay.checkboxEventFuelConvert)
 
         mInfoDisplay.checkboxLabelFuelConvert = ac.addLabel(mInfoDisplay.appWindow, mInfoDisplay.fuelconvert)
-        ac.setPosition(mInfoDisplay.checkboxLabelFuelConvert, 24, 236)
+        ac.setPosition(mInfoDisplay.checkboxLabelFuelConvert, 224, 236)
         ac.setFontColor(mInfoDisplay.checkboxLabelFuelConvert, 0.0, 1.0, 0.1, 1)
         ac.setFontAlignment(mInfoDisplay.checkboxLabelFuelConvert,'right')
 
@@ -1631,12 +1634,12 @@ def acMain(ac_version):
 
         if(configuration.getFuelLapAlertStatus() == "enabled"):
             mInfoDisplay.checkboxLabelFuelLapAlert = ac.addLabel(mInfoDisplay.appWindow, "Lap Enabled")
-            ac.setPosition(mInfoDisplay.checkboxLabelFuelLapAlert, 24, 260)
+            ac.setPosition(mInfoDisplay.checkboxLabelFuelLapAlert, 224, 260)
             ac.setFontColor(mInfoDisplay.checkboxLabelFuelLapAlert, 0.0, 1.0, 0.1, 1)
             ac.setFontAlignment(mInfoDisplay.checkboxLabelFuelLapAlert,'right')
         elif(configuration.getFuelLapAlertStatus() == "disabled"):
             mInfoDisplay.checkboxLabelFuelLapAlert = ac.addLabel(mInfoDisplay.appWindow, "Lap Disabled")
-            ac.setPosition(mInfoDisplay.checkboxLabelFuelLapAlert, 24, 260)
+            ac.setPosition(mInfoDisplay.checkboxLabelFuelLapAlert, 224, 260)
             ac.setFontColor(mInfoDisplay.checkboxLabelFuelLapAlert, 0.0, 1.0, 0.1, 1)
             ac.setFontAlignment(mInfoDisplay.checkboxLabelFuelLapAlert,'right')
 
@@ -1665,15 +1668,15 @@ def acMain(ac_version):
         ac.addOnValueChangeListener(mInfoDisplay.volumeSpinner,mInfoDisplay.volumeSpinnerEvent)
 
     else:
-        mInfoDisplay.currentfuellabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
-        ac.setPosition(mInfoDisplay.currentfuellabel, 20, 236)
+        mInfoDisplay.currentfuellabel = ac.addLabel(mInfoDisplay.appWindow, "currentfuel")
+        ac.setPosition(mInfoDisplay.currentfuellabel, 6, 236)
         ac.setFontColor(mInfoDisplay.currentfuellabel, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.currentfuellabel,'left')
 
         mInfoDisplay.currentfuelalertlabel = ac.addLabel(mInfoDisplay.appWindow, "Fuel Alert Level : -------")
         ac.setPosition(mInfoDisplay.currentfuelalertlabel, 24, 318)
         ac.setFontColor(mInfoDisplay.currentfuelalertlabel, 1.0, 0.0, 0.0, 1)
-        ac.setFontAlignment(mInfoDisplay.currentfuelalertlabel,'center')
+        ac.setFontAlignment(mInfoDisplay.currentfuelalertlabel,'left')
 
         mInfoDisplay.checkboxContainerFuel = ac.addCheckBox(mInfoDisplay.appWindow, "")
         ac.setPosition(mInfoDisplay.checkboxContainerFuel, 230,214)
@@ -1681,7 +1684,7 @@ def acMain(ac_version):
         ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerFuel,mInfoDisplay.checkboxEventFuel)
 
         mInfoDisplay.checkboxLabelFuel = ac.addLabel(mInfoDisplay.appWindow, "Disabled")
-        ac.setPosition(mInfoDisplay.checkboxLabelFuel, 26, 211)
+        ac.setPosition(mInfoDisplay.checkboxLabelFuel, 224, 211)
         ac.setFontColor(mInfoDisplay.checkboxLabelFuel, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.checkboxLabelFuel,'right')
 
@@ -1691,7 +1694,7 @@ def acMain(ac_version):
         ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerFuelConvert,mInfoDisplay.checkboxEventFuelConvert)
 
         mInfoDisplay.checkboxLabelFuelConvert = ac.addLabel(mInfoDisplay.appWindow, mInfoDisplay.fuelconvert)
-        ac.setPosition(mInfoDisplay.checkboxLabelFuelConvert, 24, 236)
+        ac.setPosition(mInfoDisplay.checkboxLabelFuelConvert, 224, 236)
         ac.setFontColor(mInfoDisplay.checkboxLabelFuelConvert, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.checkboxLabelFuelConvert,'right')
 
@@ -1730,22 +1733,22 @@ def acMain(ac_version):
         ac.addOnValueChangeListener(mInfoDisplay.volumeSpinner,mInfoDisplay.volumeSpinnerEvent)
 
     if(mInfoDisplay.lapswitch is True):
-        mInfoDisplay.currentlaplabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
+        mInfoDisplay.currentlaplabel = ac.addLabel(mInfoDisplay.appWindow, "currentlap")
         ac.setPosition(mInfoDisplay.currentlaplabel, 16, 125)
         ac.setFontColor(mInfoDisplay.currentlaplabel, 1.0, 1.0, 1.0, 1)
         ac.setFontAlignment(mInfoDisplay.currentlaplabel,'left')
 
-        mInfoDisplay.besttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
+        mInfoDisplay.besttimelabel = ac.addLabel(mInfoDisplay.appWindow, "besttime")
         ac.setPosition(mInfoDisplay.besttimelabel, 26, 145)
         ac.setFontColor(mInfoDisplay.besttimelabel, 1.0, 1.0, 1.0, 1)
         ac.setFontAlignment(mInfoDisplay.besttimelabel,'left')
 
-        mInfoDisplay.lasttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
+        mInfoDisplay.lasttimelabel = ac.addLabel(mInfoDisplay.appWindow, "lasttime")
         ac.setPosition(mInfoDisplay.lasttimelabel, 31, 165)
         ac.setFontColor(mInfoDisplay.lasttimelabel, 1.0, 1.0, 1.0, 1)
         ac.setFontAlignment(mInfoDisplay.lasttimelabel,'left')
 
-        mInfoDisplay.currenttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
+        mInfoDisplay.currenttimelabel = ac.addLabel(mInfoDisplay.appWindow, "currenttime")
         ac.setPosition(mInfoDisplay.currenttimelabel, 7, 185)
         ac.setFontColor(mInfoDisplay.currenttimelabel, 1.0, 1.0, 1.0, 1)
         ac.setFontAlignment(mInfoDisplay.currenttimelabel,'left')
@@ -1756,7 +1759,7 @@ def acMain(ac_version):
         ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerLaptime,mInfoDisplay.checkboxEventLaptime)
 
         mInfoDisplay.checkboxLabelLaptime = ac.addLabel(mInfoDisplay.appWindow, "Enabled")
-        ac.setPosition(mInfoDisplay.checkboxLabelLaptime, 26, 95)
+        ac.setPosition(mInfoDisplay.checkboxLabelLaptime, 224, 95)
         ac.setFontColor(mInfoDisplay.checkboxLabelLaptime, 0.0, 1.0, 0.1, 1)
         ac.setFontAlignment(mInfoDisplay.checkboxLabelLaptime,'right')
 
@@ -1764,27 +1767,28 @@ def acMain(ac_version):
         ac.setPosition(mInfoDisplay.checkboxContainerBestLap, 230, 148)
         ac.setSize(mInfoDisplay.checkboxContainerBestLap,15,15)
         ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerBestLap,mInfoDisplay.checkboxEventBestLap)
+        
         mInfoDisplay.checkboxLabelBestLap = ac.addLabel(mInfoDisplay.appWindow, "Best Lap")
-        ac.setPosition(mInfoDisplay.checkboxLabelBestLap, 26, 145)
+        ac.setPosition(mInfoDisplay.checkboxLabelBestLap, 224, 144)
         ac.setFontColor(mInfoDisplay.checkboxLabelBestLap, 0.0, 1.0, 0.1, 1)
         ac.setFontAlignment(mInfoDisplay.checkboxLabelBestLap,'right')
     else:
-        mInfoDisplay.currentlaplabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
+        mInfoDisplay.currentlaplabel = ac.addLabel(mInfoDisplay.appWindow, "currentlap")
         ac.setPosition(mInfoDisplay.currentlaplabel, 16, 125)
         ac.setFontColor(mInfoDisplay.currentlaplabel, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.currentlaplabel,'left')
 
-        mInfoDisplay.besttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
+        mInfoDisplay.besttimelabel = ac.addLabel(mInfoDisplay.appWindow, "besttime")
         ac.setPosition(mInfoDisplay.besttimelabel, 26, 145)
         ac.setFontColor(mInfoDisplay.besttimelabel, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.besttimelabel,'left')
 
-        mInfoDisplay.lasttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
+        mInfoDisplay.lasttimelabel = ac.addLabel(mInfoDisplay.appWindow, "lasttime")
         ac.setPosition(mInfoDisplay.lasttimelabel, 31, 165)
         ac.setFontColor(mInfoDisplay.lasttimelabel, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.lasttimelabel,'left')
 
-        mInfoDisplay.currenttimelabel = ac.addLabel(mInfoDisplay.appWindow, "mInfo")
+        mInfoDisplay.currenttimelabel = ac.addLabel(mInfoDisplay.appWindow, "currenttime")
         ac.setPosition(mInfoDisplay.currenttimelabel, 7, 185)
         ac.setFontColor(mInfoDisplay.currenttimelabel, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.currenttimelabel,'left')
@@ -1794,7 +1798,7 @@ def acMain(ac_version):
         ac.setSize(mInfoDisplay.checkboxContainerLaptime,15,15)
         ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerLaptime,mInfoDisplay.checkboxEventLaptime)
 
-        mInfoDisplay.checkboxLabelLaptime = ac.addLabel(mInfoDisplay.appWindow, "Best Lap")
+        mInfoDisplay.checkboxLabelLaptime = ac.addLabel(mInfoDisplay.appWindow, "laptime")
         ac.setPosition(mInfoDisplay.checkboxLabelLaptime, 26, 95)
         ac.setFontColor(mInfoDisplay.checkboxLabelLaptime, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.checkboxLabelLaptime,'right')
@@ -1805,7 +1809,7 @@ def acMain(ac_version):
         ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerBestLap,mInfoDisplay.checkboxEventBestLap)
 
         mInfoDisplay.checkboxLabelBestLap = ac.addLabel(mInfoDisplay.appWindow, "Best Lap")
-        ac.setPosition(mInfoDisplay.checkboxLabelBestLap, 26, 145)
+        ac.setPosition(mInfoDisplay.checkboxLabelBestLap, 224, 144)
         ac.setFontColor(mInfoDisplay.checkboxLabelBestLap, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.checkboxLabelBestLap,'right')
 
@@ -1821,7 +1825,7 @@ def acMain(ac_version):
         ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerTire,mInfoDisplay.checkboxEventTire)
 
         mInfoDisplay.checkboxLabelTire = ac.addLabel(mInfoDisplay.appWindow, "Enabled")
-        ac.setPosition(mInfoDisplay.checkboxLabelTire, 26, 338)
+        ac.setPosition(mInfoDisplay.checkboxLabelTire, 224, 338)
         ac.setFontColor(mInfoDisplay.checkboxLabelTire, 0.0, 1.0, 0.1, 1)
         ac.setFontAlignment(mInfoDisplay.checkboxLabelTire,'right')
 
@@ -1831,29 +1835,29 @@ def acMain(ac_version):
         ac.addOnCheckBoxChanged(mInfoDisplay.checkboxContainerTireConvert,mInfoDisplay.checkboxEventTireConvert)
 
         mInfoDisplay.checkboxLabelTireConvert = ac.addLabel(mInfoDisplay.appWindow, "Celsius")
-        ac.setPosition(mInfoDisplay.checkboxLabelTireConvert, 26, 364)
+        ac.setPosition(mInfoDisplay.checkboxLabelTireConvert, 224, 364)
         ac.setFontColor(mInfoDisplay.checkboxLabelTireConvert, 0.0, 1.0, 0.5, 1)
         ac.setFontAlignment(mInfoDisplay.checkboxLabelTireConvert,'right')
 
         mInfoDisplay.tiretempLabelFL = ac.addLabel(mInfoDisplay.appWindow, "TempFL")
-        ac.setPosition(mInfoDisplay.tiretempLabelFL, -16, 388)
+        ac.setPosition(mInfoDisplay.tiretempLabelFL, 64, 388)
         ac.setFontColor(mInfoDisplay.tiretempLabelFL, 1.0, 1.0, 1.0, 1)
-        ac.setFontAlignment(mInfoDisplay.tiretempLabelFL,'center')
+        ac.setFontAlignment(mInfoDisplay.tiretempLabelFL,'left')
 
         mInfoDisplay.tiretempLabelFR = ac.addLabel(mInfoDisplay.appWindow, "TempFR")
-        ac.setPosition(mInfoDisplay.tiretempLabelFR, 66, 388)
+        ac.setPosition(mInfoDisplay.tiretempLabelFR, 148, 388)
         ac.setFontColor(mInfoDisplay.tiretempLabelFR, 1.0, 1.0, 1.0, 1)
-        ac.setFontAlignment(mInfoDisplay.tiretempLabelFR,'center')
+        ac.setFontAlignment(mInfoDisplay.tiretempLabelFR,'left')
 
         mInfoDisplay.tiretempLabelRL = ac.addLabel(mInfoDisplay.appWindow, "TempRL")
-        ac.setPosition(mInfoDisplay.tiretempLabelRL, -16, 438)
+        ac.setPosition(mInfoDisplay.tiretempLabelRL, 64, 438)
         ac.setFontColor(mInfoDisplay.tiretempLabelRL, 1.0, 1.0, 1.0, 1)
-        ac.setFontAlignment(mInfoDisplay.tiretempLabelRL,'center')
+        ac.setFontAlignment(mInfoDisplay.tiretempLabelRL,'left')
 
         mInfoDisplay.tiretempLabelRR = ac.addLabel(mInfoDisplay.appWindow, "TempRR")
-        ac.setPosition(mInfoDisplay.tiretempLabelRR, 66, 438)
+        ac.setPosition(mInfoDisplay.tiretempLabelRR, 148, 438)
         ac.setFontColor(mInfoDisplay.tiretempLabelRR, 1.0, 1.0, 1.0, 1)
-        ac.setFontAlignment(mInfoDisplay.tiretempLabelRR,'center')
+        ac.setFontAlignment(mInfoDisplay.tiretempLabelRR,'left')
 
         mInfoDisplay.checkboxContainerTireFL = ac.addCheckBox(mInfoDisplay.appWindow, "")
         ac.setPosition(mInfoDisplay.checkboxContainerTireFL, 25, 412)
@@ -1936,10 +1940,10 @@ def acMain(ac_version):
         ac.setPosition(mInfoDisplay.checkboxLabelTire, 26, 338)
         ac.setFontColor(mInfoDisplay.checkboxLabelTire, 1.0, 0.0, 0.0, 1)
         ac.setFontAlignment(mInfoDisplay.checkboxLabelTire,'right')
-    ac.setBackgroundTexture(mInfoDisplay.appWindow, "apps/python/mInfo/images/mInfoBackground.png")
+    ac.setBackgroundTexture(mInfoDisplay.appWindow, "apps/python/mInfo32/images/mInfoBackground.png")
     pygame.init()
     soundsystem.loadSounds()
-    return "mInfo"
+    return "mInfo32"
 
 def acUpdate(deltaT):
     """main loop.only update lap once and play sound once required as we are in a loop."""
